@@ -9,7 +9,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <climits>
-#include <locale.h> //setlocale
 
 #include <base/math.h>
 #include <base/vmath.h>
@@ -36,13 +35,13 @@
 
 #include <engine/external/md5/md5.h>
 
+#include <engine/client/http.h>
 #include <engine/shared/config.h>
 #include <engine/shared/compression.h>
 #include <engine/shared/datafile.h>
 #include <engine/shared/demo.h>
 #include <engine/shared/filecollection.h>
 #include <engine/shared/ghost.h>
-#include <engine/shared/http.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
 #include <engine/shared/protocol.h>
@@ -1122,7 +1121,7 @@ const char *CClient::LoadMapSearch(const char *pMapName, SHA256_DIGEST *pWantedS
 	if(pWantedSha256)
 	{
 		sha256_str(*pWantedSha256, aWantedSha256, sizeof(aWantedSha256));
-		str_format(aWanted, sizeof(aWanted), "sha256=%s ", aWantedSha256);
+		str_format(aWanted, sizeof(aWanted), " sha256=%s", aWantedSha256);
 	}
 
 	str_format(aBuf, sizeof(aBuf), "loading map, map=%s wanted%s crc=%08x", pMapName, aWanted, WantedCrc);
@@ -2230,7 +2229,7 @@ void CClient::ResetDDNetInfo()
 void CClient::FinishDDNetInfo()
 {
 	ResetDDNetInfo();
-	m_pStorage->RenameFile("ddnet-info.json.tmp", "ddnet-info.json", IStorage::TYPE_SAVE);
+	m_pStorage->RenameFile(DDNET_INFO_TMP, DDNET_INFO, IStorage::TYPE_SAVE);
 	LoadDDNetInfo();
 }
 
@@ -2617,7 +2616,7 @@ void CClient::RegisterInterfaces()
 	Kernel()->RegisterInterface(static_cast<IGhostRecorder*>(&m_GhostRecorder), false);
 	Kernel()->RegisterInterface(static_cast<IGhostLoader*>(&m_GhostLoader), false);
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser), false);
-#if !defined(CONF_PLATFORM_MACOSX) && !defined(__ANDROID__)
+#if defined(CONF_AUTOUPDATE)
 	Kernel()->RegisterInterface(static_cast<IUpdater*>(&m_Updater), false);
 #endif
 	Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends), false);
@@ -2635,7 +2634,7 @@ void CClient::InitInterfaces()
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pMasterServer = Kernel()->RequestInterface<IEngineMasterServer>();
-#if !defined(CONF_PLATFORM_MACOSX) && !defined(__ANDROID__)
+#if defined(CONF_AUTOUPDATE)
 	m_pUpdater = Kernel()->RequestInterface<IUpdater>();
 #endif
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
@@ -2646,7 +2645,7 @@ void CClient::InitInterfaces()
 
 	HttpInit(m_pStorage);
 
-#if !defined(CONF_PLATFORM_MACOSX) && !defined(__ANDROID__)
+#if defined(CONF_AUTOUPDATE)
 	m_Updater.Init();
 #endif
 
@@ -2775,7 +2774,7 @@ void CClient::Run()
 	m_Fifo.Init(m_pConsole, g_Config.m_ClInputFifo, CFGFLAG_CLIENT);
 #endif
 
-	// loads the existing ddnet-info.json file if it exists
+	// loads the existing ddnet info file if it exists
 	LoadDDNetInfo();
 	// but still request the new one from server
 	if(g_Config.m_ClShowWelcome)
@@ -2787,7 +2786,7 @@ void CClient::Run()
 	bool LastQ = false;
 	bool LastE = false;
 	bool LastG = false;
-	
+
 	int64 LastTime = time_get_microseconds();
 	int64 LastRenderTime = time_get();
 
@@ -2832,7 +2831,7 @@ void CClient::Run()
 		// update input
 		if(Input()->Update())
 			break;	// SDL_QUIT
-#if !defined(CONF_PLATFORM_MACOSX) && !defined(__ANDROID__)
+#if defined(CONF_AUTOUPDATE)
 		Updater()->Update();
 #endif
 
@@ -2938,6 +2937,7 @@ void CClient::Run()
 		}
 
 		AutoScreenshot_Cleanup();
+		AutoStatScreenshot_Cleanup();
 		AutoCSV_Cleanup();
 
 		// check conditions
@@ -2960,7 +2960,7 @@ void CClient::Run()
 		{
 			SleepTimeInMicroSeconds = ((int64)1000000 / (int64)g_Config.m_ClRefreshRateInactive) - (Now - LastTime);
 			if(SleepTimeInMicroSeconds / (int64)1000 > (int64)0)
-				thread_sleep(SleepTimeInMicroSeconds / (int64)1000);
+				thread_sleep(SleepTimeInMicroSeconds);
 			Slept = true;
 		}
 		else if(g_Config.m_ClRefreshRate)
@@ -2990,7 +2990,7 @@ void CClient::Run()
 
 		if(g_Config.m_DbgHitch)
 		{
-			thread_sleep(g_Config.m_DbgHitch);
+			thread_sleep(g_Config.m_DbgHitch*1000);
 			g_Config.m_DbgHitch = 0;
 		}
 
@@ -3515,9 +3515,9 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("demo_speed", "i[speed]", CFGFLAG_CLIENT, Con_DemoSpeed, this, "Set demo speed");
 
 	m_pConsole->Chain("cl_timeout_seed", ConchainTimeoutSeed, this);
-	
+
 	m_pConsole->Chain("password", ConchainPassword, this);
-	
+
 	// used for server browser update
 	m_pConsole->Chain("br_filter_string", ConchainServerBrowserUpdate, this);
 	m_pConsole->Chain("br_filter_gametype", ConchainServerBrowserUpdate, this);
@@ -3540,6 +3540,11 @@ static CClient *CreateClient()
 	CClient *pClient = static_cast<CClient *>(malloc(sizeof(*pClient)));
 	mem_zero(pClient, sizeof(CClient));
 	return new(pClient) CClient;
+}
+
+void CClient::HandleConnectLink(const char *pArg)
+{
+	str_copy(m_aCmdConnect, pArg + sizeof(CONNECTLINK) - 1, sizeof(m_aCmdConnect));
 }
 
 /*
@@ -3588,7 +3593,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pClient->RegisterInterfaces();
 
 	// create the components
-	IEngine *pEngine = CreateEngine("DDNet", Silent);
+	IEngine *pEngine = CreateEngine("DDNet", Silent, 1);
 	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_CLIENT, argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
@@ -3688,7 +3693,9 @@ int main(int argc, const char **argv) // ignore_convention
 	g_Config.m_ClConfigVersion = 1;
 
 	// parse the command line arguments
-	if(argc > 1) // ignore_convention
+	if(argc == 2 && str_startswith(argv[1], CONNECTLINK))
+		pClient->HandleConnectLink(argv[1]);
+	else if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 
 	pClient->Engine()->InitLogfile();
@@ -3697,9 +3704,6 @@ int main(int argc, const char **argv) // ignore_convention
 	if(!g_Config.m_ClShowConsole)
 		FreeConsole();
 #endif
-
-	// For XOpenIM in SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=3102
-	setlocale(LC_ALL, "");
 
 	// run the client
 	dbg_msg("client", "starting...");
@@ -3769,7 +3773,7 @@ void CClient::RequestDDNetInfo()
 		str_append(aUrl, aEscaped, sizeof(aUrl));
 	}
 
-	m_pDDNetInfoTask = std::make_shared<CGetFile>(Storage(), aUrl, "ddnet-info.json.tmp", IStorage::TYPE_SAVE, true);
+	m_pDDNetInfoTask = std::make_shared<CGetFile>(Storage(), aUrl, DDNET_INFO_TMP, IStorage::TYPE_SAVE, true);
 	Engine()->AddJob(m_pDDNetInfoTask);
 }
 

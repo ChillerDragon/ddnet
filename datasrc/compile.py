@@ -1,4 +1,5 @@
-import os, imp, sys
+import os
+import sys
 from datatypes import *
 import content
 import network
@@ -114,7 +115,7 @@ if gen_network_header:
 	extended = [o for o in network.Messages if o.ex is not None]
 	for l in create_enum_table(["NETMSGTYPE_EX"]+[o.enum_name for o in non_extended], "NUM_NETMSGTYPES"): print(l)
 	print("")
-	for l in create_enum_table(["__NETMSGTYPE_UUID_HELPER=OFFSET_NETMSGTYPE_UUID-1"]+[o.enum_name for o in extended], "END_NETMSGTYPE_UUID"): print(l)
+	for l in create_enum_table(["__NETMSGTYPE_UUID_HELPER=OFFSET_NETMSGTYPE_UUID-1"]+[o.enum_name for o in extended], "OFFSET_MAPITEMTYPE_UUID"): print(l)
 	print("")
 
 	for item in network.Objects + network.Messages:
@@ -166,6 +167,7 @@ if gen_network_source:
 	lines += ['#include <engine/shared/protocol.h>']
 	lines += ['#include <engine/message.h>']
 	lines += ['#include "protocol.h"']
+	lines += ['#include <game/mapitems_ex.h>']
 
 	lines += ['CNetObjHandler::CNetObjHandler()']
 	lines += ['{']
@@ -217,14 +219,14 @@ if gen_network_source:
 	lines += ['{']
 	lines += ['\tif(Type < 0 || Type >= NUM_NETOBJTYPES) return "(out of range)";']
 	lines += ['\treturn ms_apObjNames[Type];']
-	lines += ['};']
+	lines += ['}']
 	lines += ['']
 
 	lines += ['int CNetObjHandler::GetObjSize(int Type)']
 	lines += ['{']
 	lines += ['\tif(Type < 0 || Type >= NUM_NETOBJTYPES) return 0;']
 	lines += ['\treturn ms_aObjSizes[Type];']
-	lines += ['};']
+	lines += ['}']
 	lines += ['']
 
 
@@ -232,7 +234,7 @@ if gen_network_source:
 	lines += ['{']
 	lines += ['\tif(Type < 0 || Type >= NUM_NETMSGTYPES) return "(out of range)";']
 	lines += ['\treturn ms_apMsgNames[Type];']
-	lines += ['};']
+	lines += ['}']
 	lines += ['']
 
 
@@ -276,7 +278,7 @@ if gen_network_source:
 		lines += ['\t']
 	lines += ['\t}']
 	lines += ['\treturn -1;']
-	lines += ['};']
+	lines += ['}']
 	lines += ['']
 
  #int Validate(int Type, void *pData, int Size);
@@ -321,7 +323,7 @@ if gen_network_source:
 	lines += ['\t\treturn 0;']
 	lines += ['\tm_pMsgFailedOn = "";']
 	lines += ['\treturn m_aMsgData;']
-	lines += ['};']
+	lines += ['}']
 	lines += ['']
 
 	lines += ['bool CNetObjHandler::TeeHistorianRecordMsg(int Type)']
@@ -347,6 +349,7 @@ if gen_network_source:
 	for item in network.Objects + network.Messages:
 		if item.ex is not None:
 			lines += ['\tpManager->RegisterName(%s, "%s");' % (item.enum_name, item.ex)]
+	lines += ['\tRegisterMapItemTypeUuids(pManager);']
 	lines += ['}']
 
 	for l in lines:

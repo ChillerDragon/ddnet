@@ -820,7 +820,7 @@ int CDemoPlayer::SetPos(float Percent)
 
 void CDemoPlayer::SetSpeed(float Speed)
 {
-	m_Info.m_Info.m_Speed = Speed;
+	m_Info.m_Info.m_Speed = clamp(Speed, 0.f, 64.f);
 }
 
 void CDemoPlayer::SetSpeedIndex(int Offset)
@@ -914,18 +914,20 @@ void CDemoPlayer::GetDemoName(char *pBuffer, int BufferSize) const
 	str_copy(pBuffer, pExtractedName, Length);
 }
 
-bool CDemoPlayer::GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const
+bool CDemoPlayer::GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader, CTimelineMarkers *pTimelineMarkers) const
 {
-	if(!pDemoHeader)
+	if(!pDemoHeader || !pTimelineMarkers)
 		return false;
 
 	mem_zero(pDemoHeader, sizeof(CDemoHeader));
+	mem_zero(pTimelineMarkers, sizeof(CTimelineMarkers));
 
 	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
 	if(!File)
 		return false;
 
 	io_read(File, pDemoHeader, sizeof(CDemoHeader));
+	io_read(File, pTimelineMarkers, sizeof(CTimelineMarkers));
 	io_close(File);
 	return !(mem_comp(pDemoHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) || pDemoHeader->m_Version < gs_OldVersion);
 }

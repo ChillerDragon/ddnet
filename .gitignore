@@ -27,7 +27,7 @@ googletest-download/
 googletest-src/
 gtest.pc
 gtest_main.pc
-install_manifest_portable.txt
+install_manifest*.txt
 ninja_package
 pack_*/
 rules.ninja
@@ -40,7 +40,6 @@ DDNet-Server
 DDNet-Server-Launcher
 config_retrieve
 config_store
-confusables
 crapnet
 dilate
 dummy_map
@@ -58,6 +57,7 @@ tileset_borderfix
 tileset_borderrem
 tileset_borderset
 twping
+unicode_confusables
 uuid
 versionsrv
 
@@ -95,6 +95,7 @@ cscope.out
 *.tar.gz
 *.tar.xz
 *.teehistorian
+*.tmp
 *.user
 *.vcxproj
 *.vs

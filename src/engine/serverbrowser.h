@@ -7,6 +7,9 @@
 
 #include "kernel.h"
 
+#define DDNET_INFO "ddnet-info.json"
+#define DDNET_INFO_TMP DDNET_INFO ".tmp"
+
 /*
 	Structure: CServerInfo
 */
@@ -56,6 +59,7 @@ public:
 	char m_aVersion[32];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
 	CClient m_aClients[MAX_CLIENTS];
+	mutable int m_NumFilteredPlayers;
 };
 
 bool IsVanilla(const CServerInfo *pInfo);
@@ -66,6 +70,7 @@ bool IsRace(const CServerInfo *pInfo);
 bool IsFastCap(const CServerInfo *pInfo);
 bool IsDDRace(const CServerInfo *pInfo);
 bool IsDDNet(const CServerInfo *pInfo);
+bool IsBlockWorlds(const CServerInfo *pInfo);
 
 bool Is64Player(const CServerInfo *pInfo);
 bool IsPlus(const CServerInfo *pInfo);
@@ -111,6 +116,9 @@ public:
 	virtual int LoadingProgression() const = 0;
 
 	virtual int NumServers() const = 0;
+
+	virtual int Players(const CServerInfo &Item) const = 0;
+	virtual int Max(const CServerInfo &Item) const = 0;
 
 	virtual int NumSortedServers() const = 0;
 	virtual const CServerInfo *SortedGet(int Index) const = 0;

@@ -147,7 +147,7 @@ bool CServerBrowser::SortCompareNumPlayers(int Index1, int Index2) const
 {
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
-	return a->m_Info.m_NumPlayers < b->m_Info.m_NumPlayers;
+	return a->m_Info.m_NumFilteredPlayers < b->m_Info.m_NumFilteredPlayers;
 }
 
 bool CServerBrowser::SortCompareNumClients(int Index1, int Index2) const
@@ -176,10 +176,9 @@ void CServerBrowser::Filter()
 	{
 		int Filtered = 0;
 
-		if(g_Config.m_BrFilterEmpty && ((g_Config.m_BrFilterSpectators && m_ppServerlist[i]->m_Info.m_NumPlayers == 0) || m_ppServerlist[i]->m_Info.m_NumClients == 0))
+		if(g_Config.m_BrFilterEmpty && m_ppServerlist[i]->m_Info.m_NumFilteredPlayers == 0)
 			Filtered = 1;
-		else if(g_Config.m_BrFilterFull && ((g_Config.m_BrFilterSpectators && m_ppServerlist[i]->m_Info.m_NumPlayers == m_ppServerlist[i]->m_Info.m_MaxPlayers) ||
-				m_ppServerlist[i]->m_Info.m_NumClients == m_ppServerlist[i]->m_Info.m_MaxClients))
+		else if(g_Config.m_BrFilterFull && Players(m_ppServerlist[i]->m_Info) == Max(m_ppServerlist[i]->m_Info))
 			Filtered = 1;
 		else if(g_Config.m_BrFilterPw && m_ppServerlist[i]->m_Info.m_Flags&SERVER_FLAG_PASSWORD)
 			Filtered = 1;
@@ -318,7 +317,7 @@ void CServerBrowser::Filter()
 
 int CServerBrowser::SortHash() const
 {
-	int i = g_Config.m_BrSort&0xf;
+	int i = g_Config.m_BrSort&0xff;
 	i |= g_Config.m_BrFilterEmpty<<4;
 	i |= g_Config.m_BrFilterFull<<5;
 	i |= g_Config.m_BrFilterSpectators<<6;
@@ -331,13 +330,40 @@ int CServerBrowser::SortHash() const
 	i |= g_Config.m_BrFilterGametypeStrict<<13;
 	i |= g_Config.m_BrFilterUnfinishedMap<<14;
 	i |= g_Config.m_BrFilterCountry<<15;
-	i |= g_Config.m_BrFilterPing<<16;
+	i |= g_Config.m_BrFilterConnectingPlayers<<16;
 	return i;
+}
+
+void SetFilteredPlayers(const CServerInfo &Item)
+{
+	Item.m_NumFilteredPlayers = 0;
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		const CServerInfo::CClient &Client = Item.m_aClients[i];
+
+		if(Client.m_aName[0] == '\0')
+			continue;
+
+		if(g_Config.m_BrFilterSpectators && !Client.m_Player)
+			continue;
+
+		if(g_Config.m_BrFilterConnectingPlayers && str_comp(Client.m_aName, "(connecting)") == 0 && Client.m_aClan[0] == '\0' && Client.m_Country == -1 && Client.m_Score == 0)
+			continue;
+
+		Item.m_NumFilteredPlayers++;
+	}
 }
 
 void CServerBrowser::Sort()
 {
 	int i;
+
+	// fill m_NumFilteredPlayers
+	for(i = 0; i < m_NumServers; i++)
+	{
+		SetFilteredPlayers(m_ppServerlist[i]->m_Info);
+	}
 
 	// create filtered list
 	Filter();
@@ -350,8 +376,7 @@ void CServerBrowser::Sort()
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_MAP)
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareMap));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_NUMPLAYERS)
-		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this,
-					g_Config.m_BrFilterSpectators ? &CServerBrowser::SortCompareNumPlayers : &CServerBrowser::SortCompareNumClients));
+		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareNumPlayers));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_GAMETYPE)
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowser::SortCompareGametype));
 
@@ -1081,7 +1106,7 @@ int CServerBrowser::HasRank(const char *pMap)
 void CServerBrowser::LoadDDNetInfoJson()
 {
 	IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
-	IOHANDLE File = pStorage->OpenFile("ddnet-info.json", IOFLAG_READ, IStorage::TYPE_ALL);
+	IOHANDLE File = pStorage->OpenFile(DDNET_INFO, IOFLAG_READ, IStorage::TYPE_SAVE);
 
 	if(!File)
 		return;

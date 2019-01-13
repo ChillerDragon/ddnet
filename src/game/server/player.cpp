@@ -38,8 +38,7 @@ void CPlayer::Reset()
 {
 	m_DieTick = Server()->Tick();
 	m_JoinTick = Server()->Tick();
-	if (m_pCharacter)
-		delete m_pCharacter;
+	delete m_pCharacter;
 	m_pCharacter = 0;
 	m_KillMe = 0;
 	m_SpectatorID = SPEC_FREEVIEW;
@@ -70,7 +69,6 @@ void CPlayer::Reset()
 	m_LastWhisperTo = -1;
 	m_LastSetSpectatorMode = 0;
 	m_TimeoutCode[0] = '\0';
-	m_ModhelpTick = -1;
 
 	m_TuneZone = 0;
 	m_TuneZoneOld = m_TuneZone;
@@ -79,7 +77,7 @@ void CPlayer::Reset()
 
 	m_SendVoteIndex = -1;
 
-	if (g_Config.m_SvEvents)
+	if(g_Config.m_Events)
 	{
 		time_t rawtime;
 		struct tm* timeinfo;
@@ -128,11 +126,14 @@ void CPlayer::Reset()
 	// non-empty, allow them to vote immediately. This allows players to
 	// vote after map changes or when they join an empty server.
 	//
-	// Otherwise, block voting for 60 seconds after joining.
+	// Otherwise, block voting in the begnning after joining.
 	if(Now > GameServer()->m_NonEmptySince + 10 * TickSpeed)
 		m_FirstVoteTick = Now + g_Config.m_SvJoinVoteDelay * TickSpeed;
 	else
 		m_FirstVoteTick = Now;
+
+	m_NotEligibleForFinish = false;
+	m_EligibleForFinishCheck = 0;
 }
 
 void CPlayer::Tick()
@@ -426,11 +427,14 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 		return; // we must return if kicked, as player struct is already deleted
 	AfkVoteTimer(NewInput);
 
+	if(((!m_pCharacter && m_Team == TEAM_SPECTATORS) || m_Paused) && m_SpectatorID == SPEC_FREEVIEW)
+		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
+
 	if(NewInput->m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
 	// skip the input if chat is active
 		if(m_PlayerFlags&PLAYERFLAG_CHATTING)
-		return;
+			return;
 
 		// reset input
 		if(m_pCharacter)
@@ -452,9 +456,6 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 
 	if(!m_pCharacter && m_Team != TEAM_SPECTATORS && (NewInput->m_Fire&1))
 		m_Spawning = true;
-
-	if(((!m_pCharacter && m_Team == TEAM_SPECTATORS) || m_Paused) && m_SpectatorID == SPEC_FREEVIEW)
-		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
 
 	// check for activity
 	if(NewInput->m_Direction || m_LatestActivity.m_TargetX != NewInput->m_TargetX ||
@@ -510,12 +511,12 @@ CCharacter* CPlayer::ForceSpawn(vec2 Pos)
 
 void CPlayer::SetTeam(int Team, bool DoChatMsg)
 {
-	// clamp the team
 	Team = GameServer()->m_pController->ClampTeam(Team);
 	if(m_Team == Team)
 		return;
 
 	char aBuf[512];
+	DoChatMsg = false;
 	if(DoChatMsg)
 	{
 		str_format(aBuf, sizeof(aBuf), "'%s' joined the %s", Server()->ClientName(m_ClientID), GameServer()->m_pController->GetTeamName(Team));

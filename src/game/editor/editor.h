@@ -3,6 +3,8 @@
 #ifndef GAME_EDITOR_EDITOR_H
 #define GAME_EDITOR_EDITOR_H
 
+#include <vector>
+#include <string>
 #include <math.h>
 
 #include <base/math.h>
@@ -136,6 +138,7 @@ public:
 		m_SaveToMap = true;
 		m_Flags = 0;
 		m_pEditor = 0;
+		m_BrushRefCount = 0;
 	}
 
 	virtual ~CLayer()
@@ -152,7 +155,7 @@ public:
 	virtual void BrushFlipY() {}
 	virtual void BrushRotate(float Amount) {}
 
-	virtual void Render() {}
+	virtual void Render(bool Tileset = false) {}
 	virtual int RenderProperties(CUIRect *pToolbox) { return 0; }
 
 	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc) {}
@@ -168,6 +171,8 @@ public:
 	bool m_Readonly;
 	bool m_Visible;
 	bool m_SaveToMap;
+
+	int m_BrushRefCount;
 };
 
 class CLayerGroup
@@ -196,6 +201,7 @@ public:
 	bool m_Collapse;
 
 	CLayerGroup();
+	CLayerGroup(const CLayerGroup& rhs);
 	~CLayerGroup();
 
 	void Convert(CUIRect *pRect);
@@ -250,7 +256,8 @@ public:
 
 	void Clear()
 	{
-		m_lLayers.delete_all();
+		//m_lLayers.delete_all();
+		m_lLayers.clear();
 	}
 
 	void AddLayer(CLayer *l);
@@ -498,6 +505,7 @@ enum
 	PROPTYPE_ENVELOPE,
 	PROPTYPE_SHIFT,
 	PROPTYPE_SOUND,
+	PROPTYPE_AUTOMAPPER,
 };
 
 typedef struct
@@ -519,7 +527,7 @@ public:
 	virtual void Shift(int Direction);
 
 	void MakePalette();
-	virtual void Render();
+	virtual void Render(bool Tileset = false);
 
 	int ConvertX(float x) const;
 	int ConvertY(float y) const;
@@ -544,6 +552,8 @@ public:
 	void PrepareForSave();
 
 	void GetSize(float *w, float *h) { *w = m_Width*32.0f; *h = m_Height*32.0f; }
+	
+	void FlagModified(int x, int y, int w, int h);
 
 	int m_TexID;
 	int m_Game;
@@ -557,6 +567,9 @@ public:
 
 	// DDRace
 
+	int m_AutoMapperConfig;
+	int m_Seed;
+	bool m_AutoAutoMap;
 	int m_Tele;
 	int m_Speedup;
 	int m_Front;
@@ -571,7 +584,7 @@ public:
 	CLayerQuads();
 	~CLayerQuads();
 
-	virtual void Render();
+	virtual void Render(bool QuadPicker = false);
 	CQuad *NewQuad();
 
 	virtual void BrushSelecting(CUIRect Rect);
@@ -642,6 +655,8 @@ public:
 		m_GridActive = false;
 		m_GridFactor = 1;
 
+		m_BrushColorEnabled = true;
+
 		m_aFileName[0] = 0;
 		m_aFileSaveName[0] = 0;
 		m_ValidSaveFilename = false;
@@ -663,6 +678,8 @@ public:
 		m_FilesStartAt = 0;
 		m_FilesCur = 0;
 		m_FilesStopAt = 999;
+
+		m_SelectEntitiesImage = "DDNet";
 
 		m_WorldOffsetX = 0;
 		m_WorldOffsetY = 0;
@@ -750,6 +767,9 @@ public:
 	bool m_Undo;
 	int m_ShowUndo;
 	float m_UndoScrollValue;
+
+	CLayerGroup *m_apSavedBrushes[10];
+
 	void FilelistPopulate(int StorageType);
 	void InvokeFileDialog(int StorageType, int FileType, const char *pTitle, const char *pButtonText,
 		const char *pBasepath, const char *pDefaultName,
@@ -762,12 +782,17 @@ public:
 	void LoadCurrentMap();
 	void Render();
 
-	CQuad *GetSelectedQuad();
+	array<CQuad *> GetSelectedQuads();
 	CLayer *GetSelectedLayerType(int Index, int Type);
 	CLayer *GetSelectedLayer(int Index);
 	CLayerGroup *GetSelectedGroup();
 	CSoundSource *GetSelectedSource();
 	void SelectLayer(int Index);
+
+	void SelectQuad(int Index);
+	void DeleteSelectedQuads();
+	bool IsQuadSelected(int Index);
+	int FindSelectedQuadIndex(int Index);
 
 	int DoProperties(CUIRect *pToolbox, CProperty *pProps, int *pIDs, int *pNewVal, vec4 Color = vec4(1,1,1,0.5f));
 
@@ -778,6 +803,8 @@ public:
 
 	bool m_GridActive;
 	int m_GridFactor;
+
+	bool m_BrushColorEnabled;
 
 	char m_aFileName[512];
 	char m_aFileSaveName[512];
@@ -819,6 +846,7 @@ public:
 	char m_aFileDialogCurrentFolder[MAX_PATH_LENGTH];
 	char m_aFileDialogCurrentLink[MAX_PATH_LENGTH];
 	char m_aFileDialogSearchText[64];
+	char m_aFileDialogPrevSearchText[64];
 	char *m_pFileDialogPath;
 	bool m_aFileDialogActivate;
 	int m_FileDialogFileType;
@@ -837,6 +865,7 @@ public:
 		bool m_IsDir;
 		bool m_IsLink;
 		int m_StorageType;
+		bool m_IsVisible;
 
 		bool operator<(const CFilelistItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
@@ -846,6 +875,9 @@ public:
 	int m_FilesStartAt;
 	int m_FilesCur;
 	int m_FilesStopAt;
+
+	std::vector<std::string> m_SelectEntitiesFiles;
+	std::string m_SelectEntitiesImage;
 
 	float m_WorldOffsetX;
 	float m_WorldOffsetY;
@@ -879,8 +911,10 @@ public:
 	bool m_ShowPicker;
 
 	array<int> m_lSelectedLayers;
+	array<int> m_lSelectedQuads;
+	int m_SelectedQuadPoint;
+	int m_SelectedQuadIndex;
 	int m_SelectedGroup;
-	int m_SelectedQuad;
 	int m_SelectedPoints;
 	int m_SelectedEnvelope;
 	int m_SelectedEnvelopePoint;
@@ -952,6 +986,7 @@ public:
 	static int PopupSound(CEditor *pEditor, CUIRect View);
 	static int PopupSource(CEditor *pEditor, CUIRect View);
 	static int PopupColorPicker(CEditor *pEditor, CUIRect View);
+	static int PopupEntities(CEditor *pEditor, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
@@ -964,7 +999,7 @@ public:
 	void PopupSelectGametileOpInvoke(float x, float y);
 	int PopupSelectGameTileOpResult();
 
-	void PopupSelectConfigAutoMapInvoke(float x, float y);
+	void PopupSelectConfigAutoMapInvoke(int Current, float x, float y);
 	int PopupSelectConfigAutoMapResult();
 
 	void PopupSelectSoundInvoke(int Current, float x, float y);
@@ -988,6 +1023,8 @@ public:
 	static void ReplaceSound(const char *pFileName, int StorageType, void *pUser);
 	static void AddImage(const char *pFilename, int StorageType, void *pUser);
 	static void AddSound(const char *pFileName, int StorageType, void *pUser);
+
+	bool IsEnvelopeUsed(int EnvelopeIndex);
 
 	void RenderImages(CUIRect Toolbox, CUIRect View);
 	void RenderLayers(CUIRect Toolbox, CUIRect View);
@@ -1129,7 +1166,7 @@ public:
 	CLayerSounds();
 	~CLayerSounds();
 
-	virtual void Render();
+	virtual void Render(bool Tileset = false);
 	CSoundSource *NewSource();
 
 	virtual void BrushSelecting(CUIRect Rect);

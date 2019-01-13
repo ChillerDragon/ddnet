@@ -68,19 +68,29 @@ else()
 endif()
 
 set(AUTO_DEPENDENCIES_DEFAULT OFF)
+set(AUTOUPDATE_DEFAULT OFF)
 if(TARGET_OS STREQUAL "windows")
   set(AUTO_DEPENDENCIES_DEFAULT ON)
+  set(AUTOUPDATE_DEFAULT ON)
+elseif(TARGET_OS STREQUAL "linux")
+  set(AUTOUPDATE_DEFAULT ON)
 endif()
 
 option(WEBSOCKETS "Enable websockets support" OFF)
 option(MYSQL "Enable mysql support" OFF)
+option(AUTOUPDATE "Enable the autoupdater" ${AUTOUPDATE_DEFAULT})
 option(CLIENT "Compile client" ON)
 option(DOWNLOAD_GTEST "Download and compile GTest" ${AUTO_DEPENDENCIES_DEFAULT})
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
+option(DEV "Don't generate stuff necessary for packaging" OFF)
 
 # Set the default build type to Release
 if(NOT(CMAKE_BUILD_TYPE))
-  set(CMAKE_BUILD_TYPE Release)
+  if(NOT(DEV))
+    set(CMAKE_BUILD_TYPE Release)
+  else()
+    set(CMAKE_BUILD_TYPE Debug)
+  endif()
 endif()
 
 set(DBG $<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>)
@@ -351,8 +361,8 @@ if(WEBSOCKETS)
   show_dependency_status("Websockets" WEBSOCKETS)
 endif()
 
-if(NOT(CURL_FOUND))
-  message(SEND_ERROR "You must install Curl to compile the DDNet")
+if(CLIENT AND NOT(CURL_FOUND))
+  message(SEND_ERROR "You must install Curl to compile DDNet")
 endif()
 if(NOT(PYTHONINTERP_FOUND))
   message(SEND_ERROR "You must install Python to compile DDNet")
@@ -555,8 +565,6 @@ generate_source("src/game/generated/server_data.h" "server_content_header")
 # Sources
 set_glob(BASE GLOB_RECURSE src/base
   color.h
-  confusables.c
-  confusables_data.h
   detect.h
   hash.c
   hash.h
@@ -574,6 +582,10 @@ set_glob(BASE GLOB_RECURSE src/base
   tl/sorted_array.h
   tl/string.h
   tl/threading.h
+  unicode/confusables.c
+  unicode/confusables_data.h
+  unicode/tolower.c
+  unicode/tolower_data.h
   vmath.h
 )
 set_glob(ENGINE_INTERFACE GLOB src/engine
@@ -622,12 +634,12 @@ set_glob(ENGINE_SHARED GLOB src/engine/shared
   ghost.cpp
   ghost.h
   global_uuid_manager.cpp
-  http.cpp
-  http.h
   huffman.cpp
   huffman.h
   jobs.cpp
   jobs.h
+  json.cpp
+  json.h
   kernel.cpp
   linereader.cpp
   linereader.h
@@ -665,7 +677,6 @@ set_glob(ENGINE_SHARED GLOB src/engine/shared
   websockets.cpp
   websockets.h
 )
-set(ENGINE_GENERATED_SHARED src/game/generated/protocol.cpp src/game/generated/protocol.h)
 set_glob(GAME_SHARED GLOB src/game
   collision.cpp
   collision.h
@@ -683,6 +694,9 @@ set_glob(GAME_SHARED GLOB src/game
   mapbugs_list.h
   mapitems.cpp
   mapitems.h
+  mapitems_ex.cpp
+  mapitems_ex.h
+  mapitems_ex_types.h
   teamscore.cpp
   teamscore.h
   tuning.h
@@ -690,6 +704,21 @@ set_glob(GAME_SHARED GLOB src/game
   version.h
   voting.h
 )
+# A bit hacky, but these are needed to register all the UUIDs, even for stuff
+# that doesn't link game.
+set(ENGINE_UUID_SHARED
+  src/game/generated/protocol.cpp
+  src/game/generated/protocol.h
+  src/game/mapitems_ex.cpp
+  src/game/mapitems_ex.h
+  src/game/mapitems_ex_types.h
+)
+foreach(s ${GAME_SHARED})
+  if(s MATCHES "mapitems_(ex.cpp|ex.h|ex_types.h)$")
+    list(REMOVE_ITEM GAME_SHARED ${s})
+  endif()
+endforeach()
+list(REMOVE_ITEM GAME_SHARED ${ENGINE_UUID_SHARED})
 set(GAME_GENERATED_SHARED
   src/game/generated/git_revision.cpp
   src/game/generated/protocol.h
@@ -698,10 +727,18 @@ set(GAME_GENERATED_SHARED
 set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP})
 
 # Libraries
-set(LIBS ${CMAKE_THREAD_LIBS_INIT} ${CURL_LIBRARIES} ${CRYPTO_LIBRARIES} ${WEBSOCKETS_LIBRARIES} ${ZLIB_LIBRARIES} ${PLATFORM_LIBS})
+set(LIBS
+  ${CRYPTO_LIBRARIES}
+  ${WEBSOCKETS_LIBRARIES}
+  ${ZLIB_LIBRARIES}
+  ${PLATFORM_LIBS}
+  # Add pthreads (on non-Windows) at the end, so that other libraries can depend
+  # on it.
+  ${CMAKE_THREAD_LIBS_INIT}
+)
 
 # Targets
-add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_INTERFACE} ${ENGINE_SHARED} ${ENGINE_GENERATED_SHARED} ${BASE})
+add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_INTERFACE} ${ENGINE_SHARED} ${ENGINE_UUID_SHARED} ${BASE})
 add_library(game-shared EXCLUDE_FROM_ALL OBJECT ${GAME_SHARED} ${GAME_GENERATED_SHARED})
 list(APPEND TARGETS_OWN engine-shared game-shared)
 
@@ -721,6 +758,8 @@ if(CLIENT)
     friends.h
     graphics_threaded.cpp
     graphics_threaded.h
+    http.cpp
+    http.h
     input.cpp
     input.h
     keynames.h
@@ -843,6 +882,7 @@ if(CLIENT)
   # Libraries
   set(LIBS_CLIENT
     ${LIBS}
+    ${CURL_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${PNGLITE_LIBRARIES}
@@ -855,6 +895,10 @@ if(CLIENT)
     ${OGG_LIBRARIES}
 
     ${PLATFORM_CLIENT_LIBS}
+
+    # Add pthreads (on non-Windows) at the end, so that other libraries can depend
+    # on it.
+    ${CMAKE_THREAD_LIBS_INIT}
   )
 
   if(TARGET_OS STREQUAL "windows")
@@ -882,6 +926,7 @@ if(CLIENT)
   target_link_libraries(${TARGET_CLIENT} ${LIBS_CLIENT})
 
   target_include_directories(${TARGET_CLIENT} PRIVATE
+    ${CURL_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${OGG_INCLUDE_DIRS}
@@ -997,7 +1042,13 @@ else()
 endif()
 
 # Libraries
-set(LIBS_SERVER ${LIBS} ${MYSQL_LIBRARIES})
+set(LIBS_SERVER
+  ${LIBS}
+  ${MYSQL_LIBRARIES}
+  # Add pthreads (on non-Windows) at the end, so that other libraries can depend
+  # on it.
+  ${CMAKE_THREAD_LIBS_INIT}
+)
 
 # Target
 set(TARGET_SERVER ${SERVER_EXECUTABLE})
@@ -1045,7 +1096,6 @@ set_glob(TOOLS GLOB src/tools
   config_common.h
   config_retrieve.cpp
   config_store.cpp
-  confusables.cpp
   crapnet.cpp
   dilate.cpp
   dummy_map.cpp
@@ -1059,6 +1109,7 @@ set_glob(TOOLS GLOB src/tools
   tileset_borderfix.cpp
   tileset_borderrem.cpp
   tileset_borderset.cpp
+  unicode_confusables.cpp
   uuid.cpp
 )
 foreach(ABS_T ${TOOLS})
@@ -1067,7 +1118,6 @@ foreach(ABS_T ${TOOLS})
     string(REGEX REPLACE "\\.cpp$" "" TOOL "${T}")
     set(TOOL_DEPS ${DEPS})
     set(TOOL_LIBS ${LIBS})
-    set(EXCLUDE_FROM_ALL EXCLUDE_FROM_ALL)
     if(TOOL MATCHES "^(tileset_.*|dilate|map_extract|map_replace_image)$")
       list(APPEND TOOL_DEPS ${PNGLITE_DEP})
       list(APPEND TOOL_LIBS ${PNGLITE_LIBRARIES})
@@ -1076,8 +1126,9 @@ foreach(ABS_T ${TOOLS})
     if(TOOL MATCHES "^config_")
       list(APPEND EXTRA_TOOL_SRC "src/tools/config_common.h")
     endif()
-    if(TOOL MATCHES "^(config_retrieve|config_store|dilate|map_diff|map_extract)$")
-      set(EXCLUDE_FROM_ALL)
+    set(EXCLUDE_FROM_ALL)
+    if(DEV)
+      set(EXCLUDE_FROM_ALL EXCLUDE_FROM_ALL)
     endif()
     add_executable(${TOOL} ${EXCLUDE_FROM_ALL}
       ${TOOL_DEPS}
@@ -1104,6 +1155,7 @@ add_custom_target(everything DEPENDS ${TARGETS_OWN})
 if(GTEST_FOUND OR DOWNLOAD_GTEST)
   set_glob(TESTS GLOB src/test
     aio.cpp
+    datafile.cpp
     fs.cpp
     git_revision.cpp
     hash.cpp
@@ -1141,7 +1193,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
   list(APPEND TARGETS_LINK ${TARGET_TESTRUNNER})
 
   add_custom_target(run_tests
-    COMMAND $<TARGET_FILE:${TARGET_TESTRUNNER}>
+    COMMAND $<TARGET_FILE:${TARGET_TESTRUNNER}> ${TESTRUNNER_ARGS}
     COMMENT Running tests
     DEPENDS ${TARGET_TESTRUNNER}
     USES_TERMINAL
@@ -1234,12 +1286,28 @@ if(TARGET_OS AND TARGET_BITS)
     set(CPACK_SYSTEM_NAME "win${TARGET_BITS}")
     set(CPACK_GENERATOR ZIP)
   elseif(TARGET_OS STREQUAL "linux")
-    # Assuming Intel here.
-    if(TARGET_BITS EQUAL 32)
-      set(CPACK_SYSTEM_NAME "linux_x86")
-    elseif(TARGET_BITS EQUAL 64)
-      set(CPACK_SYSTEM_NAME "linux_x86_64")
+    # Let compiler tell its arch
+    # Both gcc and clang support -dumpmachine
+    execute_process(
+      COMMAND ${CMAKE_C_COMPILER} -dumpmachine
+      OUTPUT_VARIABLE ARCHITECTURE_TUPLE
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NOT ARCHITECTURE_TUPLE)
+      # If you're really using a weird compiler, then assume Intel here.
+      message(WARNING "Your compiler doesn't support -dumpmachine, this is weird")
+      if(TARGET_BITS EQUAL 32)
+        set(ARCHITECTURE "x86")
+      elseif(TARGET_BITS EQUAL 64)
+        set(ARCHITECTURE "x86_64")
+      endif()
+    else()
+      string(REGEX MATCH "^[^-]*" ARCHITECTURE "${ARCHITECTURE_TUPLE}")
+      if(ARCHITECTURE MATCHES "i.86")
+        set(ARCHITECTURE "x86")
+      endif()
     endif()
+    set(CPACK_SYSTEM_NAME "linux_${ARCHITECTURE}")
   elseif(TARGET_OS STREQUAL "mac")
     set(CPACK_SYSTEM_NAME "osx")
     set(CPACK_GENERATOR DMG)
@@ -1278,7 +1346,6 @@ foreach(str ${CPACK_SOURCE_FILES_INVERTED})
 endforeach()
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME ${PROJECT_NAME})
-install(TARGETS ${TARGET_CLIENT} ${TARGET_SERVER} DESTINATION bin)
 
 set(CPACK_TARGETS
   ${TARGET_CLIENT}
@@ -1300,13 +1367,22 @@ if(TARGET_OS STREQUAL "windows")
   list(APPEND CPACK_FILES other/config_directory.bat)
 endif()
 
-if(CMAKE_VERSION VERSION_GREATER 3.6 OR CMAKE_VERSION VERSION_EQUAL 3.6)
+if(NOT DEV)
+  install(DIRECTORY data DESTINATION share/ddnet COMPONENT data)
+  install(TARGETS ${TARGET_CLIENT} DESTINATION bin COMPONENT client)
+  install(TARGETS ${TARGET_SERVER} DESTINATION bin COMPONENT server)
+  install(TARGETS ${TARGETS_TOOLS} DESTINATION lib/ddnet COMPONENT tools)
+endif()
+
+if(DEV)
+  # Don't generate CPack targets.
+elseif(CMAKE_VERSION VERSION_LESS 3.6 OR CMAKE_VERSION VERSION_EQUAL 3.6)
+  message(WARNING "Cannot create CPack targets, CMake version too old. Use CMake 3.6 or newer.")
+else()
   set(EXTRA_ARGS DESTINATION ${CPACK_PACKAGE_FILE_NAME} COMPONENT portable EXCLUDE_FROM_ALL)
   install(TARGETS ${CPACK_TARGETS} ${EXTRA_ARGS})
   install(DIRECTORY ${CPACK_DIRS} ${EXTRA_ARGS})
   install(FILES ${CPACK_FILES} ${EXTRA_ARGS})
-else()
-  message(WARNING "Cannot create CPack targets, CMake version too old. Use CMake 3.6 or newer.")
 endif()
 
 set(PACKAGE_TARGETS)
@@ -1485,8 +1561,12 @@ foreach(target ${TARGETS_LINK})
   if(TARGET_OS STREQUAL "mac")
     target_link_libraries(${target} -stdlib=libc++)
     target_link_libraries(${target} -mmacosx-version-min=10.7)
+    # Fixes: Undefined symbols for architecture x86_64:
+    #   "___isOSVersionAtLeast", referenced from:
+    #       _singleipconnect in libcurl.a(libcurl_la-connect.o)
+    target_link_libraries(${target} -Wl,-undefined -Wl,dynamic_lookup)
   endif()
-  if(MINGW OR TARGET_OS STREQUAL "linux")
+  if((MINGW OR TARGET_OS STREQUAL "linux") AND PREFER_BUNDLED_LIBS)
     # Statically link the standard libraries with on MinGW/Linux so we don't
     # have to ship them as DLLs.
     target_link_libraries(${target} -static-libgcc)
@@ -1511,7 +1591,6 @@ foreach(target ${TARGETS_OWN})
   target_include_directories(${target} PRIVATE ${PROJECT_BINARY_DIR}/src)
   target_include_directories(${target} PRIVATE src)
   target_compile_definitions(${target} PRIVATE $<$<CONFIG:Debug>:CONF_DEBUG>)
-  target_include_directories(${target} PRIVATE ${CURL_INCLUDE_DIRS})
   target_include_directories(${target} PRIVATE ${ZLIB_INCLUDE_DIRS})
   target_compile_definitions(${target} PRIVATE GLEW_STATIC)
   if(CRYPTO_FOUND)
@@ -1524,6 +1603,9 @@ foreach(target ${TARGETS_OWN})
   if(MYSQL)
     target_compile_definitions(${target} PRIVATE CONF_SQL)
     target_include_directories(${target} PRIVATE ${MYSQL_INCLUDE_DIRS})
+  endif()
+  if(AUTOUPDATE)
+    target_compile_definitions(${target} PRIVATE CONF_AUTOUPDATE)
   endif()
 endforeach()
 
