@@ -146,6 +146,14 @@ class Weapon_Ninja(Struct):
 		self.movetime = Int(200)
 		self.velocity = Int(50)
 
+class Weapon_Foo(Struct):
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecFoo")
+		self.base = Pointer(WeaponSpec, WeaponSpec())
+		self.duration = Int(15000)
+		self.movetime = Int(200)
+		self.velocity = Int(50)
+
 class Weapons(Struct):
 	def __init__(self):
 		Struct.__init__(self, "CDataWeaponspecs")
@@ -155,6 +163,7 @@ class Weapons(Struct):
 		self.grenade = Weapon_Grenade()
 		self.rifle = Weapon_Rifle()
 		self.ninja = Weapon_Ninja()
+		self.foo = Weapon_Foo()
 		self.id = Array(WeaponSpec())
 
 class DataContainer(Struct):
@@ -347,6 +356,10 @@ container.sprites.Add(Sprite("weapon_rifle_body", set_game, 2,12,7,3))
 container.sprites.Add(Sprite("weapon_rifle_cursor", set_game, 0,12,2,2))
 container.sprites.Add(Sprite("weapon_rifle_proj", set_game, 10,12,2,2))
 
+container.sprites.Add(Sprite("weapon_foo_body", set_game, 2,12,7,3))
+container.sprites.Add(Sprite("weapon_foo_cursor", set_game, 0,12,2,2))
+container.sprites.Add(Sprite("weapon_foo_proj", set_game, 10,12,2,2))
+
 container.sprites.Add(Sprite("hook_chain", set_game, 2,0,1,1))
 container.sprites.Add(Sprite("hook_head", set_game, 3,0,2,1))
 
@@ -536,4 +549,15 @@ weapon.offsety.Set(0)
 weapon.muzzleoffsetx.Set(40)
 weapon.muzzleoffsety.Set(-4)
 container.weapons.ninja.base.Set(weapon)
+container.weapons.id.Add(weapon)
+
+weapon = WeaponSpec(container, "foo")
+weapon.firedelay.Set(800)
+weapon.damage.Set(9)
+weapon.visual_size.Set(96)
+weapon.offsetx.Set(0)
+weapon.offsety.Set(0)
+weapon.muzzleoffsetx.Set(40)
+weapon.muzzleoffsety.Set(-4)
+container.weapons.foo.base.Set(weapon)
 container.weapons.id.Add(weapon)
