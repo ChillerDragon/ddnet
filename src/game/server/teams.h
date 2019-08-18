@@ -18,8 +18,8 @@ class CGameTeams
 
 	void CheckTeamFinished(int ClientID);
 	bool TeamFinished(int Team);
-	void OnTeamFinish(CPlayer** Players, unsigned int Size, float Time, const char *pTimestamp);
-	void OnFinish(CPlayer* Player, float Time, const char *pTimestamp);
+	void OnTeamFinish(CPlayer** ppPlayers, unsigned int Size, float Time, const char *pTimestamp);
+	void OnFinish(CPlayer* pPlayer, float Time, const char *pTimestamp);
 
 public:
 	enum
@@ -77,12 +77,12 @@ public:
 
 	int m_LastChat[MAX_CLIENTS];
 
-	int GetDDRaceState(CPlayer* Player);
-	int GetStartTime(CPlayer* Player);
-	float *GetCpCurrent(CPlayer* Player);
-	void SetDDRaceState(CPlayer* Player, int DDRaceState);
-	void SetStartTime(CPlayer* Player, int StartTime);
-	void SetCpActive(CPlayer* Player, int CpActive);
+	int GetDDRaceState(CPlayer* pPlayer);
+	int GetStartTime(CPlayer* pPlayer);
+	float *GetCpCurrent(CPlayer* pPlayer);
+	void SetDDRaceState(CPlayer* pPlayer, int DDRaceState);
+	void SetStartTime(CPlayer* pPlayer, int StartTime);
+	void SetCpActive(CPlayer* pPlayer, int CpActive);
 	void KillSavedTeam(int Team);
 
 	bool TeeFinished(int ClientID)
