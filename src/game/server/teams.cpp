@@ -60,7 +60,7 @@ void CGameTeams::OnCharacterStart(int ClientID)
 			str_format(
 					aBuf,
 					sizeof(aBuf),
-					"%s has finished and didn't go through start yet, wait for him or join another team.",
+					"'%s' has finished and didn't go through start yet, wait for him or join another team.",
 					Server()->ClientName(i));
 			GameServer()->SendChatTarget(ClientID, aBuf);
 			m_LastChat[ClientID] = Tick;
@@ -72,7 +72,7 @@ void CGameTeams::OnCharacterStart(int ClientID)
 			str_format(
 					aBuf,
 					sizeof(aBuf),
-					"%s wants to start a new round, kill or walk to start.",
+					"'%s' wants to start a new round, kill or walk to start.",
 					Server()->ClientName(ClientID));
 			GameServer()->SendChatTarget(i, aBuf);
 			m_LastChat[i] = Tick;
@@ -477,7 +477,7 @@ void CGameTeams::OnTeamFinish(CPlayer** ppPlayers, unsigned int Size, float Time
 		{
 			SetForceCharacterTeam(ppPlayers[i]->GetCID(), 0);
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "%s joined team 0",
+			str_format(aBuf, sizeof(aBuf), "'%s' joined team 0",
 					GameServer()->Server()->ClientName(ppPlayers[i]->GetCID()));
 			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 		}
@@ -496,7 +496,7 @@ void CGameTeams::OnFinish(CPlayer* pPlayer, float Time, const char *pTimestamp)
 	char aBuf[128];
 	SetCpActive(pPlayer, -2);
 	str_format(aBuf, sizeof(aBuf),
-			"%s finished in: %d minute(s) %5.2f second(s)",
+			"'%s' finished in: %d minute(s) %5.2f second(s)",
 			Server()->ClientName(pPlayer->GetCID()), (int)Time / 60,
 			Time - ((int)Time / 60 * 60));
 	if (g_Config.m_SvHideScore || !g_Config.m_SvSaveWorseScores)
