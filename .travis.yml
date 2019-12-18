@@ -11,6 +11,7 @@ addons:
     - libgtest-dev
     - libsdl2-dev
 script:
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; brew install sdl2; brew install tree; fi
 - git submodule update --init --recursive
 - ls -lha ddnet-libs
 - echo "xxxx"
