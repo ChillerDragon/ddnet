@@ -100,6 +100,7 @@ void CGameClient::OnConsoleInit()
 
 	// make a list of all the systems, make sure to add them in the correct render order
 	m_All.Add(&m_Skins);
+	m_All.Add(&m_Skins7);
 	m_All.Add(&m_CountryFlags);
 	m_All.Add(&m_MapImages);
 	m_All.Add(&m_Effects); // doesn't render anything, just updates effects

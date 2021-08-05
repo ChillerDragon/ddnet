@@ -1816,6 +1816,8 @@ if(CLIENT)
     components/scoreboard.h
     components/skins.cpp
     components/skins.h
+    components/skins7.cpp
+    components/skins7.h
     components/sounds.cpp
     components/sounds.h
     components/spectator.cpp

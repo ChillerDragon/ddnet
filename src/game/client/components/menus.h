@@ -12,6 +12,7 @@
 #include <engine/shared/linereader.h>
 #include <engine/textrender.h>
 #include <game/client/components/mapimages.h>
+#include <game/client/components/skins7.h>
 
 #include <game/client/component.h>
 #include <game/client/ui.h>
@@ -346,6 +347,13 @@ protected:
 	bool m_NeedSendDummyinfo;
 	int m_SettingPlayerPage;
 
+	// skins 0.7
+	int m_TeePartSelected;
+	char m_aSaveSkinName[MAX_SKIN_ARRAY_SIZE];
+
+	bool m_RefreshSkinSelector;
+	const CSkins7::CSkin *m_pSelectedSkin;
+
 	//
 	bool m_EscapePressed;
 	bool m_EnterPressed;
@@ -516,6 +524,7 @@ protected:
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsDummyPlayer(CUIRect MainView);
 	void RenderSettingsTee(CUIRect MainView);
+	void RenderSettingsTee7(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
@@ -580,6 +589,7 @@ public:
 		SETTINGS_GENERAL,
 		SETTINGS_PLAYER,
 		SETTINGS_TEE,
+		SETTINGS_TEE_7,
 		SETTINGS_HUD,
 		SETTINGS_CONTROLS,
 		SETTINGS_GRAPHICS,

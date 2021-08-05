@@ -9,6 +9,7 @@
 #include <engine/graphics.h>
 #include <game/client/skin.h>
 #include <game/mapitems.h>
+#include <game/generated/protocol7.h>
 
 class CTeeRenderInfo
 {
@@ -19,6 +20,10 @@ public:
 		m_ColorFeet = ColorRGBA(1, 1, 1);
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
+
+		// 0.7
+		for(int i = 0; i < protocol7::NUM_SKINPARTS; i++)
+			m_aColors[i] = vec4(1,1,1,1);
 	};
 
 	CSkin::SSkinTextures m_OriginalRenderSkin;
@@ -33,6 +38,13 @@ public:
 	ColorRGBA m_ColorFeet;
 	float m_Size;
 	int m_GotAirJump;
+
+	// 0.7
+	IGraphics::CTextureHandle m_aTextures[protocol7::NUM_SKINPARTS];
+	IGraphics::CTextureHandle m_HatTexture;
+	IGraphics::CTextureHandle m_BotTexture;
+	vec4 m_BotColor;
+	vec4 m_aColors[protocol7::NUM_SKINPARTS];
 };
 
 // sprite renderings
@@ -110,6 +122,7 @@ public:
 	void GetRenderTeeOffsetToRenderedTee(class CAnimState *pAnim, CTeeRenderInfo *pInfo, vec2 &TeeOffsetToMid);
 	// object render methods (gc_render_obj.cpp)
 	void RenderTee(class CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha = 1.0f);
+	void RenderTee7(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
 
 	// map render methods (gc_render_map.cpp)
 	static void RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, int64_t TimeMicros, float *pResult);

@@ -1834,6 +1834,10 @@ void str_utf8_skeleton_begin(struct SKELETON *skel, const char *str);
 int str_utf8_skeleton_next(struct SKELETON *skel);
 int str_utf8_to_skeleton(const char *str, int *buf, int buf_len);
 
+enum
+{
+	UTF8_BYTE_LENGTH = 4
+};
 /*
 	Function: str_utf8_comp_confusable
 		Compares two strings for visual appearance.
@@ -2045,6 +2049,22 @@ int str_utf16le_encode(char *ptr, int chr);
 		- The string is treated as zero-terminated utf8 string.
 */
 int str_utf8_check(const char *str);
+
+/*
+	Function: str_utf8_copy_num
+		Copies a number of utf8 characters from one string to another.
+
+	Parameters:
+		dst - Pointer to a buffer that shall receive the string.
+		src - String to be copied.
+		dst_size - Size of the buffer dst.
+		num - maximum number of utf8 characters to be copied.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+		- Garantees that dst string will contain zero-termination.
+*/
+void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num);
 
 /*
 	Function: str_utf8_copy

@@ -106,7 +106,7 @@ MACRO_CONFIG_STR(ClSkinPrefix, cl_skin_prefix, 12, "", CFGFLAG_CLIENT | CFGFLAG_
 MACRO_CONFIG_INT(ClFatSkins, cl_fat_skins, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable fat skins")
 
 MACRO_CONFIG_INT(UiPage, ui_page, 9, 6, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface page")
-MACRO_CONFIG_INT(UiSettingsPage, ui_settings_page, 0, 0, 9, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface settings page")
+MACRO_CONFIG_INT(UiSettingsPage, ui_settings_page, 0, 0, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface settings page")
 MACRO_CONFIG_INT(UiToolboxPage, ui_toolbox_page, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toolbox page")
 MACRO_CONFIG_STR(UiServerAddress, ui_server_address, 64, "localhost:8303", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface server address")
 MACRO_CONFIG_INT(UiScale, ui_scale, 100, 50, 150, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Interface scale")
@@ -190,6 +190,27 @@ MACRO_CONFIG_INT(ClVideoShowHookCollOther, cl_video_show_hook_coll_other, 0, 0, 
 MACRO_CONFIG_INT(ClVideoShowDirection, cl_video_showdirection, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show other players' key presses when rendering video")
 MACRO_CONFIG_INT(ClVideoX264Crf, cl_video_crf, 18, 0, 51, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Set crf when encode video with libx264 (0 for highest quality, 51 for lowest)")
 MACRO_CONFIG_INT(ClVideoX264Preset, cl_video_preset, 5, 0, 9, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Set preset when encode video with libx264, default is 5 (medium), 0 is ultrafast, 9 is placebo (the slowest, not recommend)")
+
+// 0.7 skins
+MACRO_CONFIG_INT(PlayerColorBody, player_color_body, 0x1B6F74, 0, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player body color")
+MACRO_CONFIG_INT(PlayerColorMarking, player_color_marking, 0 /* TODO: support unsigned int*/, 0, 0, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player marking color")
+MACRO_CONFIG_INT(PlayerColorDecoration, player_color_decoration, 0x1B6F74, 0, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player decoration color")
+MACRO_CONFIG_INT(PlayerColorHands, player_color_hands, 0x1B759E, 0, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player hands color")
+MACRO_CONFIG_INT(PlayerColorFeet, player_color_feet, 0x1C873E, 0, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player feet color")
+MACRO_CONFIG_INT(PlayerColorEyes, player_color_eyes, 0x0000FF, 0, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player eyes color")
+MACRO_CONFIG_INT(PlayerUseCustomColorBody, player_use_custom_color_body, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggles usage of custom colors for body")
+MACRO_CONFIG_INT(PlayerUseCustomColorMarking, player_use_custom_color_marking, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggles usage of custom colors for marking")
+MACRO_CONFIG_INT(PlayerUseCustomColorDecoration, player_use_custom_color_decoration, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggles usage of custom colors for decoration")
+MACRO_CONFIG_INT(PlayerUseCustomColorHands, player_use_custom_color_hands, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggles usage of custom colors for hands")
+MACRO_CONFIG_INT(PlayerUseCustomColorFeet, player_use_custom_color_feet, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggles usage of custom colors for feet")
+MACRO_CONFIG_INT(PlayerUseCustomColorEyes, player_use_custom_color_eyes, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggles usage of custom colors for eyes")
+MACRO_CONFIG_STR(PlayerSkin, player_skin, 12, "default", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player skin")
+MACRO_CONFIG_STR(PlayerSkinBody, player_skin_body, 12, "standard", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player skin body")
+MACRO_CONFIG_STR(PlayerSkinMarking, player_skin_marking, 12, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player skin marking")
+MACRO_CONFIG_STR(PlayerSkinDecoration, player_skin_decoration, 12, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player skin decoration")
+MACRO_CONFIG_STR(PlayerSkinHands, player_skin_hands, 12, "standard", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player skin hands")
+MACRO_CONFIG_STR(PlayerSkinFeet, player_skin_feet, 12, "standard", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player skin feet")
+MACRO_CONFIG_STR(PlayerSkinEyes, player_skin_eyes, 12, "standard", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Player skin eyes")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

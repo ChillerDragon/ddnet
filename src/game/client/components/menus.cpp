@@ -81,6 +81,12 @@ CMenus::CMenus()
 	m_UseMouseButtons = true;
 	m_MouseSlow = false;
 
+	// skins 0.7
+	m_TeePartSelected = protocol7::SKINPART_BODY;
+	m_aSaveSkinName[0] = 0;
+	m_RefreshSkinSelector = true;
+	m_pSelectedSkin = 0;
+
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_DeletePressed = false;
