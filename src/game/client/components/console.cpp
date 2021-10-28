@@ -115,12 +115,12 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 {
 	bool Handled = false;
 
-	if(m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL)) // jump to spaces and special ASCII characters
+	if(m_pGameConsole->Input()->KeyIsPressed(TW_KEY_LCTRL)) // jump to spaces and special ASCII characters
 	{
 		int SearchDirection = 0;
-		if(m_pGameConsole->Input()->KeyPress(KEY_LEFT) || m_pGameConsole->Input()->KeyPress(KEY_BACKSPACE))
+		if(m_pGameConsole->Input()->KeyPress(TW_KEY_LEFT) || m_pGameConsole->Input()->KeyPress(TW_KEY_BACKSPACE))
 			SearchDirection = -1;
-		else if(m_pGameConsole->Input()->KeyPress(KEY_RIGHT) || m_pGameConsole->Input()->KeyPress(KEY_DELETE))
+		else if(m_pGameConsole->Input()->KeyPress(TW_KEY_RIGHT) || m_pGameConsole->Input()->KeyPress(TW_KEY_DELETE))
 			SearchDirection = 1;
 
 		if(SearchDirection != 0)
@@ -143,7 +143,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 			}
 
-			if(m_pGameConsole->Input()->KeyPress(KEY_BACKSPACE))
+			if(m_pGameConsole->Input()->KeyPress(TW_KEY_BACKSPACE))
 			{
 				if(m_Input.GetCursorOffset() != 0)
 				{
@@ -157,7 +157,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 			}
 
-			if(m_pGameConsole->Input()->KeyPress(KEY_DELETE))
+			if(m_pGameConsole->Input()->KeyPress(TW_KEY_DELETE))
 			{
 				if(m_Input.GetCursorOffset() != m_Input.GetLength())
 				{
@@ -176,7 +176,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			m_Input.SetCursorOffset(FoundAt);
 		}
 	}
-	if(m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(KEY_V))
+	if(m_pGameConsole->Input()->KeyIsPressed(TW_KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(TW_KEY_V))
 	{
 		const char *Text = m_pGameConsole->Input()->GetClipboardText();
 		if(Text)
@@ -203,30 +203,30 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			m_Input.Add(aLine);
 		}
 	}
-	else if(m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(KEY_C))
+	else if(m_pGameConsole->Input()->KeyIsPressed(TW_KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(TW_KEY_C))
 	{
 		m_pGameConsole->Input()->SetClipboardText(m_Input.GetString());
 	}
-	else if(m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(KEY_A))
+	else if(m_pGameConsole->Input()->KeyIsPressed(TW_KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(TW_KEY_A))
 	{
 		m_Input.SetCursorOffset(0);
 	}
-	else if(m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(KEY_E))
+	else if(m_pGameConsole->Input()->KeyIsPressed(TW_KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(TW_KEY_E))
 	{
 		m_Input.SetCursorOffset(m_Input.GetLength());
 	}
-	else if(m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(KEY_U))
+	else if(m_pGameConsole->Input()->KeyIsPressed(TW_KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(TW_KEY_U))
 	{
 		m_Input.DeleteUntilCursor();
 	}
-	else if(m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(KEY_K))
+	else if(m_pGameConsole->Input()->KeyIsPressed(TW_KEY_LCTRL) && m_pGameConsole->Input()->KeyPress(TW_KEY_K))
 	{
 		m_Input.DeleteFromCursor();
 	}
 
 	if(Event.m_Flags & IInput::FLAG_PRESS)
 	{
-		if(Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)
+		if(Event.m_Key == TW_KEY_RETURN || Event.m_Key == TW_KEY_KP_ENTER)
 		{
 			if(m_Input.GetString()[0] || (m_UsernameReq && !m_pGameConsole->Client()->RconAuthed() && !m_UserGot))
 			{
@@ -242,7 +242,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 
 			Handled = true;
 		}
-		else if(Event.m_Key == KEY_UP)
+		else if(Event.m_Key == TW_KEY_UP)
 		{
 			if(m_pHistoryEntry)
 			{
@@ -258,7 +258,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_Input.Set(m_pHistoryEntry);
 			Handled = true;
 		}
-		else if(Event.m_Key == KEY_DOWN)
+		else if(Event.m_Key == TW_KEY_DOWN)
 		{
 			if(m_pHistoryEntry)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
@@ -269,7 +269,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_Input.Clear();
 			Handled = true;
 		}
-		else if(Event.m_Key == KEY_TAB)
+		else if(Event.m_Key == TW_KEY_TAB)
 		{
 			if(m_Type == CGameConsole::CONSOLETYPE_LOCAL || m_pGameConsole->Client()->RconAuthed())
 			{
@@ -291,12 +291,12 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 			}
 		}
-		else if(Event.m_Key == KEY_PAGEUP)
+		else if(Event.m_Key == TW_KEY_PAGEUP)
 		{
 			++m_BacklogActPage;
 			m_pGameConsole->m_HasSelection = false;
 		}
-		else if(Event.m_Key == KEY_PAGEDOWN)
+		else if(Event.m_Key == TW_KEY_PAGEDOWN)
 		{
 			m_pGameConsole->m_HasSelection = false;
 			--m_BacklogActPage;
@@ -305,23 +305,23 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 		}
 		// in order not to conflict with CLineInput's handling of Home/End only
 		// react to it when the input is empty
-		else if(Event.m_Key == KEY_HOME && m_Input.GetString()[0] == '\0')
+		else if(Event.m_Key == TW_KEY_HOME && m_Input.GetString()[0] == '\0')
 		{
 			m_BacklogActPage = INT_MAX;
 			m_pGameConsole->m_HasSelection = false;
 		}
-		else if(Event.m_Key == KEY_END && m_Input.GetString()[0] == '\0')
+		else if(Event.m_Key == TW_KEY_END && m_Input.GetString()[0] == '\0')
 		{
 			m_BacklogActPage = 0;
 			m_pGameConsole->m_HasSelection = false;
 		}
-		else if(Event.m_Key == KEY_LSHIFT)
+		else if(Event.m_Key == TW_KEY_LSHIFT)
 		{
 			m_ReverseTAB = true;
 			Handled = true;
 		}
 	}
-	if(Event.m_Flags & IInput::FLAG_RELEASE && Event.m_Key == KEY_LSHIFT)
+	if(Event.m_Flags & IInput::FLAG_RELEASE && Event.m_Key == TW_KEY_LSHIFT)
 	{
 		m_ReverseTAB = false;
 		Handled = true;
@@ -332,7 +332,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 
 	if(Event.m_Flags & (IInput::FLAG_PRESS | IInput::FLAG_TEXT))
 	{
-		if((Event.m_Key != KEY_TAB) && (Event.m_Key != KEY_LSHIFT))
+		if((Event.m_Key != TW_KEY_TAB) && (Event.m_Key != TW_KEY_LSHIFT))
 		{
 			m_CompletionUsed = false;
 			m_CompletionChosen = -1;
@@ -673,7 +673,7 @@ void CGameConsole::OnRender()
 		float LineOffset = 1.0f;
 
 		bool WantsSelectionCopy = false;
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyPress(KEY_C))
+		if(Input()->KeyIsPressed(TW_KEY_LCTRL) && Input()->KeyPress(TW_KEY_C))
 			WantsSelectionCopy = true;
 		std::string SelectionString;
 
@@ -806,10 +806,10 @@ bool CGameConsole::OnInput(IInput::CEvent Event)
 	// accept input when opening, but not at first frame to discard the input that caused the console to open
 	if(m_ConsoleState != CONSOLE_OPEN && (m_ConsoleState != CONSOLE_OPENING || m_StateChangeEnd == TimeNow() + m_StateChangeDuration))
 		return false;
-	if((Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F12) || (Event.m_Key >= KEY_F13 && Event.m_Key <= KEY_F24))
+	if((Event.m_Key >= TW_KEY_F1 && Event.m_Key <= TW_KEY_F12) || (Event.m_Key >= TW_KEY_F13 && Event.m_Key <= TW_KEY_F24))
 		return false;
 
-	if(Event.m_Key == KEY_ESCAPE && (Event.m_Flags & IInput::FLAG_PRESS))
+	if(Event.m_Key == TW_KEY_ESCAPE && (Event.m_Flags & IInput::FLAG_PRESS))
 		Toggle(m_ConsoleType);
 	else
 		CurrentConsole()->OnInput(Event);
