@@ -248,6 +248,11 @@ void CInfoMessages::OnTeamKillMessage(const CNetMsg_Sv_KillMsgTeam *pMsg)
 
 void CInfoMessages::OnKillMessage(const CNetMsg_Sv_KillMsg *pMsg)
 {
+	const int InfClassModeSpecialSkip = 0x100;
+	if(pMsg->m_ModeSpecial == InfClassModeSpecialSkip)
+	{
+		return;
+	}
 	CInfoMsg Kill = CreateInfoMsg(TYPE_KILL);
 
 	if(GameClient()->m_aClients[pMsg->m_Victim].m_Active)
