@@ -409,7 +409,15 @@ void CPlayers::RenderHook(
 	float d = distance(Pos, HookPos);
 	vec2 Dir = normalize(Pos - HookPos);
 
-	Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookHead);
+	bool InfectedHook = pRenderInfo->m_InfectedHook;
+	if(InfectedHook)
+	{
+		Graphics()->TextureSet(GameClient()->m_InfclassSkin.m_SpriteHookHead);
+	}
+	else
+	{
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookHead);
+	}
 	Graphics()->QuadsSetRotation(angle(Dir) + pi);
 	// render head
 	int QuadOffset = NUM_WEAPONS * 2 + 2;
@@ -428,7 +436,14 @@ void CPlayers::RenderHook(
 		s_aHookChainRenderInfo[HookChainCount].m_Scale = 1;
 		s_aHookChainRenderInfo[HookChainCount].m_Rotation = angle(Dir) + pi;
 	}
-	Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookChain);
+	if(InfectedHook)
+	{
+		Graphics()->TextureSet(GameClient()->m_InfclassSkin.m_SpriteHookChain);
+	}
+	else
+	{
+		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookChain);
+	}
 	Graphics()->RenderQuadContainerAsSpriteMultiple(m_WeaponEmoteQuadContainerIndex, QuadOffset, HookChainCount, s_aHookChainRenderInfo);
 
 	Graphics()->QuadsSetRotation(0);
@@ -836,6 +851,12 @@ void CPlayers::OnRender()
 		aRenderInfo[i].m_TeeRenderFlags = 0;
 
 		// predict freeze skin only for local players
+
+		// const CGameClient::CClientData *pClientData = GameClient()->m_aClients[i];
+		aRenderInfo[i].m_InfectedHook = GameClient()->m_aClients[i].m_InfClassPlayerFlags & INFCLASS_PLAYER_FLAG_INFECTED;
+
+		// const bool Frozen = m_pClient->m_aClients[i].m_Predicted.m_FreezeEnd != 0;
+
 		bool Frozen = false;
 		if(i == GameClient()->m_aLocalIds[0] || i == GameClient()->m_aLocalIds[1])
 		{
