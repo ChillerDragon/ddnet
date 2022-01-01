@@ -112,6 +112,7 @@ void CHud::OnInit()
 	m_FlagOffset = Graphics()->QuadContainerAddSprite(m_HudQuadContainerIndex, 0.f, 0.f, 8.f, 16.f);
 
 	PreparePlayerStateQuads();
+	PrepareInfclassHudQuads();
 
 	Graphics()->QuadContainerUpload(m_HudQuadContainerIndex);
 }
@@ -708,6 +709,23 @@ void CHud::PrepareAmmoHealthAndArmorQuads()
 	for(int i = 0; i < 10; ++i)
 		Array[i] = IGraphics::CQuadItem(x + i * 12, y + 12, 12, 12);
 	Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, 10);
+}
+
+void CHud::PrepareInfclassHudQuads()
+{
+	float x = 5;
+	float y = 5;
+
+	y += 24 + 12;
+
+	IGraphics::CQuadItem Array[10];
+
+	int MaxStatusIcons = 4;
+	for(int i = 0; i < MaxStatusIcons; ++i)
+	{
+		Array[i] = IGraphics::CQuadItem(x + i * 24, y, g_Config.m_ClInfStatusSize, g_Config.m_ClInfStatusSize);
+	}
+	m_IcStatusIconOffset = Graphics()->QuadContainerAddQuads(m_HudQuadContainerIndex, Array, MaxStatusIcons);
 }
 
 void CHud::RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter)
@@ -1542,6 +1560,23 @@ void CHud::RenderMovementInformation()
 	}
 }
 
+void CHud::RenderStatusIcons(int ClientId)
+{
+	if(ClientId < 0)
+	{
+		return;
+	}
+
+	const CGameClient::CClientData *pClientData = &GameClient()->m_aClients[ClientId];
+	int InfclassPlayerFlags = pClientData->m_InfClassPlayerFlags;
+
+	if(InfclassPlayerFlags & INFCLASS_PLAYER_FLAG_HOOK_PROTECTION_OFF)
+	{
+		Graphics()->TextureSet(GameClient()->m_InfclassSkin.m_SpriteStatusHookable);
+		Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_IcStatusIconOffset, 1);
+	}
+}
+
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
@@ -1672,6 +1707,7 @@ void CHud::OnRender()
 			if(g_Config.m_ClShowhudHealthAmmo)
 			{
 				RenderAmmoHealthAndArmor(GameClient()->m_Snap.m_pLocalCharacter);
+				RenderStatusIcons(GameClient()->m_aLocalIds[g_Config.m_ClDummy]);
 			}
 			if(GameClient()->m_Snap.m_aCharacters[GameClient()->m_Snap.m_LocalClientId].m_HasExtendedData && g_Config.m_ClShowhudDDRace && GameClient()->m_GameInfo.m_HudDDRace)
 			{
@@ -1687,6 +1723,7 @@ void CHud::OnRender()
 			if(SpectatorId != SPEC_FREEVIEW && g_Config.m_ClShowhudHealthAmmo)
 			{
 				RenderAmmoHealthAndArmor(&GameClient()->m_Snap.m_aCharacters[SpectatorId].m_Cur);
+				RenderStatusIcons(SpectatorId);
 			}
 			if(SpectatorId != SPEC_FREEVIEW &&
 				GameClient()->m_Snap.m_aCharacters[SpectatorId].m_HasExtendedData &&
