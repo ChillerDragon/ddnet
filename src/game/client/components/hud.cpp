@@ -1577,6 +1577,34 @@ void CHud::RenderStatusIcons(int ClientId)
 	}
 }
 
+void CHud::RenderObjectOwnerIcons(int ClientId)
+{
+	if(ClientId < 0)
+		return;
+
+	int Icons = GameClient()->m_aClients[ClientId].m_OwnerIcons;
+	if(!Icons)
+		return;
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	float aPoints[4];
+	Graphics()->MapScreenToWorld(GameClient()->m_Camera.m_Center.x, GameClient()->m_Camera.m_Center.y, 100.0f, 100.0f, 100.0f, 0, 0, Graphics()->ScreenAspect(), 1.0f, aPoints);
+	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
+
+	CTeeRenderInfo RenderInfo = GameClient()->m_aClients[ClientId].m_RenderInfo;
+	RenderInfo.m_Size = 32;
+
+	for(int i = 0; i < Icons; ++i)
+	{
+		const vec2 &Pos = GameClient()->m_aClients[ClientId].m_aOwnerIconPositions[i];
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &RenderInfo, EMOTE_HAPPY, vec2(1, 0), Pos);
+	}
+
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+}
+
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
@@ -1708,6 +1736,7 @@ void CHud::OnRender()
 			{
 				RenderAmmoHealthAndArmor(GameClient()->m_Snap.m_pLocalCharacter);
 				RenderStatusIcons(GameClient()->m_aLocalIds[g_Config.m_ClDummy]);
+				RenderObjectOwnerIcons(GameClient()->m_aLocalIds[g_Config.m_ClDummy]);
 			}
 			if(GameClient()->m_Snap.m_aCharacters[GameClient()->m_Snap.m_LocalClientId].m_HasExtendedData && g_Config.m_ClShowhudDDRace && GameClient()->m_GameInfo.m_HudDDRace)
 			{
@@ -1724,6 +1753,7 @@ void CHud::OnRender()
 			{
 				RenderAmmoHealthAndArmor(&GameClient()->m_Snap.m_aCharacters[SpectatorId].m_Cur);
 				RenderStatusIcons(SpectatorId);
+				RenderObjectOwnerIcons(SpectatorId);
 			}
 			if(SpectatorId != SPEC_FREEVIEW &&
 				GameClient()->m_Snap.m_aCharacters[SpectatorId].m_HasExtendedData &&
