@@ -17,6 +17,7 @@ enum EMapImageModType
 	MAP_IMAGE_MOD_TYPE_RACE,
 	MAP_IMAGE_MOD_TYPE_BLOCKWORLDS,
 	MAP_IMAGE_MOD_TYPE_FNG,
+	MAP_IMAGE_MOD_TYPE_INFCLASS,
 	MAP_IMAGE_MOD_TYPE_VANILLA,
 	MAP_IMAGE_MOD_TYPE_FDDRACE,
 
@@ -29,6 +30,7 @@ constexpr const char *const gs_apModEntitiesNames[] = {
 	"race",
 	"blockworlds",
 	"fng",
+	"infclass",
 	"vanilla",
 	"f-ddrace",
 };
