@@ -4,7 +4,7 @@
 #define GAME_VERSION_H
 
 // ddnet
-#define GAME_NAME "DDNet"
+#define GAME_NAME "Infclass"
 #define DDNET_VERSION_NUMBER 19050
 extern const char *GIT_SHORTREV_HASH;
 #ifndef GAME_RELEASE_VERSION_INTERNAL
