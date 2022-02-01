@@ -123,6 +123,8 @@ void CGameClient::OnConsoleInit()
 					      &m_CountryFlags,
 					      &m_MapImages,
 					      &m_Effects, // doesn't render anything, just updates effects
+					      &m_InfCBinds,
+					      &m_InfCBinds.m_SpecialBinds,
 					      &m_Binds,
 					      &m_Binds.m_SpecialBinds,
 					      &m_Controls,
@@ -166,6 +168,7 @@ void CGameClient::OnConsoleInit()
 
 	// build the input stack
 	m_vpInput.insert(m_vpInput.end(), {&m_Menus.m_Binder, // this will take over all input when we want to bind a key
+						  &m_InfCBinds.m_SpecialBinds,
 						  &m_Binds.m_SpecialBinds,
 						  &m_GameConsole,
 						  &m_Chat, // chat has higher prio, due to that you can quit it by pressing esc
@@ -175,6 +178,7 @@ void CGameClient::OnConsoleInit()
 						  &m_Menus,
 						  &m_Controls,
 						  &m_TouchControls,
+						  &m_InfCBinds,
 						  &m_Binds});
 
 	// initialize client data
