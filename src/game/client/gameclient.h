@@ -45,6 +45,7 @@
 #include "components/ghost.h"
 #include "components/hud.h"
 #include "components/infc_binds.h"
+#include "components/infc_commands.h"
 #include "components/infomessages.h"
 #include "components/items.h"
 #include "components/local_server.h"
@@ -144,6 +145,7 @@ public:
 	CCamera m_Camera;
 	CChat m_Chat;
 	CCensor m_Censor;
+	CInfCCommands m_InfCCommands;
 	CMotd m_Motd;
 	CBroadcast m_Broadcast;
 	CGameConsole m_GameConsole;
