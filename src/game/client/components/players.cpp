@@ -480,6 +480,10 @@ void CPlayers::RenderPlayer(
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
+	if(PlayerClass == PLAYERCLASS_BOOMER)
+	{
+		RenderInfo.m_Size = 68.0f;
+	}
 
 	if(ClientId >= 0)
 		Intra = GameClient()->m_aClients[ClientId].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy);
