@@ -183,7 +183,11 @@ private:
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
+#ifdef CONF_HEADLESS_CLIENT
+	CUINull m_UI;
+#else
 	CUI m_UI;
+#endif
 
 	void ProcessEvents();
 	void UpdatePositions();

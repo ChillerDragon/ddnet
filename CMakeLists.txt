@@ -1893,6 +1893,7 @@ if(CLIENT)
     ui.h
     ui_ex.cpp
     ui_ex.h
+    ui_null.h
   )
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp

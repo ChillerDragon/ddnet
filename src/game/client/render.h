@@ -4,6 +4,7 @@
 #define GAME_CLIENT_RENDER_H
 
 #include "ui.h"
+#include "ui_null.h"
 #include <base/color.h>
 #include <base/vmath.h>
 #include <engine/graphics.h>
