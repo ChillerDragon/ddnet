@@ -75,7 +75,11 @@ CMenus::CMenus()
 	m_NeedRestartSound = false;
 	m_NeedSendinfo = false;
 	m_NeedSendDummyinfo = false;
+#ifdef CONF_HEADLESS_CLIENT
+	m_MenuActive = false;
+#else
 	m_MenuActive = true;
+#endif
 	m_ShowStart = true;
 	m_UseMouseButtons = true;
 
@@ -2340,6 +2344,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 void CMenus::SetActive(bool Active)
 {
+#ifndef CONF_HEADLESS_CLIENT
 	if(Active != m_MenuActive)
 	{
 		ms_ColorPicker.m_Active = false;
@@ -2369,6 +2374,7 @@ void CMenus::SetActive(bool Active)
 	{
 		m_pClient->OnRelease();
 	}
+#endif
 }
 
 void CMenus::OnReset()
