@@ -535,6 +535,12 @@ void CPlayers::RenderPlayer(
 	if(RunTime < 0.0f)
 		RunTime += 1.0f;
 
+	if(PlayerClass == PLAYERCLASS_GHOST)
+	{
+		RunTime = 0;
+		WalkTime = 0;
+	}
+
 	CAnimState State;
 	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0.0f);
 
