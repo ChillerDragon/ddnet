@@ -3291,6 +3291,12 @@ void CGameClient::UpdateLocalTuning()
 	if(!m_GameWorld.m_WorldConfig.m_UseTuneZones)
 		m_GameWorld.TuningList()[0] = m_aTuning[g_Config.m_ClDummy];
 
+	if(m_GameInfo.m_InfClass)
+	{
+		m_GameWorld.GetTuning(0)->m_PlayerCollision = 1;
+		m_GameWorld.GetTuning(0)->m_PlayerHooking = 1;
+	}
+	
 	if(!m_Snap.m_pLocalCharacter && !m_Snap.m_pSpectatorInfo)
 		return;
 
