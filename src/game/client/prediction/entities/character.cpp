@@ -12,6 +12,8 @@
 #include <game/collision.h>
 #include <game/mapitems.h>
 
+#include <game/classes.h>
+
 // Character, "physical" player's part
 
 void CCharacter::SetWeapon(int Weapon)
@@ -1258,6 +1260,8 @@ CCharacter::CCharacter(CGameWorld *pGameWorld, int Id, CNetObj_Character *pChar,
 	m_Input.m_TargetY = -1;
 
 	m_LatestPrevInput = m_LatestInput = m_PrevInput = m_SavedInput = m_Input;
+
+	m_InfClassClass = PLAYERCLASS_INVALID;
 
 	ResetPrediction();
 	Read(pChar, pExtended, false);

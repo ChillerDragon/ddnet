@@ -135,6 +135,9 @@ public:
 
 	bool IsSuper() const { return m_Core.m_Super; }
 
+	int GetPlayerClass() const { return m_InfClassClass; }
+	int m_InfClassClass;
+
 private:
 	// weapon info
 	int m_aHitObjects[10];
