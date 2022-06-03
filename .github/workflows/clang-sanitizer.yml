@@ -45,4 +45,10 @@ jobs:
         fi
     - name: Run integration tests with ASan and UBSan
       run: |
-        scripts/integration_test.sh san
+        scripts/integration_test.sh san || {
+          if test -n "$(find . -maxdepth 1 -name 'SAN.*' -print -quit)";
+          then;
+            cat ./SAN.*;
+            exit 1;
+          fi;
+        }
