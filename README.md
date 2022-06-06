@@ -42,6 +42,10 @@ Or on CentOS, RedHat and AlmaLinux like this:
 
     sudo yum install gcc gcc-c++ make cmake git python2 gtest-devel gmock-devel libcurl-devel openssl-devel freetype-devel glew-devel libnotify-devel libogg-devel opus-devel opusfile-devel pnglite-devel SDL2-devel sqlite-devel wavpack-devel libx264-devel ffmpeg-devel vulkan-devel glslang spirv-tools
 
+Or on openSUSE like this:
+
+    zypper install devel_basis freetype2 git glew gmock libnotify opusfile python SDL2 sqlite wavpack x264 ffmpeg vulkan-icd-loader vulkan-headers glslang spirv-tools
+
 Or on Arch Linux like this:
 
     sudo pacman -S --needed base-devel cmake curl freetype2 git glew gmock libnotify opusfile python sdl2 sqlite wavpack x264 ffmpeg vulkan-icd-loader vulkan-headers glslang spirv-tools
