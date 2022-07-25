@@ -53,7 +53,7 @@ int main(int argc, const char **argv)
 
 	g_NetOp.Update();
 
-	while(g_NetOp.Recv(&Packet))
+	while(g_NetOp.Recv(&Packet, nullptr, false))
 	{
 		if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(Packet.m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 		{

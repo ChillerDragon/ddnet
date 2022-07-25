@@ -135,6 +135,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	char m_aConnectAddressStr[MAX_SERVER_ADDRESSES * NETADDR_MAXSTRSIZE];
 
 	CUuid m_ConnectionID;
+	bool m_Sixup;
 
 	bool m_HaveGlobalTcpAddr = false;
 	NETADDR m_GlobalTcpAddr;
@@ -182,6 +183,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	//
 	char m_aCmdConnect[256];
+	bool m_SixupConnect;
 	char m_aCmdPlayDemo[IO_MAX_PATH_LENGTH];
 	char m_aCmdEditMap[IO_MAX_PATH_LENGTH];
 
@@ -322,6 +324,7 @@ public:
 	int SendMsgActive(CMsgPacker *pMsg, int Flags) override;
 
 	void SendInfo();
+	void SendInfo7();
 	void SendEnterGame(int Conn);
 	void SendReady();
 	void SendMapRequest();
@@ -352,7 +355,7 @@ public:
 	void OnEnterGame(bool Dummy);
 	void EnterGame(int Conn) override;
 
-	void Connect(const char *pAddress, const char *pPassword = nullptr) override;
+	void Connect(const char *pAddress, bool Sixup, const char *pPassword = nullptr) override;
 	void DisconnectWithReason(const char *pReason);
 	void Disconnect() override;
 
@@ -406,6 +409,8 @@ public:
 	bool IsDDNetInfoChanged();
 	void FinishDDNetInfo();
 	void LoadDDNetInfo();
+
+	bool IsSixup() override { return m_Sixup; };
 
 	const NETADDR &ServerAddress() const override { return *m_aNetClient[CONN_MAIN].ServerAddress(); }
 	int ConnectNetTypes() const override;

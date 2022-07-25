@@ -73,7 +73,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		const char *pAddr = ServerBrowser()->GetTutorialServer();
 		if(pAddr)
 		{
-			Client()->Connect(pAddr);
+			Client()->Connect(pAddr, false /* TODO: sixup */);
 			s_JoinTutorialTime = 0.0f;
 		}
 		else if(s_JoinTutorialTime == 0.0f)

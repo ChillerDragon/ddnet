@@ -1605,6 +1605,23 @@ const char *str_rchr(const char *haystack, char needle);
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
 /*
+	Function: str_raw
+		get all printable chars of raw data
+		and use dot for unprintables
+
+	Parameters:
+		dst - Buffer to fill with raw data
+		dst_size - size of the buffer
+		data - Data to turn into raw
+		data - Size of the data
+
+	Remarks:
+		- The destination buffer will be zero-terminated
+*/
+void str_raw(char *dst, int dst_size, const void *data, int data_size); // TODO: chiller remove
+void print_raw(const char *sys, const char *prefix, const void *data, int data_size); // TODO: chiller remove
+
+/*
 	Function: str_hex_decode
 		Takes a hex string *without spaces between bytes* and returns a
 		byte array.

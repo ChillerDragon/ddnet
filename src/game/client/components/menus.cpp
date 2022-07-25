@@ -1336,7 +1336,7 @@ int CMenus::Render()
 			m_JoinTutorial = false;
 			const char *pAddr = ServerBrowser()->GetTutorialServer();
 			if(pAddr)
-				Client()->Connect(pAddr);
+				Client()->Connect(pAddr, false /* TODO: sixup */);
 		}
 		if(m_ShowStart && Client()->State() == IClient::STATE_OFFLINE)
 		{
@@ -2284,7 +2284,7 @@ int CMenus::Render()
 
 			static CButtonContainer s_ButtonTryAgain;
 			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
-				Client()->Connect(m_aNextServer);
+				Client()->Connect(m_aNextServer, false /* TODO: sixup */);
 		}
 		else
 		{

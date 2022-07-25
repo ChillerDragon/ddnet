@@ -149,7 +149,7 @@ public:
 	inline float FrameTimeAvg() const { return m_FrameTimeAvg; }
 
 	// actions
-	virtual void Connect(const char *pAddress, const char *pPassword = nullptr) = 0;
+	virtual void Connect(const char *pAddress, bool Sixup, const char *pPassword = nullptr) = 0;
 	virtual void Disconnect() = 0;
 
 	// dummy
@@ -256,6 +256,8 @@ public:
 	virtual SHA256_DIGEST GetCurrentMapSha256() const = 0;
 	virtual unsigned GetCurrentMapCrc() const = 0;
 
+	virtual bool IsSixup() = 0;
+
 	virtual int GetCurrentRaceTime() = 0;
 
 	virtual void RaceRecord_Start(const char *pFilename) = 0;
@@ -321,6 +323,8 @@ public:
 	virtual bool IsDisplayingWarning() = 0;
 
 	virtual CNetObjHandler *GetNetObjHandler() = 0;
+
+	virtual int ClientVersion() const = 0;
 };
 
 void SnapshotRemoveExtraProjectileInfo(unsigned char *pData);

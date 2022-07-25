@@ -490,7 +490,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				str_copy(m_aNextServer, g_Config.m_UiServerAddress);
 			}
 			else
-				Client()->Connect(g_Config.m_UiServerAddress);
+				Client()->Connect(g_Config.m_UiServerAddress, false /* TODO: sixup */);
 		}
 	}
 
@@ -666,7 +666,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				str_copy(m_aNextServer, g_Config.m_UiServerAddress);
 			}
 			else
-				Client()->Connect(g_Config.m_UiServerAddress);
+				Client()->Connect(g_Config.m_UiServerAddress, false /* TODO: sixup */);
 			m_EnterPressed = false;
 		}
 	}

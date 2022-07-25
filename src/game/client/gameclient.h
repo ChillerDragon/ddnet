@@ -480,10 +480,12 @@ public:
 	const char *NetVersion() const override;
 	int DDNetVersion() const override;
 	const char *DDNetVersionStr() const override;
+	virtual int ClientVersion() const override;
 
 	// actions
 	// TODO: move these
 	void SendSwitchTeam(int Team);
+	void SendStartInfo7();
 	void SendInfo(bool Start);
 	void SendDummyInfo(bool Start) override;
 	void SendKill(int ClientID);

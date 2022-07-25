@@ -35,6 +35,9 @@
 #include <game/mapitems.h>
 #include <game/version.h>
 
+#include <game/generated/protocol7.h>
+#include <game/generated/protocolglue.h>
+
 #include "components/background.h"
 #include "components/binds.h"
 #include "components/broadcast.h"
@@ -77,6 +80,7 @@ const char *CGameClient::Version() const { return GAME_VERSION; }
 const char *CGameClient::NetVersion() const { return GAME_NETVERSION; }
 int CGameClient::DDNetVersion() const { return CLIENT_VERSIONNR; }
 const char *CGameClient::DDNetVersionStr() const { return m_aDDNetVersionStr; }
+int CGameClient::ClientVersion() const { return CLIENT_VERSION; }
 const char *CGameClient::GetItemName(int Type) const { return m_NetObjHandler.GetObjName(Type); }
 
 void CGameClient::OnConsoleInit()
@@ -2075,8 +2079,29 @@ void CGameClient::SendSwitchTeam(int Team)
 		m_Camera.OnReset();
 }
 
+void CGameClient::SendStartInfo7()
+{
+	protocol7::CNetMsg_Cl_StartInfo Msg;
+	Msg.m_pName = Config()->m_PlayerName;
+	Msg.m_pClan = Config()->m_PlayerClan;
+	Msg.m_Country = Config()->m_PlayerCountry;
+	static const int NUM_SKINPARTS = 6;
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		Msg.m_apSkinPartNames[p] = "default";
+		Msg.m_aUseCustomColors[p] = 0;
+		Msg.m_aSkinPartColors[p] = 0;
+	}
+	Client()->SendPackMsgActive(&Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
+}
+
 void CGameClient::SendInfo(bool Start)
 {
+	if(m_pClient->IsSixup())
+	{
+		SendStartInfo7();
+		return;
+	}
 	if(Start)
 	{
 		CNetMsg_Cl_StartInfo Msg;

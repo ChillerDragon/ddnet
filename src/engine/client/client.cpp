@@ -49,6 +49,11 @@
 #include <engine/shared/snapshot.h>
 #include <engine/shared/uuid_manager.h>
 
+#include <engine/shared/protocol.h>
+#include <game/generated/protocol.h>
+#include <game/generated/protocol7.h>
+#include <game/generated/protocolglue.h>
+
 #include <game/localization.h>
 #include <game/version.h>
 
@@ -347,6 +352,7 @@ CClient::CClient() :
 	m_aCurrentMap[0] = 0;
 
 	m_aCmdConnect[0] = 0;
+	m_SixupConnect = false;
 
 	// map download
 	m_aMapdownloadFilename[0] = 0;
@@ -412,15 +418,68 @@ CClient::CClient() :
 	m_BenchmarkStopTime = 0;
 
 	mem_zero(&m_Checksum, sizeof(m_Checksum));
+
+	m_Sixup = false;
 }
 
 // ----- send functions -----
-static inline bool RepackMsg(const CMsgPacker *pMsg, CPacker &Packer)
+static inline bool RepackMsg(const CMsgPacker *pMsg, CPacker &Packer, bool Sixup)
 {
+	int MsgId = pMsg->m_MsgID;
 	Packer.Reset();
+
+	if(Sixup && !pMsg->m_NoTranslate)
+	{
+		if(pMsg->m_System)
+		{
+			if(MsgId >= OFFSET_UUID) // TODO: this still by learath2 do we need dis?
+				;
+			else if(MsgId == NETMSG_INFO)
+				;
+			else if(MsgId == NETMSG_READY)
+				MsgId += 4;
+			else if(MsgId == NETMSG_RCON_CMD)
+				MsgId = 21; // 17 -> NETMSG_RCON_CMD
+			else if(MsgId == NETMSG_ENTERGAME)
+				MsgId = 19; //15 -> 19
+			else if(MsgId >= NETMSG_MAP_CHANGE && MsgId <= NETMSG_MAP_DATA) // TODO: this still by learath2 do we need dis?
+			{
+				dbg_msg("network_out", "msg=%d unchanged", MsgId);
+			}
+			else if(MsgId >= NETMSG_CON_READY && MsgId <= NETMSG_INPUTTIMING) // TODO: this still by learath2 do we need dis?
+			{
+				dbg_msg("network_out", "msg=%d increment by one", MsgId);
+				MsgId += 1;
+			}
+			else
+			{
+				dbg_msg("net", "DROP send sys %d", MsgId);
+				return true;
+			}
+		}
+		else
+		{
+			if(MsgId == 27) // 27 is NETMSGTYPE_CL_STARTINFO TODO: this should use Msg_SixToSeven or enums or anything other than magic numbers
+			{
+				dbg_msg("network_out", "do not translate MsgId=%d (NETMSGTYPE_CL_STARTINFO)", MsgId);
+			}
+			else if(MsgId >= 0 && MsgId < OFFSET_UUID)
+			{
+				dbg_msg("network_out", "SixToSeven MsgId=%d -> SevenId=%d", MsgId, Msg_SixToSeven(MsgId));
+				MsgId = Msg_SixToSeven(MsgId);
+			}
+
+			if(MsgId < 0)
+			{
+				dbg_msg("network_out", "MsgId < 0 id=%d", MsgId);
+				return true;
+			}
+		}
+	}
+
 	if(pMsg->m_MsgID < OFFSET_UUID)
 	{
-		Packer.AddInt((pMsg->m_MsgID << 1) | (pMsg->m_System ? 1 : 0));
+		Packer.AddInt((MsgId << 1) | (pMsg->m_System ? 1 : 0));
 	}
 	else
 	{
@@ -428,7 +487,6 @@ static inline bool RepackMsg(const CMsgPacker *pMsg, CPacker &Packer)
 		g_UuidManager.PackUuid(pMsg->m_MsgID, &Packer);
 	}
 	Packer.AddRaw(pMsg->Data(), pMsg->Size());
-
 	return false;
 }
 
@@ -441,7 +499,7 @@ int CClient::SendMsg(int Conn, CMsgPacker *pMsg, int Flags)
 
 	// repack message (inefficient)
 	CPacker Pack;
-	if(RepackMsg(pMsg, Pack))
+	if(RepackMsg(pMsg, Pack, IsSixup()))
 		return 0;
 
 	mem_zero(&Packet, sizeof(CNetChunk));
@@ -485,6 +543,15 @@ void CClient::SendInfo()
 	CMsgPacker Msg(NETMSG_INFO, true);
 	Msg.AddString(GameClient()->NetVersion(), 128);
 	Msg.AddString(m_aPassword, 128);
+	SendMsg(CONN_MAIN, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
+}
+
+void CClient::SendInfo7()
+{
+	CMsgPacker Msg(NETMSG_INFO, true);
+	Msg.AddString(GAME_NETVERSION7, 128);
+	Msg.AddString(Config()->m_Password, 128);
+	Msg.AddInt(GameClient()->ClientVersion());
 	SendMsg(CONN_MAIN, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 }
 
@@ -752,7 +819,7 @@ void CClient::GenerateTimeoutCodes(const NETADDR *pAddrs, int NumAddrs)
 	}
 }
 
-void CClient::Connect(const char *pAddress, const char *pPassword)
+void CClient::Connect(const char *pAddress, bool Sixup, const char *pPassword)
 {
 	Disconnect();
 
@@ -819,7 +886,16 @@ void CClient::Connect(const char *pAddress, const char *pPassword)
 	m_UseTempRconCommands = 0;
 	m_pConsole->DeregisterTempAll();
 
-	m_aNetClient[CONN_MAIN].Connect(aConnectAddrs, NumConnectAddrs);
+	if(Sixup)
+	{
+		m_aNetClient[CONN_MAIN].Connect7(aConnectAddrs, NumConnectAddrs);
+		m_Sixup = true;
+	}
+	else
+	{
+		m_aNetClient[CONN_MAIN].Connect(aConnectAddrs, NumConnectAddrs);
+		m_Sixup = false;
+	}
 	m_aNetClient[CONN_MAIN].RefreshStun();
 	SetState(IClient::STATE_CONNECTING);
 
@@ -1632,6 +1708,30 @@ static CServerCapabilities GetServerCapabilities(int Version, int Flags)
 	return Result;
 }
 
+static inline int MsgFromSixup(int Msg, bool System)
+{
+	if(System)
+	{
+		if(Msg >= NETMSG_INFO && Msg <= NETMSG_MAP_DATA)
+			dbg_msg("network_in", "msg=%d is same in 0.6 and 0.7", Msg);
+		else if(Msg - 1 == NETMSG_CON_READY) // TODO: do this smart and +1 all after ready
+		{
+			Msg -= 1;
+		}
+		else if(Msg < OFFSET_UUID) // learath2
+		{
+			dbg_msg("network_in", "drop=%d", Msg);
+			return -1;
+		}
+		else
+		{
+			dbg_msg("network_in", "weird msg=%d", Msg);
+		}
+	}
+
+	return Msg;
+}
+
 void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 {
 	CUnpacker Unpacker;
@@ -1646,12 +1746,21 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 	int Result = UnpackMessageID(&Msg, &Sys, &Uuid, &Unpacker, &Packer);
 	if(Result == UNPACKMESSAGE_ERROR)
 	{
+		dbg_msg("network_in", "Unpack error");
 		return;
 	}
 	else if(Result == UNPACKMESSAGE_ANSWER)
 	{
 		SendMsg(Conn, &Packer, MSGFLAG_VITAL);
 	}
+
+	if(IsSixup() && (Msg = MsgFromSixup(Msg, Sys)) < 0)
+	{
+		dbg_msg("network_in", "dropped invalid system message=%d sys=%d", Msg, Sys);
+		return;
+	}
+
+	dbg_msg("network_in", "sys=%d Msg=%d (mapchange=2) flags=%d %s", Sys, Msg, pPacket->m_Flags, pPacket->m_Flags & NET_CHUNKFLAG_VITAL ? "vital" : "not vital");
 
 	if(Sys)
 	{
@@ -1690,6 +1799,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		}
 		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MAP_CHANGE)
 		{
+			dbg_msg("network_in", "GOT MAPCHANGE");
 			if(m_CanReceiveServerCapabilities)
 			{
 				m_ServerCapabilities = GetServerCapabilities(0, 0);
@@ -2553,25 +2663,34 @@ void CClient::PumpNetwork()
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", "connected, sending info", gs_ClientNetworkPrintColor);
 			SetState(IClient::STATE_LOADING);
 			SetLoadingStateDetail(IClient::LOADING_STATE_DETAIL_INITIAL);
-			SendInfo();
+			if(IsSixup())
+				SendInfo7();
+			else
+				SendInfo();
 		}
 	}
 
+	// dbg_msg("network_in", "about to process packets ..."); // gets hit
+
 	// process packets
 	CNetChunk Packet;
+	SECURITY_TOKEN ResponseToken;
 	for(int i = 0; i < NUM_CONNS; i++)
 	{
-		while(m_aNetClient[i].Recv(&Packet))
+		while(m_aNetClient[i].Recv(&Packet, &ResponseToken, IsSixup()))
 		{
 			if(Packet.m_ClientID == -1)
 			{
+				dbg_msg("network_in", "abort srv pack it connless");
 				ProcessConnlessPacket(&Packet);
 				continue;
 			}
 			if(i > 1)
 			{
+				dbg_msg("network_in", "abort srv pack i=%d", i);
 				continue;
 			}
+			dbg_msg("network_in", "process server pack");
 			ProcessServerPacket(&Packet, i, g_Config.m_ClDummy ^ i);
 		}
 	}
@@ -2871,7 +2990,7 @@ void CClient::Update()
 			if(Now > ActionTaken + time_freq() * 2)
 			{
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "stress", "reconnecting!");
-				Connect(g_Config.m_DbgStressServer);
+				Connect(g_Config.m_DbgStressServer, false);
 				ActionTaken = Now;
 			}
 		}
@@ -2961,7 +3080,7 @@ void CClient::Update()
 	if(m_ReconnectTime > 0 && time_get() > m_ReconnectTime)
 	{
 		if(State() != STATE_ONLINE)
-			Connect(m_aConnectAddressStr);
+			Connect(m_aConnectAddressStr, IsSixup());
 		m_ReconnectTime = 0;
 	}
 
@@ -3194,8 +3313,9 @@ void CClient::Run()
 		if(m_aCmdConnect[0])
 		{
 			str_copy(g_Config.m_UiServerAddress, m_aCmdConnect);
-			Connect(m_aCmdConnect);
+			Connect(m_aCmdConnect, m_SixupConnect);
 			m_aCmdConnect[0] = 0;
+			m_SixupConnect = false;
 		}
 
 		// handle pending demo play
@@ -3506,6 +3626,7 @@ void CClient::Con_Connect(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	str_copy(pSelf->m_aCmdConnect, pResult->GetString(0));
+	pSelf->m_SixupConnect = str_find(pResult->GetString(1), "7");
 }
 
 void CClient::Con_Disconnect(IConsole::IResult *pResult, void *pUserData)
@@ -4461,7 +4582,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT | CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT | CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT | CFGFLAG_STORE, Con_Minimize, this, "Minimize Teeworlds");
-	m_pConsole->Register("connect", "r[host|ip]", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip");
+	m_pConsole->Register("connect", "s[host|ip] ?s[0.6|0.7]", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip");
 	m_pConsole->Register("disconnect", "", CFGFLAG_CLIENT, Con_Disconnect, this, "Disconnect from the server");
 	m_pConsole->Register("ping", "", CFGFLAG_CLIENT, Con_Ping, this, "Ping the current server");
 	m_pConsole->Register("screenshot", "", CFGFLAG_CLIENT, Con_Screenshot, this, "Take a screenshot");
