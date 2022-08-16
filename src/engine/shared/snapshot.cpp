@@ -10,6 +10,8 @@
 #include <base/system.h>
 #include <game/generated/protocolglue.h>
 
+#include <base/dissector/dissector.h>
+
 // CSnapshot
 
 CSnapshotItem *CSnapshot::GetItem(int Index) const
@@ -374,11 +376,17 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 
 		const int Type = *pData++;
 		if(Type < 0 || Type > CSnapshot::MAX_TYPE)
+		{
+			dbg_msg("network_in", "  here 1");
 			return -3;
+		}
 
 		const int ID = *pData++;
 		if(ID < 0 || ID > CSnapshot::MAX_ID)
+		{
+			dbg_msg("network_in", "  here 2");
 			return -3;
+		}
 
 		int ItemSize;
 		if(Type < MAX_NETOBJSIZES && m_aItemSizes[Type])
@@ -388,12 +396,32 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 			if(pData + 1 > pEnd)
 				return -2;
 			if(*pData < 0 || *pData > INT_MAX / 4)
+			{
+				dbg_msg("network_in", "  here 3");
 				return -3;
+			}
 			ItemSize = (*pData++) * 4;
 		}
 
 		if(ItemSize < 0 || RangeCheck(pEnd, pData, ItemSize))
+		{
+			if(ItemSize < 0)
+				dbg_msg("network_in", "  ItemSize=%d (should not be negative)", ItemSize);
+			else
+			{
+				char aHexData[512];
+				str_hex(aHexData, sizeof(aHexData), pData, ItemSize);
+				dbg_msg("network_in", "  RangeCheck(ItemSize=%d) failed", ItemSize);
+				print_raw("network_in", "    pData: ", pData, ItemSize);
+				print_raw("network_in", "    pEnd: ", pEnd, ItemSize);
+				dbg_msg("network_in", "    (const char *)pData + Size > (const char *)pEnd");
+				dbg_msg("network_in", "    %s + %d > %s", (const char *)pData, ItemSize, (const char *)pEnd);
+				dbg_msg("network_in", "    %s > %s", (const char *)pData + ItemSize, (const char *)pEnd);
+				// dbg_msg("network_in", "    %x > %x", (const char *)pData + ItemSize, (const char *)pEnd);
+			}
+
 			return -3;
+		}
 
 		const int Key = (Type << 16) | ID;
 

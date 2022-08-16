@@ -1618,8 +1618,6 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 	Remarks:
 		- The destination buffer will be zero-terminated
 */
-void str_raw(char *dst, int dst_size, const void *data, int data_size); // TODO: chiller remove
-void print_raw(const char *sys, const char *prefix, const void *data, int data_size); // TODO: chiller remove
 
 /*
 	Function: str_hex_decode

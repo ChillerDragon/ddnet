@@ -2998,24 +2998,6 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 	}
 }
 
-// TODO: chiller remove
-void str_raw(char *dst, int dst_size, const void *data, int data_size)
-{
-	int i;
-	const unsigned char *pdat = (const unsigned char *)data;
-	for(i = 0; i < data_size && i < dst_size - 1; i++)
-		dst[i] = (pdat[i] < 32 || pdat[i] > 126) ? '.' : pdat[i];
-	dst[i] = '\0';
-}
-
-// TODO: chiller remove
-void print_raw(const char *sys, const char *prefix, const void *data, int data_size)
-{
-	char aRaw[1024];
-	str_raw(aRaw, sizeof(aRaw), data, data_size);
-	dbg_msg(sys, "%s%s", prefix, aRaw);
-}
-
 static int hexval(char x)
 {
 	switch(x)

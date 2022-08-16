@@ -87,6 +87,9 @@ using namespace std::chrono_literals;
 static const ColorRGBA gs_ClientNetworkPrintColor{0.7f, 1, 0.7f, 1.0f};
 static const ColorRGBA gs_ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0f};
 
+#include <base/dissector/snapshot.h>
+#include <base/dissector/dissector.h>
+
 void CGraph::Init(float Min, float Max)
 {
 	m_MinRange = m_Min = Min;
@@ -1718,6 +1721,10 @@ static inline int MsgFromSixup(int Msg, bool System)
 		{
 			Msg -= 1;
 		}
+		else if(Msg - 1 == NETMSG_SNAPSINGLE)
+		{
+			Msg = NETMSG_SNAPSINGLE;
+		}
 		else if(Msg < OFFSET_UUID) // learath2
 		{
 			dbg_msg("network_in", "drop=%d", Msg);
@@ -1760,7 +1767,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		return;
 	}
 
-	dbg_msg("network_in", "sys=%d Msg=%d (mapchange=2) flags=%d %s", Sys, Msg, pPacket->m_Flags, pPacket->m_Flags & NET_CHUNKFLAG_VITAL ? "vital" : "not vital");
+	char aMsg[128];
+	netmsg_to_s(Msg, aMsg, sizeof(aMsg));
+	dbg_msg("network_in", "sys=%d Msg=%d (%s) flags=%d %s", Sys, Msg, aMsg, pPacket->m_Flags, pPacket->m_Flags & NET_CHUNKFLAG_VITAL ? "vital" : "not vital");
 
 	if(Sys)
 	{
@@ -1799,7 +1808,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		}
 		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MAP_CHANGE)
 		{
-			dbg_msg("network_in", "GOT MAPCHANGE");
 			if(m_CanReceiveServerCapabilities)
 			{
 				m_ServerCapabilities = GetServerCapabilities(0, 0);
@@ -2057,6 +2065,21 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		}
 		else if(Msg == NETMSG_SNAP || Msg == NETMSG_SNAPSINGLE || Msg == NETMSG_SNAPEMPTY)
 		{
+			CUnpacker PrintPacker = Unpacker; // create copy that will be modified during print
+			print_snapshot(Msg,
+				PrintPacker,
+				Config(),
+				m_aReceivedSnapshots[Config()->m_ClDummy],
+				m_aSnapshotParts[Config()->m_ClDummy],
+				m_SnapshotDelta,
+				m_aCurrentRecvTick[Config()->m_ClDummy],
+				m_aSnapshotStorage[Config()->m_ClDummy],
+				m_SnapCrcErrors,
+				// const class CSmoothTime &GameTime,
+				m_aaSnapshotIncomingData[Config()->m_ClDummy],
+				m_aapSnapshots[Config()->m_ClDummy],
+				this);
+
 			int GameTick = Unpacker.GetInt();
 			int DeltaTick = GameTick - Unpacker.GetInt();
 
@@ -2681,16 +2704,11 @@ void CClient::PumpNetwork()
 		{
 			if(Packet.m_ClientID == -1)
 			{
-				dbg_msg("network_in", "abort srv pack it connless");
 				ProcessConnlessPacket(&Packet);
 				continue;
 			}
 			if(i > 1)
-			{
-				dbg_msg("network_in", "abort srv pack i=%d", i);
 				continue;
-			}
-			dbg_msg("network_in", "process server pack");
 			ProcessServerPacket(&Packet, i, g_Config.m_ClDummy ^ i);
 		}
 	}

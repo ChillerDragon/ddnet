@@ -6,6 +6,8 @@
 #include "huffman.h"
 #include "network.h"
 
+#include <base/dissector/dissector.h>
+
 const unsigned char SECURITY_TOKEN_MAGIC[4] = {'T', 'K', 'E', 'N'};
 
 void CNetRecvUnpacker::Clear()
@@ -192,10 +194,10 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 		}
 	}
 
-	char aHex[1024];
-	str_hex(aHex, sizeof(aHex), aBuffer, FinalSize);
-	dbg_msg("network_out", "hex: %s", aHex);
-	print_raw("network_out", "raw: ", aBuffer, FinalSize);
+	if(g_Config.m_Debug > 2)
+	{
+		print_packet(pPacket, aBuffer, FinalSize, pAddr, NETWORK_OUT, &g_Config);
+	}
 }
 
 // TODO: rename this function
