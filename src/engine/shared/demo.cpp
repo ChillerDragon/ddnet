@@ -617,7 +617,7 @@ void CDemoPlayer::DoTick()
 
 			GotSnapshot = 1;
 
-			DataSize = m_pSnapshotDelta->UnpackDelta((CSnapshot *)m_aLastSnapshotData, (CSnapshot *)s_aNewsnap, s_aData, DataSize);
+			DataSize = m_pSnapshotDelta->UnpackDelta((CSnapshot *)m_aLastSnapshotData, (CSnapshot *)s_aNewsnap, s_aData, DataSize, false /* TODO: 0.7 demos */);
 
 			if(DataSize >= 0)
 			{

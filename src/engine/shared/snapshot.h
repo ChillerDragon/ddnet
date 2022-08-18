@@ -90,7 +90,7 @@ public:
 	void SetStaticsize(int ItemType, int Size);
 	const CData *EmptyDelta() const;
 	int CreateDelta(class CSnapshot *pFrom, class CSnapshot *pTo, void *pDstData);
-	int UnpackDelta(class CSnapshot *pFrom, class CSnapshot *pTo, const void *pSrcData, int DataSize);
+	int UnpackDelta(class CSnapshot *pFrom, class CSnapshot *pTo, const void *pSrcData, int DataSize, bool Sixup);
 };
 
 // CSnapshotStorage

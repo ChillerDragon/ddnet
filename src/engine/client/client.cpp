@@ -2078,7 +2078,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				// const class CSmoothTime &GameTime,
 				m_aaSnapshotIncomingData[Config()->m_ClDummy],
 				m_aapSnapshots[Config()->m_ClDummy],
-				this);
+				this,
+				IsSixup());
 
 			int GameTick = Unpacker.GetInt();
 			int DeltaTick = GameTick - Unpacker.GetInt();
@@ -2183,7 +2184,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					}
 
 					// unpack delta
-					const int SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
+					const int SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize, IsSixup());
 					if(SnapSize < 0)
 					{
 						dbg_msg("client", "delta unpack failed!=%d", SnapSize);

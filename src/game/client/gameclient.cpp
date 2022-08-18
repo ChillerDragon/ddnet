@@ -654,7 +654,7 @@ void CGameClient::OnRender()
 		g_Config.m_ClDummy = 0;
 
 	// resend player and dummy info if it was filtered by server
-	if(Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive())
+	if(Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive() && !Client()->IsSixup())
 	{
 		if(m_aCheckInfo[0] == 0)
 		{
