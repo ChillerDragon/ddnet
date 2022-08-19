@@ -386,6 +386,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 			return -3;
 
 		int ItemSize;
+		init_compat();
 		const short * pItemSizes = Sixup ? _gs_aItemSizes : m_aItemSizes;
 		if(Type < MAX_NETOBJSIZES && pItemSizes[Type])
 			ItemSize = pItemSizes[Type];

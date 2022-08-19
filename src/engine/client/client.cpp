@@ -444,7 +444,9 @@ static inline bool RepackMsg(const CMsgPacker *pMsg, CPacker &Packer, bool Sixup
 			else if(MsgId == NETMSG_RCON_CMD)
 				MsgId = 21; // 17 -> NETMSG_RCON_CMD
 			else if(MsgId == NETMSG_ENTERGAME)
-				MsgId = 19; //15 -> 19
+				MsgId = 19; // 15 -> 19
+			else if(MsgId == NETMSG_INPUT)
+				MsgId = 20; // 16 -> 20
 			else if(MsgId >= NETMSG_MAP_CHANGE && MsgId <= NETMSG_MAP_DATA) // TODO: this still by learath2 do we need dis?
 			{
 				dbg_msg("network_out", "msg=%d unchanged", MsgId);
@@ -468,7 +470,8 @@ static inline bool RepackMsg(const CMsgPacker *pMsg, CPacker &Packer, bool Sixup
 			}
 			else if(MsgId >= 0 && MsgId < OFFSET_UUID)
 			{
-				dbg_msg("network_out", "SixToSeven MsgId=%d -> SevenId=%d", MsgId, Msg_SixToSeven(MsgId));
+				if(g_Config.m_Debug > 2)
+					dbg_msg("network_out", "SixToSeven MsgId=%d -> SevenId=%d", MsgId, Msg_SixToSeven(MsgId));
 				MsgId = Msg_SixToSeven(MsgId);
 			}
 
@@ -1725,6 +1728,19 @@ static inline int MsgFromSixup(int Msg, bool System)
 		{
 			Msg = NETMSG_SNAPSINGLE;
 		}
+		else if(Msg - 1 == NETMSG_SNAPEMPTY)
+		{
+			Msg = NETMSG_SNAPEMPTY;
+		}
+		else if(Msg - 1 == NETMSG_INPUTTIMING)
+		{
+			Msg = NETMSG_INPUTTIMING;
+		}
+		// else if(Msg_SevenToSix(Msg) > 0) // TODO: use this but as of right now i kinda borked it
+		// {
+		// 	dbg_msg("network_in", " Msg_SevenToSix(%d) -> %d", Msg, Msg_SevenToSix(Msg));
+		// 	Msg = Msg_SevenToSix(Msg);
+		// }
 		else if(Msg < OFFSET_UUID) // learath2
 		{
 			dbg_msg("network_in", "drop=%d", Msg);
@@ -1767,9 +1783,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		return;
 	}
 
-	char aMsg[128];
-	netmsg_to_s(Msg, aMsg, sizeof(aMsg));
-	dbg_msg("network_in", "sys=%d Msg=%d (%s) flags=%d %s", Sys, Msg, aMsg, pPacket->m_Flags, pPacket->m_Flags & NET_CHUNKFLAG_VITAL ? "vital" : "not vital");
+	if(g_Config.m_Debug > 1)
+	{
+		char aMsg[128];
+		netmsg_to_s(Msg, aMsg, sizeof(aMsg));
+		dbg_msg("network_in", "sys=%d Msg=%d (%s) flags=%d %s", Sys, Msg, aMsg, pPacket->m_Flags, pPacket->m_Flags & NET_CHUNKFLAG_VITAL ? "vital" : "not vital");
+	}
 
 	if(Sys)
 	{

@@ -99,7 +99,6 @@ int CNetConnection::Flush()
 
 	// send of the packets
 	m_Construct.m_Ack = m_Ack;
-	dbg_msg("network_out", "connection::Flush() flags=%d token=%x didflip=%d", m_Construct.m_Flags, m_SecurityToken, m_FlippedTokenTodoFixThisShit);
 	if(!m_FlippedTokenTodoFixThisShit && IsSixup())
 	{
 		m_SecurityToken = (((m_SecurityToken & 0x000000FF) << 24) |
