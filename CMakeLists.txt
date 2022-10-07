@@ -721,7 +721,7 @@ endif()
 if(TARGET_OS STREQUAL "windows")
   set(PLATFORM_CLIENT)
   set(PLATFORM_CLIENT_LIBS opengl32 winmm)
-  set(PLATFORM_LIBS version ws2_32) # Windows sockets
+  set(PLATFORM_LIBS shlwapi version ws2_32) # Windows sockets
 elseif(TARGET_OS STREQUAL "mac")
   find_library(CARBON Carbon)
   find_library(COCOA Cocoa)
@@ -1956,7 +1956,6 @@ if(CLIENT)
     backend/opengl/opengl_sl_program.cpp
     backend/opengl/opengl_sl_program.h
     backend/opengles/backend_opengles.cpp
-    backend/opengles/backend_opengles.h
     backend/opengles/backend_opengles3.cpp
     backend/opengles/backend_opengles3.h
     backend/opengles/gles_class_defines.h
@@ -2110,8 +2109,8 @@ if(CLIENT)
     skin.h
     ui.cpp
     ui.h
-    ui_ex.cpp
-    ui_ex.h
+    ui_rect.cpp
+    ui_rect.h
   )
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp
@@ -2292,12 +2291,15 @@ if(SERVER)
     databases/connection_pool.h
     databases/mysql.cpp
     databases/sqlite.cpp
+    main.cpp
     name_ban.cpp
     name_ban.h
     register.cpp
     register.h
     server.cpp
     server.h
+    server_logger.cpp
+    server_logger.h
     sql_string_helpers.cpp
     sql_string_helpers.h
     upnp.cpp
@@ -2315,8 +2317,6 @@ if(SERVER)
     entities/dragger.h
     entities/dragger_beam.cpp
     entities/dragger_beam.h
-    entities/flag.cpp
-    entities/flag.h
     entities/gun.cpp
     entities/gun.h
     entities/laser.cpp

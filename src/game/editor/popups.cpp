@@ -72,14 +72,14 @@ void CEditor::UiDoPopupMenu()
 				UI()->SetActiveItem(&s_UiPopups[i].m_pId);
 		}
 
-		int Corners = CUI::CORNER_ALL;
+		int Corners = IGraphics::CORNER_ALL;
 		if(s_UiPopups[i].m_IsMenu)
-			Corners = CUI::CORNER_R | CUI::CORNER_B;
+			Corners = IGraphics::CORNER_R | IGraphics::CORNER_B;
 
 		CUIRect r = s_UiPopups[i].m_Rect;
-		RenderTools()->DrawUIRect(&r, ColorRGBA(0.5f, 0.5f, 0.5f, 0.75f), Corners, 3.0f);
+		r.Draw(ColorRGBA(0.5f, 0.5f, 0.5f, 0.75f), Corners, 3.0f);
 		r.Margin(1.0f, &r);
-		RenderTools()->DrawUIRect(&r, ColorRGBA(0, 0, 0, 0.75f), Corners, 3.0f);
+		r.Draw(ColorRGBA(0, 0, 0, 0.75f), Corners, 3.0f);
 		r.Margin(4.0f, &r);
 
 		if(s_UiPopups[i].m_pfnFunc(this, r, s_UiPopups[i].m_pContext))
@@ -395,6 +395,21 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View, void *pContext)
 	if(pPopup->m_vpLayers.size() > 1)
 	{
 		return CLayerTiles::RenderCommonProperties(pPopup->m_CommonPropState, pEditor, &View, pPopup->m_vpLayers);
+	}
+
+	// duplicate layer button
+	CUIRect DupButton;
+	static int s_DuplicationButton = 0;
+	View.HSplitBottom(4.0f, &View, nullptr);
+	View.HSplitBottom(12.0f, &View, &DupButton);
+
+	if(!pEditor->IsSpecialLayer(pEditor->GetSelectedLayer(0)))
+	{
+		if(pEditor->DoButton_Editor(&s_DuplicationButton, "Duplicate layer", 0, &DupButton, 0, "Duplicates the layer"))
+		{
+			pEditor->m_Map.m_vpGroups[pEditor->m_SelectedGroup]->DuplicateLayer(pEditor->m_vSelectedLayers[0]);
+			return 1;
+		}
 	}
 
 	// don't allow deletion of game layer
@@ -1232,7 +1247,7 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View, void *pContext)
 	{
 		CUIRect Scroll;
 		ButtonBar.VSplitRight(20.0f, &ButtonBar, &Scroll);
-		s_ScrollValue = pEditor->UIEx()->DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
+		s_ScrollValue = pEditor->UI()->DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
 
 		if(pEditor->UI()->MouseInside(&Scroll) || pEditor->UI()->MouseInside(&ButtonBar))
 		{
@@ -1272,7 +1287,8 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View, void *pContext)
 
 		if(i == -1)
 		{
-			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_vpImages[i], "None", i == g_SelectImageCurrent, &Button))
+			static int s_NoneButton = 0;
+			if(pEditor->DoButton_MenuItem(&s_NoneButton, "None", i == g_SelectImageCurrent, &Button))
 				g_SelectImageSelected = -1;
 		}
 		else
@@ -1339,7 +1355,7 @@ int CEditor::PopupSelectSound(CEditor *pEditor, CUIRect View, void *pContext)
 	{
 		CUIRect Scroll;
 		ButtonBar.VSplitRight(20.0f, &ButtonBar, &Scroll);
-		s_ScrollValue = pEditor->UIEx()->DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
+		s_ScrollValue = pEditor->UI()->DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
 
 		if(pEditor->UI()->MouseInside(&Scroll) || pEditor->UI()->MouseInside(&ButtonBar))
 		{
@@ -1374,12 +1390,10 @@ int CEditor::PopupSelectSound(CEditor *pEditor, CUIRect View, void *pContext)
 		CUIRect Button;
 		ButtonBar.HSplitTop(14.0f, &Button, &ButtonBar);
 
-		//if(pEditor->UI()->MouseInside(&Button))
-		//	ShowSound = i;
-
 		if(i == -1)
 		{
-			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_vpSounds[i], "None", i == g_SelectSoundCurrent, &Button))
+			static int s_NoneButton = 0;
+			if(pEditor->DoButton_MenuItem(&s_NoneButton, "None", i == g_SelectSoundCurrent, &Button))
 				g_SelectSoundSelected = -1;
 		}
 		else
@@ -1484,7 +1498,7 @@ int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View, void *pCon
 	{
 		CUIRect Scroll;
 		View.VSplitRight(20.0f, &View, &Scroll);
-		s_ScrollValue = pEditor->UIEx()->DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
+		s_ScrollValue = pEditor->UI()->DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
 
 		if(pEditor->UI()->MouseInside(&View) || pEditor->UI()->MouseInside(&Scroll))
 		{

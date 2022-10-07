@@ -63,11 +63,12 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#include <errno.h>
+#include <cerrno>
 #include <io.h>
 #include <process.h>
 #include <share.h>
 #include <shellapi.h>
+#include <shlwapi.h>
 #include <wincrypt.h>
 #else
 #error NOT IMPLEMENTED
@@ -2115,7 +2116,7 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	while((entry = readdir(d)) != NULL)
 	{
 		str_copy(buffer + length, entry->d_name, (int)sizeof(buffer) - length);
-		if(cb(entry->d_name, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
+		if(cb(entry->d_name, fs_is_dir(buffer), type, user))
 			break;
 	}
 
@@ -2184,7 +2185,7 @@ void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 		info.m_TimeCreated = created;
 		info.m_TimeModified = modified;
 
-		if(cb(&info, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
+		if(cb(&info, fs_is_dir(buffer), type, user))
 			break;
 	}
 
@@ -2306,6 +2307,17 @@ int fs_is_dir(const char *path)
 	if(stat(path, &sb) == -1)
 		return 0;
 	return S_ISDIR(sb.st_mode) ? 1 : 0;
+#endif
+}
+
+int fs_is_relative_path(const char *path)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wPath[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wPath, std::size(wPath));
+	return PathIsRelativeW(wPath) ? 1 : 0;
+#else
+	return path[0] == '/' ? 0 : 1; // yes, it's that simple
 #endif
 }
 
@@ -3866,8 +3878,18 @@ int open_file(const char *path)
 #if defined(CONF_PLATFORM_MACOS)
 	return open_link(path);
 #else
+	// Create a file link so the path can contain forward and
+	// backward slashes. But the file link must be absolute.
 	char buf[512];
-	str_format(buf, sizeof(buf), "file://%s", path);
+	char workingDir[IO_MAX_PATH_LENGTH];
+	if(fs_is_relative_path(path))
+	{
+		fs_getcwd(workingDir, sizeof(workingDir));
+		str_append(workingDir, "/", sizeof(workingDir));
+	}
+	else
+		workingDir[0] = '\0';
+	str_format(buf, sizeof(buf), "file://%s%s", workingDir, path);
 	return open_link(buf);
 #endif
 }
