@@ -718,6 +718,37 @@ inline bool CPlayers::IsPlayerInfoAvailable(int ClientID) const
 
 void CPlayers::OnRender()
 {
+	float _ScreenX0, _ScreenY0, _ScreenX1, _ScreenY1;
+	Graphics()->GetScreen(&_ScreenX0, &_ScreenY0, &_ScreenX1, &_ScreenY1);
+	dbg_msg("CPlayers::OnRender", "render the following players:");
+	for(int ClientID = 0; ClientID < MAX_CLIENTS; ClientID++)
+	{
+		if(ClientID == m_pClient->m_Snap.m_LocalClientID)
+		{
+			dbg_msg("CPlayers::OnRender", "  ID=%d skip our self", ClientID);
+			continue;
+		}
+		if(!m_pClient->m_Snap.m_aCharacters[ClientID].m_Active)
+		{
+			dbg_msg("CPlayers::OnRender", "  ID=%d skip inactive", ClientID);
+			continue;
+		}
+		if(!IsPlayerInfoAvailable(ClientID))
+		{
+			dbg_msg("CPlayers::OnRender", "  ID=%d skip no info avail", ClientID);
+			continue;
+		}
+
+		//don't render off_screen
+		vec2 *pRenderPos = &m_pClient->m_aClients[ClientID].m_RenderPos;
+		if(pRenderPos->x < _ScreenX0 || pRenderPos->x > _ScreenX1 || pRenderPos->y < _ScreenY0 || pRenderPos->y > _ScreenY1)
+		{
+			dbg_msg("CPlayers::OnRender", "  ID=%d skip off screen", ClientID);
+			continue;
+		}
+		dbg_msg("CPlayers::OnRender", "  ID=%d render", ClientID);
+	}
+
 	// update RenderInfo for ninja
 	bool IsTeamplay = false;
 	if(m_pClient->m_Snap.m_pGameInfoObj)
