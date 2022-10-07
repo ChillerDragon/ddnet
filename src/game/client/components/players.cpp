@@ -720,6 +720,7 @@ void CPlayers::OnRender()
 {
 	float _ScreenX0, _ScreenY0, _ScreenX1, _ScreenY1;
 	Graphics()->GetScreen(&_ScreenX0, &_ScreenY0, &_ScreenX1, &_ScreenY1);
+  /*
 	dbg_msg("CPlayers::OnRender", "render the following players:");
 	for(int ClientID = 0; ClientID < MAX_CLIENTS; ClientID++)
 	{
@@ -748,6 +749,7 @@ void CPlayers::OnRender()
 		}
 		dbg_msg("CPlayers::OnRender", "  ID=%d render", ClientID);
 	}
+  */
 
 	// update RenderInfo for ninja
 	bool IsTeamplay = false;
