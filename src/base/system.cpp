@@ -64,7 +64,9 @@
 #include <ws2tcpip.h>
 
 #include <cerrno>
+#include <float.h>
 #include <io.h>
+#include <objbase.h>
 #include <process.h>
 #include <share.h>
 #include <shellapi.h>
@@ -147,6 +149,7 @@ typedef struct
 } NETSOCKET_BUFFER;
 
 void net_buffer_init(NETSOCKET_BUFFER *buffer);
+void net_buffer_reinit(NETSOCKET_BUFFER *buffer);
 void net_buffer_simple(NETSOCKET_BUFFER *buffer, char **buf, int *size);
 
 struct NETSOCKET_INTERNAL
@@ -904,8 +907,10 @@ void sphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
 void sphore_init(SEMAPHORE *sem)
 {
 	char aBuf[64];
-	str_format(aBuf, sizeof(aBuf), "/%d-ddnet.tw-%p", pid(), (void *)sem);
+	str_format(aBuf, sizeof(aBuf), "%p", (void *)sem);
 	*sem = sem_open(aBuf, O_CREAT | O_EXCL, S_IRWXU | S_IRWXG, 0);
+	if(*sem == SEM_FAILED)
+		dbg_msg("sphore", "init failed: %d", errno);
 }
 void sphore_wait(SEMAPHORE *sem) { sem_wait(*sem); }
 void sphore_signal(SEMAPHORE *sem) { sem_post(*sem); }
@@ -913,7 +918,7 @@ void sphore_destroy(SEMAPHORE *sem)
 {
 	char aBuf[64];
 	sem_close(*sem);
-	str_format(aBuf, sizeof(aBuf), "/%d-ddnet.tw-%p", pid(), (void *)sem);
+	str_format(aBuf, sizeof(aBuf), "%p", (void *)sem);
 	sem_unlink(aBuf);
 }
 #elif defined(CONF_FAMILY_UNIX)
@@ -1694,6 +1699,16 @@ void net_buffer_init(NETSOCKET_BUFFER *buffer)
 #endif
 }
 
+void net_buffer_reinit(NETSOCKET_BUFFER *buffer)
+{
+#if defined(CONF_PLATFORM_LINUX)
+	for(int i = 0; i < VLEN; i++)
+	{
+		buffer->msgs[i].msg_hdr.msg_namelen = sizeof(buffer->sockaddrs[i]);
+	}
+#endif
+}
+
 void net_buffer_simple(NETSOCKET_BUFFER *buffer, char **buf, int *size)
 {
 #if defined(CONF_PLATFORM_LINUX)
@@ -1715,6 +1730,7 @@ int net_udp_recv(NETSOCKET sock, NETADDR *addr, unsigned char **data)
 	{
 		if(sock->buffer.pos >= sock->buffer.size)
 		{
+			net_buffer_reinit(&sock->buffer);
 			sock->buffer.size = recvmmsg(sock->ipv4sock, sock->buffer.msgs, VLEN, 0, NULL);
 			sock->buffer.pos = 0;
 		}
@@ -1724,6 +1740,7 @@ int net_udp_recv(NETSOCKET sock, NETADDR *addr, unsigned char **data)
 	{
 		if(sock->buffer.pos >= sock->buffer.size)
 		{
+			net_buffer_reinit(&sock->buffer);
 			sock->buffer.size = recvmmsg(sock->ipv6sock, sock->buffer.msgs, VLEN, 0, NULL);
 			sock->buffer.pos = 0;
 		}
@@ -2261,9 +2278,9 @@ int fs_makedir(const char *path)
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, std::size(wBuffer));
-	if(_wmkdir(wBuffer) == 0)
+	if(CreateDirectoryW(wBuffer, NULL) != 0)
 		return 0;
-	if(errno == EEXIST)
+	if(GetLastError() == ERROR_ALREADY_EXISTS)
 		return 0;
 	return -1;
 #else
@@ -2328,10 +2345,7 @@ int fs_chdir(const char *path)
 #if defined(CONF_FAMILY_WINDOWS)
 		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 		MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, std::size(wBuffer));
-		if(_wchdir(wBuffer))
-			return 1;
-		else
-			return 0;
+		return SetCurrentDirectoryW(wBuffer) != 0 ? 0 : 1;
 #else
 		if(chdir(path))
 			return 1;
@@ -2345,11 +2359,10 @@ int fs_chdir(const char *path)
 
 char *fs_getcwd(char *buffer, int buffer_size)
 {
-	if(buffer == 0)
-		return 0;
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
-	if(_wgetcwd(wBuffer, buffer_size) == 0)
+	DWORD result = GetCurrentDirectoryW(std::size(wBuffer), wBuffer);
+	if(result == 0 || result > std::size(wBuffer))
 		return 0;
 	WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buffer, buffer_size, NULL, NULL);
 	return buffer;
@@ -2635,15 +2648,31 @@ int str_format(char *buffer, int buffer_size, const char *format, ...)
 	return str_utf8_fix_truncation(buffer);
 }
 
-char *str_trim_words(char *str, int words)
+const char *str_trim_words(const char *str, int words)
 {
+	while(*str && str_isspace(*str))
+		str++;
 	while(words && *str)
 	{
-		if(isspace(*str) && !isspace(*(str + 1)))
+		if(str_isspace(*str) && !str_isspace(*(str + 1)))
 			words--;
 		str++;
 	}
 	return str;
+}
+
+bool str_has_cc(const char *str)
+{
+	unsigned char *s = (unsigned char *)str;
+	while(*s)
+	{
+		if(*s < 32)
+		{
+			return true;
+		}
+		s++;
+	}
+	return false;
 }
 
 /* makes sure that the string only contains the characters between 32 and 255 */
@@ -2715,28 +2744,28 @@ void str_clean_whitespaces(char *str_in)
 
 char *str_skip_to_whitespace(char *str)
 {
-	while(*str && (*str != ' ' && *str != '\t' && *str != '\n'))
+	while(*str && !str_isspace(*str))
 		str++;
 	return str;
 }
 
 const char *str_skip_to_whitespace_const(const char *str)
 {
-	while(*str && (*str != ' ' && *str != '\t' && *str != '\n'))
+	while(*str && !str_isspace(*str))
 		str++;
 	return str;
 }
 
 char *str_skip_whitespaces(char *str)
 {
-	while(*str && (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r'))
+	while(*str && str_isspace(*str))
 		str++;
 	return str;
 }
 
 const char *str_skip_whitespaces_const(const char *str)
 {
-	while(*str && (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r'))
+	while(*str && str_isspace(*str))
 		str++;
 	return str;
 }
@@ -2795,8 +2824,9 @@ int str_comp_filenames(const char *a, const char *b)
 				return result;
 		}
 
-		if(*a != *b)
-			break;
+		result = tolower(*a) - tolower(*b);
+		if(result)
+			return result;
 	}
 	return *a - *b;
 }
@@ -2996,18 +3026,31 @@ const char *str_rchr(const char *haystack, char needle)
 	return strrchr(haystack, needle);
 }
 
+int str_countchr(const char *haystack, char needle)
+{
+	int count = 0;
+	while(*haystack)
+	{
+		if(*haystack == needle)
+			count++;
+		haystack++;
+	}
+	return count;
+}
+
 void str_hex(char *dst, int dst_size, const void *data, int data_size)
 {
 	static const char hex[] = "0123456789ABCDEF";
-	int b;
-
-	for(b = 0; b < data_size && b < dst_size / 4 - 4; b++)
+	int data_index;
+	int dst_index;
+	for(data_index = 0, dst_index = 0; data_index < data_size && dst_index < dst_size - 3; data_index++)
 	{
-		dst[b * 3] = hex[((const unsigned char *)data)[b] >> 4];
-		dst[b * 3 + 1] = hex[((const unsigned char *)data)[b] & 0xf];
-		dst[b * 3 + 2] = ' ';
-		dst[b * 3 + 3] = 0;
+		dst[data_index * 3] = hex[((const unsigned char *)data)[data_index] >> 4];
+		dst[data_index * 3 + 1] = hex[((const unsigned char *)data)[data_index] & 0xf];
+		dst[data_index * 3 + 2] = ' ';
+		dst_index += 3;
 	}
+	dst[dst_index] = '\0';
 }
 
 static int hexval(char x)
@@ -3040,11 +3083,10 @@ static int hexval(char x)
 	}
 }
 
-static int byteval(const char *byte, unsigned char *dst)
+static int byteval(const char *hex, unsigned char *dst)
 {
-	int v1 = -1, v2 = -1;
-	v1 = hexval(byte[0]);
-	v2 = hexval(byte[1]);
+	int v1 = hexval(hex[0]);
+	int v2 = hexval(hex[1]);
 
 	if(v1 < 0 || v2 < 0)
 		return 1;
@@ -3331,7 +3373,10 @@ void net_stats(NETSTATS *stats_inout)
 	*stats_inout = network_stats;
 }
 
-int str_isspace(char c) { return c == ' ' || c == '\n' || c == '\t'; }
+int str_isspace(char c)
+{
+	return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+}
 
 char str_uppercase(char c)
 {
@@ -3553,9 +3598,9 @@ int str_utf8_encode(char *ptr, int chr)
 
 static unsigned char str_byte_next(const char **ptr)
 {
-	unsigned char byte = **ptr;
+	unsigned char byte_value = **ptr;
 	(*ptr)++;
-	return byte;
+	return byte_value;
 }
 
 static void str_byte_rewind(const char **ptr)
@@ -3573,35 +3618,35 @@ int str_utf8_decode(const char **ptr)
 	int utf8_bytes_needed = 0;
 	while(true)
 	{
-		unsigned char byte = str_byte_next(ptr);
+		unsigned char byte_value = str_byte_next(ptr);
 		if(utf8_bytes_needed == 0)
 		{
-			if(byte <= 0x7F)
+			if(byte_value <= 0x7F)
 			{
-				return byte;
+				return byte_value;
 			}
-			else if(0xC2 <= byte && byte <= 0xDF)
+			else if(0xC2 <= byte_value && byte_value <= 0xDF)
 			{
 				utf8_bytes_needed = 1;
-				utf8_code_point = byte - 0xC0;
+				utf8_code_point = byte_value - 0xC0;
 			}
-			else if(0xE0 <= byte && byte <= 0xEF)
+			else if(0xE0 <= byte_value && byte_value <= 0xEF)
 			{
-				if(byte == 0xE0)
+				if(byte_value == 0xE0)
 					utf8_lower_boundary = 0xA0;
-				if(byte == 0xED)
+				if(byte_value == 0xED)
 					utf8_upper_boundary = 0x9F;
 				utf8_bytes_needed = 2;
-				utf8_code_point = byte - 0xE0;
+				utf8_code_point = byte_value - 0xE0;
 			}
-			else if(0xF0 <= byte && byte <= 0xF4)
+			else if(0xF0 <= byte_value && byte_value <= 0xF4)
 			{
-				if(byte == 0xF0)
+				if(byte_value == 0xF0)
 					utf8_lower_boundary = 0x90;
-				if(byte == 0xF4)
+				if(byte_value == 0xF4)
 					utf8_upper_boundary = 0x8F;
 				utf8_bytes_needed = 3;
-				utf8_code_point = byte - 0xF0;
+				utf8_code_point = byte_value - 0xF0;
 			}
 			else
 			{
@@ -3610,7 +3655,7 @@ int str_utf8_decode(const char **ptr)
 			utf8_code_point = utf8_code_point << (6 * utf8_bytes_needed);
 			continue;
 		}
-		if(!(utf8_lower_boundary <= byte && byte <= utf8_upper_boundary))
+		if(!(utf8_lower_boundary <= byte_value && byte_value <= utf8_upper_boundary))
 		{
 			// Resetting variables not necessary, will be done when
 			// the function is called again.
@@ -3620,7 +3665,7 @@ int str_utf8_decode(const char **ptr)
 		utf8_lower_boundary = 0x80;
 		utf8_upper_boundary = 0xBF;
 		utf8_bytes_seen += 1;
-		utf8_code_point = utf8_code_point + ((byte - 0x80) << (6 * (utf8_bytes_needed - utf8_bytes_seen)));
+		utf8_code_point = utf8_code_point + ((byte_value - 0x80) << (6 * (utf8_bytes_needed - utf8_bytes_seen)));
 		if(utf8_bytes_seen != utf8_bytes_needed)
 		{
 			continue;
@@ -3822,7 +3867,10 @@ PROCESS shell_execute(const char *file)
 	info.lpFile = wBuffer;
 	info.nShow = SW_SHOWMINNOACTIVE;
 	info.fMask = SEE_MASK_NOCLOSEPROCESS;
+	// Save and restore the FPU control word because ShellExecute might change it
+	unsigned oldcontrol87 = _control87(0u, 0u);
 	ShellExecuteExW(&info);
+	_control87(oldcontrol87, 0xffffffffu);
 	return info.hProcess;
 #elif defined(CONF_FAMILY_UNIX)
 	char *argv[2];
@@ -3859,7 +3907,11 @@ int open_link(const char *link)
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[512];
 	MultiByteToWideChar(CP_UTF8, 0, link, -1, wBuffer, std::size(wBuffer));
-	return (uintptr_t)ShellExecuteW(NULL, L"open", wBuffer, NULL, NULL, SW_SHOWDEFAULT) > 32;
+	// Save and restore the FPU control word because ShellExecute might change it
+	unsigned oldcontrol87 = _control87(0u, 0u);
+	int status = (uintptr_t)ShellExecuteW(NULL, L"open", wBuffer, NULL, NULL, SW_SHOWDEFAULT) > 32;
+	_control87(oldcontrol87, 0xffffffffu);
+	return status;
 #elif defined(CONF_PLATFORM_LINUX)
 	const int pid = fork();
 	if(pid == 0)
@@ -4061,27 +4113,27 @@ int secure_rand_below(int below)
 int os_version_str(char *version, int length)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	const char *DLL = "C:\\Windows\\System32\\user32.dll";
+	const WCHAR *module_path = L"kernel32.dll";
 	DWORD handle;
-	DWORD size = GetFileVersionInfoSizeA(DLL, &handle);
+	DWORD size = GetFileVersionInfoSizeW(module_path, &handle);
 	if(!size)
 	{
 		return 1;
 	}
 	void *data = malloc(size);
-	if(!GetFileVersionInfoA(DLL, handle, size, data))
+	if(!GetFileVersionInfoW(module_path, handle, size, data))
 	{
 		free(data);
 		return 1;
 	}
 	VS_FIXEDFILEINFO *fileinfo;
 	UINT unused;
-	if(!VerQueryValueA(data, "\\", (void **)&fileinfo, &unused))
+	if(!VerQueryValueW(data, L"\\", (void **)&fileinfo, &unused))
 	{
 		free(data);
 		return 1;
 	}
-	str_format(version, length, "Windows %d.%d.%d.%d",
+	str_format(version, length, "Windows %hu.%hu.%hu.%hu",
 		HIWORD(fileinfo->dwProductVersionMS),
 		LOWORD(fileinfo->dwProductVersionMS),
 		HIWORD(fileinfo->dwProductVersionLS),
@@ -4198,6 +4250,17 @@ int net_socket_read_wait(NETSOCKET sock, std::chrono::nanoseconds nanoseconds)
 	using namespace std::chrono_literals;
 	return ::net_socket_read_wait(sock, (nanoseconds / std::chrono::nanoseconds(1us).count()).count());
 }
+
+#if defined(CONF_FAMILY_WINDOWS)
+CWindowsComLifecycle::CWindowsComLifecycle()
+{
+	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+}
+CWindowsComLifecycle::~CWindowsComLifecycle()
+{
+	CoUninitialize();
+}
+#endif
 
 size_t std::hash<NETADDR>::operator()(const NETADDR &Addr) const noexcept
 {

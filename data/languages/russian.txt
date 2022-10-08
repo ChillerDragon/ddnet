@@ -807,8 +807,8 @@ Video name:
 Show DDNet map finishes in server browser
 == Показывать в браузере статус завершения карты
 
-transmits your player name to info2.ddnet.tw
-== передает ваш псевдоним на info2.ddnet.tw
+transmits your player name to info.ddnet.org
+== передает ваш псевдоним на info.ddnet.org
 
 Exclude
 == Исключить
@@ -1005,9 +1005,6 @@ Show other players' key presses
 Show tiles layers from BG map
 == Показывать тайловые слои фона
 
-Try fast HTTP map download first
-== Быстро загружать карты по HTTP
-
 DDNet %s is available:
 == Доступен DDNet %s:
 
@@ -1077,8 +1074,8 @@ Markers
 Skip the main menu
 == Пропускать главное меню
 
-https://wiki.ddnet.tw/
-== https://wiki.ddnet.tw/wiki/Main_Page/ru
+https://wiki.ddnet.org/
+== https://wiki.ddnet.org/wiki/Main_Page/ru
 
 Website
 == Сайт
@@ -1204,12 +1201,6 @@ The width of texture %s is not divisible by %d, or the height is not divisible b
 Dummy
 == Дамми
 
-Laser Outline Color
-== Цвет обводки лазера
-
-Laser Inner Color
-== Цвет лазера
-
 Preview
 == Превью
 
@@ -1228,8 +1219,8 @@ Chat command
 Discord
 == Дискорд
 
-https://ddnet.tw/discord
-== https://ddnet.tw/discord
+https://ddnet.org/discord
+== https://ddnet.org/discord
 
 AFR
 == AFR
@@ -1564,4 +1555,64 @@ Loading sound files
 == Загрузка звуковых файлов
 
 Why are you slowmo replaying to read this?
+== Зачем ты читаешь на это в замедлении?
+
+Play the current demo
+== Включить демо
+
+Pause the current demo
+== Поставить на паузу
+
+Stop the current demo
+== Остановить демо
+
+Slow down the demo
+== Замедлить демо
+
+Speed up the demo
+== Ускорить демо
+
+Mark the beginning of a cut
+== Отметить начало участка
+
+Mark the end of a cut
+== Отметить конец участка
+
+Export cut as a separate demo
+== Экспортировать участок отдельно
+
+Toggle keyboard shortcuts
+== Включить горячие клавиши
+
+Weapons
+== Оружия
+
+Rifle Laser Outline Color
+== Цвет обводки лазера
+
+Rifle Laser Inner Color
+== Цвет лазера
+
+Shotgun Laser Outline Color
+== Цвет обводки лазера дробовика
+
+Shotgun Laser Inner Color
+== Цвет лазера дробовика
+
+Door Laser Outline Color
+== Цвет обводки двери
+
+Door Laser Inner Color
+== Цвет двери
+
+Freeze Laser Outline Color
+== Цвет обводки фриз лазера
+
+Freeze Laser Inner Color
+== Цвет фриз лазера
+
+Menu opened. Press Esc key again to close menu.
+== 
+
+Set all to Rifle
 == 

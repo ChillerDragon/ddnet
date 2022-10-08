@@ -11,6 +11,7 @@
 #include <game/client/render.h>
 #include <game/client/ui.h>
 #include <game/mapitems.h>
+#include <game/mapitems_ex.h>
 
 #include <engine/editor.h>
 #include <engine/graphics.h>
@@ -187,6 +188,8 @@ public:
 
 	int m_ParallaxX;
 	int m_ParallaxY;
+	int m_CustomParallaxZoom;
+	int m_ParallaxZoom;
 
 	int m_UseClipping;
 	int m_ClipX;
@@ -252,6 +255,12 @@ public:
 				return false;
 		}
 	}*/
+
+	void OnEdited()
+	{
+		if(!m_CustomParallaxZoom)
+			m_ParallaxZoom = GetParallaxZoomDefault(m_ParallaxX, m_ParallaxY);
+	}
 
 	void Clear()
 	{
@@ -658,6 +667,7 @@ public:
 
 	void Render(bool QuadPicker = false) override;
 	CQuad *NewQuad(int x, int y, int Width, int Height);
+	int SwapQuads(int Index0, int Index1);
 
 	void BrushSelecting(CUIRect Rect) override;
 	int BrushGrab(CLayerGroup *pBrush, CUIRect Rect) override;
@@ -788,6 +798,7 @@ public:
 
 		m_GuiActive = true;
 		m_ProofBorders = false;
+		m_PreviewZoom = false;
 
 		m_ShowTileInfo = false;
 		m_ShowDetail = true;
@@ -799,7 +810,7 @@ public:
 		m_ShowEnvelopeEditor = 0;
 		m_ShowServerSettingsEditor = false;
 
-		m_ShowEnvelopePreview = 0;
+		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
 
@@ -824,6 +835,8 @@ public:
 		m_PreventUnusedTilesWasWarned = false;
 		m_AllowPlaceUnusedTiles = 0;
 		m_BrushDrawDestructive = true;
+		m_GotoX = 0;
+		m_GotoY = 0;
 
 		m_Mentions = 0;
 	}
@@ -942,7 +955,7 @@ public:
 		int m_StorageType;
 		bool m_IsVisible;
 
-		bool operator<(const CFilelistItem &Other) const { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false : m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false : str_comp_nocase(m_aFilename, Other.m_aFilename) < 0; }
+		bool operator<(const CFilelistItem &Other) const { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false : m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false : str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
 	std::vector<CFilelistItem> m_vFileList;
 	int m_FilesStartAt;
@@ -962,6 +975,8 @@ public:
 	bool m_ShowMousePointer;
 	bool m_GuiActive;
 	bool m_ProofBorders;
+	bool m_PreviewZoom;
+	float m_MouseWScale = 1.0f; // Mouse (i.e. UI) scale relative to the World (selected Group)
 	float m_MouseX = 0.0f;
 	float m_MouseY = 0.0f;
 	float m_MouseWorldX = 0.0f;
@@ -979,7 +994,14 @@ public:
 	float m_AnimateSpeed;
 
 	int m_ShowEnvelopeEditor;
-	int m_ShowEnvelopePreview; //Values: 0-Off|1-Selected Envelope|2-All
+
+	enum EShowEnvelope
+	{
+		SHOWENV_NONE = 0,
+		SHOWENV_SELECTED,
+		SHOWENV_ALL
+	};
+	EShowEnvelope m_ShowEnvelopePreview;
 	bool m_ShowServerSettingsEditor;
 	bool m_ShowPicker;
 
@@ -1114,9 +1136,10 @@ public:
 
 	bool IsEnvelopeUsed(int EnvelopeIndex) const;
 
-	void RenderImages(CUIRect Toolbox, CUIRect View);
-	void RenderLayers(CUIRect Toolbox, CUIRect View);
-	void RenderSounds(CUIRect Toolbox, CUIRect View);
+	void RenderLayers(CUIRect LayersBox);
+	void RenderImagesList(CUIRect Toolbox);
+	void RenderSelectedImage(CUIRect View);
+	void RenderSounds(CUIRect Toolbox);
 	void RenderModebar(CUIRect View);
 	void RenderStatusbar(CUIRect View);
 	void RenderEnvelopeEditor(CUIRect View);
@@ -1128,7 +1151,7 @@ public:
 	void AddFileDialogEntry(int Index, CUIRect *pView);
 	void SelectGameLayer();
 	void SortImages();
-	void SelectLayerByTile(float &Scroll);
+	bool SelectLayerByTile();
 
 	//Tile Numbers For Explanations - TODO: Add/Improve tiles and explanations
 	enum
@@ -1225,6 +1248,8 @@ public:
 	static int PopupSpeedup(CEditor *pEditor, CUIRect View, void *pContext);
 	static int PopupSwitch(CEditor *pEditor, CUIRect View, void *pContext);
 	static int PopupTune(CEditor *pEditor, CUIRect View, void *pContext);
+	static int PopupGoto(CEditor *pEditor, CUIRect View, void *pContext);
+	void Goto(float X, float Y);
 	unsigned char m_TeleNumber;
 
 	unsigned char m_TuningNum;
@@ -1235,6 +1260,9 @@ public:
 
 	unsigned char m_SwitchNum;
 	unsigned char m_SwitchDelay;
+
+	int m_GotoX;
+	int m_GotoY;
 };
 
 // make sure to inline this function

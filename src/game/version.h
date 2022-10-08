@@ -3,7 +3,7 @@
 #ifndef GAME_VERSION_H
 #define GAME_VERSION_H
 #ifndef GAME_RELEASE_VERSION
-#define GAME_RELEASE_VERSION "16.2.2"
+#define GAME_RELEASE_VERSION "16.4"
 #endif
 
 // teeworlds
@@ -13,7 +13,7 @@
 #define GAME_NETVERSION7 "0.7 802f1be60a05665f"
 
 // ddnet
-#define CLIENT_VERSIONNR 16022
+#define CLIENT_VERSIONNR 16040
 extern const char *GIT_SHORTREV_HASH;
 #define GAME_NAME "DDNet"
 #endif
