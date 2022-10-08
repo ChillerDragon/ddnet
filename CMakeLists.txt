@@ -1696,12 +1696,8 @@ set_src(BASE GLOB_RECURSE src/base
   dissector/byte_printer.h
   dissector/compat.cpp
   dissector/compat.h
-  dissector/debug_dump_snapshot.cpp
-  dissector/debug_dump_snapshot.h
   dissector/dissector.cpp
   dissector/dissector.h
-  dissector/num_to_str.cpp
-  dissector/num_to_str.h
   dissector/snapshot.cpp
   dissector/snapshot.h
   dynamic.h

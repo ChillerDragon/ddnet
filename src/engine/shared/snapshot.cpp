@@ -365,13 +365,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 	int *pEnd = (int *)(((char *)pSrcData + DataSize));
 
 	CSnapshotBuilder Builder;
-	Builder.Init(/* Sixup */);
-  // ddnet's builder already has a m_Sixup that can be activated on Init
-  // this then translates the messages which currently seems to be the problem
-  // because the snap contains items of type 10 for characters currently
-  // but ddnet expects character to be 9
-  // but sadly activating sixup just breaks things into a even worse state
-  // setting m_Sixup to true makes the client hang in connecting screen again :(
+	Builder.Init(false, Sixup);
 
 	// unpack deleted stuff
 	int *pDeleted = pData;
@@ -589,11 +583,12 @@ CSnapshotBuilder::CSnapshotBuilder()
 	m_NumExtendedItemTypes = 0;
 }
 
-void CSnapshotBuilder::Init(bool Sixup)
+void CSnapshotBuilder::Init(bool Sixup, bool SixupClient)
 {
 	m_DataSize = 0;
 	m_NumItems = 0;
 	m_Sixup = Sixup;
+	m_SixupClient = SixupClient;
 
 	for(int i = 0; i < m_NumExtendedItemTypes; i++)
 	{
@@ -689,6 +684,16 @@ void *CSnapshotBuilder::NewItem(int Type, int ID, int Size)
 	{
 		if(Type >= 0)
 			Type = Obj_SixToSeven(Type);
+		else
+			Type *= -1;
+
+		if(Type < 0)
+			return pObj;
+	}
+	else if(m_SixupClient && !Extended)
+	{
+		if(Type >= 0)
+			Type = Obj_SevenToSix(Type);
 		else
 			Type *= -1;
 

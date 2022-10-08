@@ -152,11 +152,12 @@ class CSnapshotBuilder
 	int GetTypeFromIndex(int Index);
 
 	bool m_Sixup;
+	bool m_SixupClient;
 
 public:
 	CSnapshotBuilder();
 
-	void Init(bool Sixup = false);
+	void Init(bool Sixup = false, bool SixupClient = false);
 
 	void *NewItem(int Type, int ID, int Size);
 
