@@ -12,6 +12,7 @@
 
 #include <base/dissector/dissector.h>
 #include <base/dissector/compat.h>
+#include <base/dissector/snapshot.h>
 
 
 
@@ -365,7 +366,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 	int *pEnd = (int *)(((char *)pSrcData + DataSize));
 
 	CSnapshotBuilder Builder;
-	Builder.Init(false, Sixup);
+	Builder.Init();
 
 	// unpack deleted stuff
 	int *pDeleted = pData;
@@ -583,12 +584,11 @@ CSnapshotBuilder::CSnapshotBuilder()
 	m_NumExtendedItemTypes = 0;
 }
 
-void CSnapshotBuilder::Init(bool Sixup, bool SixupClient)
+void CSnapshotBuilder::Init(bool Sixup)
 {
 	m_DataSize = 0;
 	m_NumItems = 0;
 	m_Sixup = Sixup;
-	m_SixupClient = SixupClient;
 
 	for(int i = 0; i < m_NumExtendedItemTypes; i++)
 	{
@@ -674,6 +674,7 @@ void *CSnapshotBuilder::NewItem(int Type, int ID, int Size)
 	bool Extended = false;
 	if(Type >= OFFSET_UUID)
 	{
+		exit(1);
 		Extended = true;
 		Type = GetTypeFromIndex(GetExtendedItemTypeIndex(Type));
 	}
@@ -684,16 +685,6 @@ void *CSnapshotBuilder::NewItem(int Type, int ID, int Size)
 	{
 		if(Type >= 0)
 			Type = Obj_SixToSeven(Type);
-		else
-			Type *= -1;
-
-		if(Type < 0)
-			return pObj;
-	}
-	else if(m_SixupClient && !Extended)
-	{
-		if(Type >= 0)
-			Type = Obj_SevenToSix(Type);
 		else
 			Type *= -1;
 

@@ -1140,6 +1140,13 @@ void CGameClient::InvalidateSnapshot()
 	SnapCollectEntities();
 }
 
+// TODO: do something like CGameContext::PreProcessMsg instead
+//       to be consistent with the server side bridge implementation
+void CGameClient::OnNewSnapItem7(const IClient::CSnapItem &Item)
+{
+	dbg_msg("snapitem7", "type=%d", Item.m_Type);
+}
+
 void CGameClient::OnNewSnapshot()
 {
 	auto &&Evolve = [this](CNetObj_Character *pCharacter, int Tick) {
@@ -1204,6 +1211,11 @@ void CGameClient::OnNewSnapshot()
 		{
 			IClient::CSnapItem Item;
 			const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
+			if(m_pClient->IsSixup())
+			{
+				OnNewSnapItem7(Item);
+				return;
+			}
 
 			if(Item.m_Type == NETOBJTYPE_CLIENTINFO)
 			{
