@@ -74,6 +74,8 @@
 #include "prediction/entities/character.h"
 #include "prediction/entities/projectile.h"
 
+#include <base/dissector/snapshot.h>
+
 using namespace std::chrono_literals;
 
 const char *CGameClient::Version() const { return GAME_VERSION; }
@@ -1142,9 +1144,16 @@ void CGameClient::InvalidateSnapshot()
 
 // TODO: do something like CGameContext::PreProcessMsg instead
 //       to be consistent with the server side bridge implementation
-void CGameClient::OnNewSnapItem7(const IClient::CSnapItem &Item)
+void CGameClient::OnNewSnapItem7(const IClient::CSnapItem &Item, const void *pData)
 {
-	dbg_msg("snapitem7", "type=%d", Item.m_Type);
+	char aType[128];
+	netobj_to_str(Item.m_Type, aType, sizeof(aType));
+	dbg_msg("snapitem7", "type=%d (%s)", Item.m_Type, aType);
+	if(Item.m_Type == NETOBJTYPE_CHARACTER)
+	{
+		dbg_msg("snapitem7", "got character with id=%d", Item.m_ID);
+		// TODO: do item manipulation magic and then let the old ddnet code do the rest
+	}
 }
 
 void CGameClient::OnNewSnapshot()
@@ -1213,7 +1222,7 @@ void CGameClient::OnNewSnapshot()
 			const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
 			if(m_pClient->IsSixup())
 			{
-				OnNewSnapItem7(Item);
+				OnNewSnapItem7(Item, pData);
 				return;
 			}
 

@@ -460,7 +460,7 @@ public:
 	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy) override;
 	void InvalidateSnapshot() override;
 	void OnNewSnapshot() override;
-	void OnNewSnapItem7(const IClient::CSnapItem &Item);
+	void OnNewSnapItem7(const IClient::CSnapItem &Item, const void *pData);
 	void OnPredict() override;
 	void OnActivateEditor() override;
 	void OnDummySwap() override;
