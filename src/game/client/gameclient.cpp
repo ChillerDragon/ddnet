@@ -1148,10 +1148,14 @@ void CGameClient::OnNewSnapItem7(const IClient::CSnapItem &Item, const void *pDa
 {
 	char aType[128];
 	netobj_to_str(Item.m_Type, aType, sizeof(aType));
-	dbg_msg("snapitem7", "type=%d (%s)", Item.m_Type, aType);
-	if(Item.m_Type == NETOBJTYPE_CHARACTER)
+	dbg_msg("snapitem7", "type=%d (%s) size=%d", Item.m_Type, aType, Item.m_DataSize);
+	if(Item.m_Type == protocol7::NETOBJTYPE_CHARACTER)
 	{
 		dbg_msg("snapitem7", "got character with id=%d", Item.m_ID);
+    const protocol7::CNetObj_Character *pChr = ((const protocol7::CNetObj_Character *)pData);
+
+    dbg_msg("snapitem7", "character m_X=%d m_Y=%d", pChr->m_X, pChr->m_Y);
+
 		// TODO: do item manipulation magic and then let the old ddnet code do the rest
 	}
 }
