@@ -9,6 +9,7 @@
 #include <base/hash.h>
 
 #include <game/generated/protocol.h>
+#include <game/generated/protocol7.h>
 
 #include <engine/friends.h>
 #include <functional>
@@ -322,6 +323,7 @@ public:
 	virtual bool IsDisplayingWarning() = 0;
 
 	virtual CNetObjHandler *GetNetObjHandler() = 0;
+	virtual protocol7::CNetObjHandler *GetNetObjHandler7() = 0;
 
 	virtual int ClientVersion() const = 0;
 };

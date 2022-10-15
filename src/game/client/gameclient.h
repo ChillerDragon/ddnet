@@ -17,6 +17,10 @@
 
 #include <game/client/prediction/gameworld.h>
 
+#include <game/generated/protocol7.h>
+#include <game/generated/protocolglue.h>
+
+
 // components
 #include "components/background.h"
 #include "components/binds.h"
@@ -156,6 +160,7 @@ private:
 	std::vector<class CComponent *> m_vpAll;
 	std::vector<class CComponent *> m_vpInput;
 	CNetObjHandler m_NetObjHandler;
+	protocol7::CNetObjHandler m_NetObjHandler7;
 
 	class IEngine *m_pEngine;
 	class IInput *m_pInput;
@@ -532,6 +537,7 @@ public:
 	bool CanDisplayWarning() override;
 	bool IsDisplayingWarning() override;
 	CNetObjHandler *GetNetObjHandler() override;
+	protocol7::CNetObjHandler *GetNetObjHandler7() override;
 
 	void LoadGameSkin(const char *pPath, bool AsDir = false);
 	void LoadEmoticonsSkin(const char *pPath, bool AsDir = false);

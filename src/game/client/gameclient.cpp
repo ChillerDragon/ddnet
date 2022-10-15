@@ -3348,6 +3348,11 @@ CNetObjHandler *CGameClient::GetNetObjHandler()
 	return &m_NetObjHandler;
 }
 
+protocol7::CNetObjHandler *CGameClient::GetNetObjHandler7()
+{
+	return &m_NetObjHandler7;
+}
+
 void CGameClient::SnapCollectEntities()
 {
 	int NumSnapItems = Client()->SnapNumItems(IClient::SNAP_CURRENT);

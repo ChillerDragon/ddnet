@@ -2249,7 +2249,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					// create a verified and unpacked snapshot
 					unsigned char aAltSnapBuffer[CSnapshot::MAX_SIZE];
 					CSnapshot *pAltSnapBuffer = (CSnapshot *)aAltSnapBuffer;
-					const int AltSnapSize = UnpackAndValidateSnapshot(pTmpBuffer3, pAltSnapBuffer);
+					const int AltSnapSize = UnpackAndValidateSnapshot(pTmpBuffer3, pAltSnapBuffer, IsSixup());
 					if(AltSnapSize < 0)
 					{
 						dbg_msg("client", "unpack snapshot and validate failed. error=%d", AltSnapSize);
@@ -2257,6 +2257,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					}
 
 					// add new
+					// TODO: add support for 0.7 validation in UnpackAndValidateSnapshot
 					if(IsSixup())
 						m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, SnapSize, pTmpBuffer3);
 					else
@@ -2405,11 +2406,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 	}
 }
 
-int CClient::UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshot *pTo)
+int CClient::UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshot *pTo, bool Sixup)
 {
 	CUnpacker Unpacker;
 	CSnapshotBuilder Builder;
 	Builder.Init();
+	// protocol7::CNetObjHandler *pNetObjHandler7 = GameClient()->GetNetObjHandler7();
 	CNetObjHandler *pNetObjHandler = GameClient()->GetNetObjHandler();
 
 	int Num = pFrom->NumItems();
@@ -2421,6 +2423,7 @@ int CClient::UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshot *pTo)
 		const void *pData = pFromItem->Data();
 		Unpacker.Reset(pData, FromItemSize);
 
+		// void *pRawObj = Sixup ? pNetObjHandler7->SecureUnpackObj(ItemType, &Unpacker) : pNetObjHandler->SecureUnpackObj(ItemType, &Unpacker);
 		void *pRawObj = pNetObjHandler->SecureUnpackObj(ItemType, &Unpacker);
 		if(!pRawObj)
 		{
@@ -2432,6 +2435,7 @@ int CClient::UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshot *pTo)
 			}
 			continue;
 		}
+		// const int ItemSize = Sixup ? pNetObjHandler7->GetUnpackedObjSize(ItemType) : pNetObjHandler->GetUnpackedObjSize(ItemType);
 		const int ItemSize = pNetObjHandler->GetUnpackedObjSize(ItemType);
 
 		void *pObj = Builder.NewItem(pFromItem->Type(), pFromItem->ID(), ItemSize);
