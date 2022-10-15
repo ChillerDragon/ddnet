@@ -1227,7 +1227,7 @@ void CGameClient::OnNewSnapshot()
 			if(m_pClient->IsSixup())
 			{
 				OnNewSnapItem7(Item, pData);
-				return;
+				continue;
 			}
 
 			if(Item.m_Type == NETOBJTYPE_CLIENTINFO)
