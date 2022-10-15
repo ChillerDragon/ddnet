@@ -359,6 +359,28 @@ static int RangeCheck(void *pEnd, void *pPtr, int Size)
 	return 0;
 }
 
+int* PreProcessItemData(const void *pData, const int Type7, const int Type, const int ID)
+{
+	static char s_aRawData[128];
+
+	if(Type7 == protocol7::NETOBJTYPE_GAMEDATA)
+	{
+		dbg_msg("snap", "got gamedata with id=%d", ID);
+		// todo: compare protcol.h and protocol7.h gamedata is very different
+	}
+	else if(Type7 == protocol7::NETOBJTYPE_CHARACTER)
+	{
+		dbg_msg("snap", "got character with id=%d", ID);
+	}
+	else
+	{
+		dbg_msg("snap", "todo: unsupported type=%d id=%d", Type7, ID);
+		// mem_copy(s_aRawData, pData, sizeof(s_aRawData));
+	}
+
+	return (int *)s_aRawData;
+}
+
 int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pSrcData, int DataSize, bool Sixup)
 {
 	CData *pDelta = (CData *)pSrcData;
@@ -408,7 +430,11 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 		if(pData + 2 > pEnd)
 			return -1;
 
-		const int Type = *pData++;
+		int Type = *pData++;
+		int Type7 = Type;
+		if(Sixup)
+			Type = Obj_SevenToSix(Type7);
+		// dbg_msg("snap", "type %d -> %d", Type7, Type);
 		if(Type < 0 || Type > CSnapshot::MAX_TYPE)
 			return -3;
 
@@ -419,8 +445,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 		int ItemSize;
 		init_compat();
 		const short * pItemSizes = Sixup ? _gs_aItemSizes : m_aItemSizes;
-		if(Type < MAX_NETOBJSIZES && pItemSizes[Type])
-			ItemSize = pItemSizes[Type];
+		if(Type < MAX_NETOBJSIZES && pItemSizes[Type7])
+			ItemSize = pItemSizes[Type7];
 		else
 		{
 			if(pData + 1 > pEnd)
@@ -444,15 +470,19 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 		if(!pNewData)
 			return -4;
 
+		int *pTransData = pData;
+		if(Sixup)
+			pTransData = PreProcessItemData(pData, Type7, Type, ID);
+
 		const int FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
 			// we got an update so we need to apply the diff
-			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize / 4, &m_aSnapshotDataRate[Type]);
+			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pTransData, pNewData, ItemSize / 4, &m_aSnapshotDataRate[Type]);
 		}
-		else // no previous, just copy the pData
+		else // no previous, just copy the Data
 		{
-			mem_copy(pNewData, pData, ItemSize);
+			mem_copy(pNewData, pTransData, ItemSize);
 			m_aSnapshotDataRate[Type] += ItemSize * 8;
 		}
 		m_aSnapshotDataUpdates[Type]++;
