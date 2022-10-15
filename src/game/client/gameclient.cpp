@@ -1142,23 +1142,56 @@ void CGameClient::InvalidateSnapshot()
 	SnapCollectEntities();
 }
 
-// TODO: do something like CGameContext::PreProcessMsg instead
-//       to be consistent with the server side bridge implementation
-void CGameClient::OnNewSnapItem7(const IClient::CSnapItem &Item, const void *pData)
-{
-	char aType[128];
-	netobj_to_str(Item.m_Type, aType, sizeof(aType));
-	dbg_msg("snapitem7", "type=%d (%s) size=%d", Item.m_Type, aType, Item.m_DataSize);
-	if(Item.m_Type == protocol7::NETOBJTYPE_CHARACTER)
-	{
-		dbg_msg("snapitem7", "got character with id=%d", Item.m_ID);
-		const protocol7::CNetObj_Character *pChr = ((const protocol7::CNetObj_Character *)pData);
+// this is fucked because the client calls SnapFindItem() all over the place
+// we are too late here
+// the whole snapshot in the storage has to be in 0.6 format already
+// so this has to be done when the items are added to the snapshot
+// void *CGameClient::OnNewSnapItem7(IClient::CSnapItem &Item, void *pData)
+// {
+// 	static char s_aRawData[1024];
+// 	char aType[128];
+// 	netobj_to_str(Item.m_Type, aType, sizeof(aType));
+// 	dbg_msg("snapitem7", "type=%d (%s) size=%d", Item.m_Type, aType, Item.m_DataSize);
+// 	if(Item.m_Type == protocol7::NETOBJTYPE_CHARACTER)
+// 	{
+// 		Item.m_Type = NETOBJTYPE_CHARACTER;
+// 		dbg_msg("snapitem7", "got character with id=%d", Item.m_ID);
+// 		const protocol7::CNetObj_Character *pChr7 = ((const protocol7::CNetObj_Character *)pData);
 
-		dbg_msg("snapitem7", "character m_X=%d m_Y=%d", pChr->m_X, pChr->m_Y);
+// 		dbg_msg("snapitem7", "character m_X=%d m_Y=%d", pChr7->m_X, pChr7->m_Y);
 
-		// TODO: do item manipulation magic and then let the old ddnet code do the rest
-	}
-}
+
+// 		protocol7::CNetObj_Character *pItem7 = (protocol7::CNetObj_Character *)pData;
+// 		// Should probably use a placement new to start the lifetime of the object to avoid future weirdness
+// 		::CNetObj_Character *pItem6 = (::CNetObj_Character *)s_aRawData;
+
+// 		mem_copy(pItem6, pChr7, sizeof(::CNetObj_CharacterCore));
+// 		pItem6->m_PlayerFlags = 0;
+// 		pItem6->m_Health = pItem7->m_Health;
+// 		pItem6->m_Armor = pItem7->m_Armor;
+// 		pItem6->m_AmmoCount = pItem7->m_AmmoCount;
+// 		pItem6->m_Weapon = pItem7->m_Weapon;
+// 		pItem6->m_Emote = pItem7->m_Emote;
+// 		pItem6->m_AttackTick = pItem7->m_AttackTick;
+
+
+// 		// ::CNetObj_Character Chr6;
+// 		// mem_copy(&Chr6, pChr7, sizeof(::CNetObj_CharacterCore));
+// 		// Chr6.m_PlayerFlags = 0;
+// 		// Chr6.m_Health = pChr7->m_Health;
+// 		// Chr6.m_Armor = pChr7->m_Armor;
+// 		// Chr6.m_AmmoCount = pChr7->m_AmmoCount;
+// 		// Chr6.m_Weapon = pChr7->m_Weapon;
+// 		// Chr6.m_Emote = pChr7->m_Emote;
+// 		// Chr6.m_AttackTick = pChr7->m_AttackTick;
+
+// 		// mem_copy(pData, &Chr6, sizeof(Chr6));
+
+// 		// TODO: do item manipulation magic and then let the old ddnet code do the rest
+// 		return s_aRawData;
+// 	}
+// 	return nullptr;
+// }
 
 void CGameClient::OnNewSnapshot()
 {
@@ -1223,12 +1256,12 @@ void CGameClient::OnNewSnapshot()
 		for(int i = 0; i < Num; i++)
 		{
 			IClient::CSnapItem Item;
-			const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
-			if(m_pClient->IsSixup())
-			{
-				OnNewSnapItem7(Item, pData);
-				continue;
-			}
+			void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
+			// if(m_pClient->IsSixup())
+			// {
+			// 	if(!(pData = OnNewSnapItem7(Item, pData)))
+			// 		continue;
+			// }
 
 			if(Item.m_Type == NETOBJTYPE_CLIENTINFO)
 			{
