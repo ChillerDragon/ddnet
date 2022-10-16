@@ -3,6 +3,7 @@
 #include <base/math.h>
 
 #include <engine/shared/config.h>
+#include <engine/shared/protocolglue.h>
 
 #include <game/client/components/camera.h>
 #include <game/client/components/chat.h>
