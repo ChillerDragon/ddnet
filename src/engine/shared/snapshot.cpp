@@ -10,6 +10,7 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <game/generated/protocol7.h>
 #include <game/generated/protocolglue.h>
 
 // CSnapshot
@@ -241,6 +242,7 @@ void CSnapshotDelta::UndiffItem(const int *pPast, int *pDiff, int *pOut, int Siz
 CSnapshotDelta::CSnapshotDelta()
 {
 	mem_zero(m_aItemSizes, sizeof(m_aItemSizes));
+	mem_zero(m_aItemSizes7, sizeof(m_aItemSizes7));
 	mem_zero(m_aSnapshotDataRate, sizeof(m_aSnapshotDataRate));
 	mem_zero(m_aSnapshotDataUpdates, sizeof(m_aSnapshotDataUpdates));
 	mem_zero(&m_Empty, sizeof(m_Empty));
@@ -249,6 +251,7 @@ CSnapshotDelta::CSnapshotDelta()
 CSnapshotDelta::CSnapshotDelta(const CSnapshotDelta &Old)
 {
 	mem_copy(m_aItemSizes, Old.m_aItemSizes, sizeof(m_aItemSizes));
+	mem_copy(m_aItemSizes7, Old.m_aItemSizes7, sizeof(m_aItemSizes7));
 	mem_copy(m_aSnapshotDataRate, Old.m_aSnapshotDataRate, sizeof(m_aSnapshotDataRate));
 	mem_copy(m_aSnapshotDataUpdates, Old.m_aSnapshotDataUpdates, sizeof(m_aSnapshotDataUpdates));
 	mem_zero(&m_Empty, sizeof(m_Empty));
@@ -259,6 +262,13 @@ void CSnapshotDelta::SetStaticsize(int ItemType, int Size)
 	if(ItemType < 0 || ItemType >= MAX_NETOBJSIZES)
 		return;
 	m_aItemSizes[ItemType] = Size;
+}
+
+void CSnapshotDelta::SetStaticsize7(int ItemType, int Size)
+{
+	if(ItemType < 0 || ItemType >= MAX_NETOBJSIZES)
+		return;
+	m_aItemSizes7[ItemType] = Size;
 }
 
 const CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta() const
@@ -357,7 +367,7 @@ static int RangeCheck(void *pEnd, void *pPtr, int Size)
 	return 0;
 }
 
-int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pSrcData, int DataSize)
+int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pSrcData, int DataSize, bool Sixup)
 {
 	CData *pDelta = (CData *)pSrcData;
 	int *pData = (int *)pDelta->m_aData;
@@ -415,8 +425,9 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 			return -203;
 
 		int ItemSize;
-		if(Type < MAX_NETOBJSIZES && m_aItemSizes[Type])
-			ItemSize = m_aItemSizes[Type];
+		const short *pItemSizes = Sixup ? m_aItemSizes7 : m_aItemSizes;
+		if(Type < MAX_NETOBJSIZES && pItemSizes[Type])
+			ItemSize = pItemSizes[Type];
 		else
 		{
 			if(pData + 1 > pEnd)
@@ -509,7 +520,7 @@ void CSnapshotStorage::PurgeUntil(int Tick)
 	m_pLast = 0;
 }
 
-void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData)
+void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData, int TransDataSize, void *pTransData)
 {
 	// allocate memory for holder + snapshot_data
 	int TotalSize = sizeof(CHolder) + DataSize;
@@ -517,6 +528,10 @@ void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData,
 	if(AltDataSize > 0)
 	{
 		TotalSize += AltDataSize;
+	}
+	if(TransDataSize > 0)
+	{
+		TotalSize += TransDataSize;
 	}
 
 	CHolder *pHolder = (CHolder *)malloc(TotalSize);
@@ -538,6 +553,21 @@ void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData,
 	{
 		pHolder->m_pAltSnap = 0;
 		pHolder->m_AltSnapSize = 0;
+	}
+
+	if(TransDataSize > 0)
+	{
+		if(AltDataSize > 0)
+			pHolder->m_pTransSnap = (CSnapshot *)(((char *)pHolder->m_pAltSnap) + AltDataSize);
+		else
+			pHolder->m_pTransSnap = (CSnapshot *)(((char *)pHolder->m_pSnap) + DataSize);
+		mem_copy(pHolder->m_pTransSnap, pTransData, TransDataSize);
+		pHolder->m_TransSnapSize = TransDataSize;
+	}
+	else
+	{
+		pHolder->m_pTransSnap = 0;
+		pHolder->m_TransSnapSize = 0;
 	}
 
 	// link

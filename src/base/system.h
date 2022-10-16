@@ -845,6 +845,7 @@ enum
 	NETTYPE_IPV4 = 1,
 	NETTYPE_IPV6 = 2,
 	NETTYPE_WEBSOCKET_IPV4 = 8,
+	NETTYPE_TW7 = 16,
 
 	NETTYPE_ALL = NETTYPE_IPV4 | NETTYPE_IPV6 | NETTYPE_WEBSOCKET_IPV4,
 	NETTYPE_MASK = NETTYPE_ALL | NETTYPE_LINK_BROADCAST,
@@ -933,9 +934,28 @@ int net_addr_comp_noport(const NETADDR *a, const NETADDR *b);
  * @param max_length Maximum size of the string.
  * @param add_port add port to string or not
  *
+ * @return 0 on success,
+ *
  * @remark The string will always be zero terminated
  */
-void net_addr_str(const NETADDR *addr, char *string, int max_length, int add_port);
+int net_addr_str(const NETADDR *addr, char *string, int max_length, int add_port);
+
+/**
+ * Turns a network address into a url string.
+ * Examples:
+ *   tw-0.6+udp://127.0.0.1:8303
+ *   tw-0.7+udp://127.0.0.1
+ *
+ * @ingroup Network-General
+ *
+ * @param addr Address to turn into a string.
+ * @param string Buffer to fill with the url string.
+ * @param max_length Maximum size of the url string.
+ * @param add_port add port to url string or not
+ *
+ * @remark The string will always be zero terminated
+ */
+void net_addr_url_str(const NETADDR *addr, char *string, int max_length, int add_port);
 
 /**
  * Turns url string into a network address struct.

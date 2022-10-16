@@ -373,7 +373,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 			else if(ID == COL_VERSION)
 			{
-				const char *pVersion = pItem->m_aVersion;
+				const char *pVersion = pItem->ShortVersion();
 				UI()->DoLabelStreamed(*pItem->m_pUIElement->Rect(gs_OffsetColVersion), &Button, pVersion, FontSize, TEXTALIGN_MR);
 			}
 			else if(ID == COL_GAMETYPE)

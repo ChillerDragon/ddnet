@@ -228,6 +228,13 @@ bool CServerBrowser::SortComparePing(int Index1, int Index2) const
 	return pIndex1->m_Info.m_Latency < pIndex2->m_Info.m_Latency;
 }
 
+bool CServerBrowser::SortCompareVersion(int Index1, int Index2) const
+{
+	CServerEntry *pIndex1 = m_ppServerlist[Index1];
+	CServerEntry *pIndex2 = m_ppServerlist[Index2];
+	return str_comp(pIndex1->m_Info.m_aVersion, pIndex2->m_Info.m_aVersion) < 0;
+}
+
 bool CServerBrowser::SortCompareGametype(int Index1, int Index2) const
 {
 	CServerEntry *pIndex1 = m_ppServerlist[Index1];
@@ -469,6 +476,8 @@ void CServerBrowser::Sort()
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist + m_NumSortedServers, CSortWrap(this, &CServerBrowser::SortCompareName));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_PING)
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist + m_NumSortedServers, CSortWrap(this, &CServerBrowser::SortComparePing));
+	else if(g_Config.m_BrSort == IServerBrowser::SORT_VERSION)
+		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist + m_NumSortedServers, CSortWrap(this, &CServerBrowser::SortCompareVersion));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_MAP)
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist + m_NumSortedServers, CSortWrap(this, &CServerBrowser::SortCompareMap));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_NUMPLAYERS)
@@ -543,7 +552,7 @@ void ServerBrowserFormatAddresses(char *pBuffer, int BufferSize, NETADDR *pAddrs
 		{
 			return;
 		}
-		net_addr_str(&pAddrs[i], pBuffer, BufferSize, true);
+		net_addr_url_str(&pAddrs[i], pBuffer, BufferSize, true);
 		int Length = str_length(pBuffer);
 		pBuffer += Length;
 		BufferSize -= Length;
