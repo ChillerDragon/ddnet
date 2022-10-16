@@ -24,6 +24,12 @@
 #include <game/client/ui.h>
 #include <game/voting.h>
 
+#include <game/client/render.h>
+
+#include <game/client/components/skins7.h>
+
+#include <game/client/lineinput.h>
+
 struct CServerProcess
 {
 	PROCESS m_Process;
@@ -227,6 +233,14 @@ protected:
 	bool m_NeedSendinfo;
 	bool m_NeedSendDummyinfo;
 	int m_SettingPlayerPage;
+
+	// 0.7 skins
+	int m_TeePartSelected;
+	bool m_RefreshSkinSelector;
+	const CSkins7::CSkin *m_pSelectedSkin;
+	bool m_SkinModified;
+	char m_aSaveSkinName[protocol7::MAX_SKIN_ARRAY_SIZE];
+	CLineInput m_SkinNameInput;
 
 	// for map download popup
 	int64_t m_DownloadLastCheckTime;
@@ -504,6 +518,13 @@ protected:
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsDummyPlayer(CUIRect MainView);
 	void RenderSettingsTee(CUIRect MainView);
+	void RenderSettingsTee7(CUIRect MainView);
+	void RenderSettingsTeeCustom(CUIRect MainView);
+	void RenderSettingsTeeBasic(CUIRect MainView);
+	void RenderSkinPartPalette(CUIRect MainView);
+	void RenderHSLPicker(CUIRect MainView);
+	void RenderSkinSelection(CUIRect MainView);
+	void RenderSkinPartSelection(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
 	void ResetSettingsControls();
 	void RenderSettingsGraphics(CUIRect MainView);
@@ -573,6 +594,7 @@ public:
 		SETTINGS_GENERAL,
 		SETTINGS_PLAYER,
 		SETTINGS_TEE,
+		SETTINGS_TEE7,
 		SETTINGS_APPEARANCE,
 		SETTINGS_CONTROLS,
 		SETTINGS_GRAPHICS,
