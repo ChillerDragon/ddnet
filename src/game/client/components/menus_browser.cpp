@@ -616,12 +616,12 @@ void CMenus::Connect(const char *pAddress)
 		PopupConfirm(Localize("Disconnect"), Localize("Are you sure that you want to disconnect and switch to a different server?"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmSwitchServer);
 	}
 	else
-		Client()->Connect(pAddress);
+		Client()->Connect(pAddress, false /* TODO: 0.7 */);
 }
 
 void CMenus::PopupConfirmSwitchServer()
 {
-	Client()->Connect(m_aNextServer);
+	Client()->Connect(m_aNextServer, false /* TODO: 0.7 */);
 }
 
 void CMenus::RenderServerbrowserFilters(CUIRect View)

@@ -35,6 +35,9 @@
 #include <game/mapitems.h>
 #include <game/version.h>
 
+#include <game/generated/protocol7.h>
+#include <game/generated/protocolglue.h>
+
 #include "components/background.h"
 #include "components/binds.h"
 #include "components/broadcast.h"
@@ -77,6 +80,7 @@ const char *CGameClient::Version() const { return GAME_VERSION; }
 const char *CGameClient::NetVersion() const { return GAME_NETVERSION; }
 int CGameClient::DDNetVersion() const { return CLIENT_VERSIONNR; }
 const char *CGameClient::DDNetVersionStr() const { return m_aDDNetVersionStr; }
+int CGameClient::ClientVersion7() const { return CLIENT_VERSION7; }
 const char *CGameClient::GetItemName(int Type) const { return m_NetObjHandler.GetObjName(Type); }
 
 void CGameClient::OnConsoleInit()
@@ -249,6 +253,11 @@ void CGameClient::OnInit()
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
+	// HACK: only set static size for items, which were available in the first 0.7 release
+	// so new items don't break the snapshot delta
+	static const int OLD_NUM_NETOBJTYPES = 23;
+	for(int i = 0; i < OLD_NUM_NETOBJTYPES; i++)
+		Client()->SnapSetStaticsize7(i, m_NetObjHandler7.GetObjSize(i));
 
 	Client()->LoadFont();
 
@@ -652,7 +661,7 @@ void CGameClient::OnRender()
 		g_Config.m_ClDummy = 0;
 
 	// resend player and dummy info if it was filtered by server
-	if(Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive())
+	if(Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive() && !Client()->IsSixup())
 	{
 		if(m_aCheckInfo[0] == 0)
 		{
@@ -2083,8 +2092,32 @@ void CGameClient::SendSwitchTeam(int Team)
 		m_Camera.OnReset();
 }
 
+void CGameClient::SendStartInfo7()
+{
+	protocol7::CNetMsg_Cl_StartInfo Msg;
+	Msg.m_pName = Config()->m_PlayerName;
+	Msg.m_pClan = Config()->m_PlayerClan;
+	Msg.m_Country = Config()->m_PlayerCountry;
+	static const int NUM_SKINPARTS = 6;
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		Msg.m_apSkinPartNames[p] = "default";
+		Msg.m_aUseCustomColors[p] = 0;
+		Msg.m_aSkinPartColors[p] = 0;
+	}
+	CMsgPacker Packer(Msg.MsgID(), false, true);
+	if(Msg.Pack(&Packer))
+		return;
+	Client()->SendMsg(g_Config.m_ClDummy, &Packer, MSGFLAG_VITAL | MSGFLAG_FLUSH);
+}
+
 void CGameClient::SendInfo(bool Start)
 {
+	if(m_pClient->IsSixup())
+	{
+		SendStartInfo7();
+		return;
+	}
 	if(Start)
 	{
 		CNetMsg_Cl_StartInfo Msg;
@@ -3294,6 +3327,11 @@ bool CGameClient::IsDisplayingWarning()
 CNetObjHandler *CGameClient::GetNetObjHandler()
 {
 	return &m_NetObjHandler;
+}
+
+protocol7::CNetObjHandler *CGameClient::GetNetObjHandler7()
+{
+	return &m_NetObjHandler7;
 }
 
 void CGameClient::SnapCollectEntities()

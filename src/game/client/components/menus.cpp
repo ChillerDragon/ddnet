@@ -1367,7 +1367,7 @@ int CMenus::Render()
 			m_JoinTutorial = false;
 			const char *pAddr = ServerBrowser()->GetTutorialServer();
 			if(pAddr)
-				Client()->Connect(pAddr);
+				Client()->Connect(pAddr, false /* TODO: 0.7 */);
 		}
 		if(m_ShowStart && Client()->State() == IClient::STATE_OFFLINE)
 		{
@@ -1744,7 +1744,7 @@ int CMenus::Render()
 			static CButtonContainer s_ButtonTryAgain;
 			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Try again"), 0, &TryAgain) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
-				Client()->Connect(g_Config.m_UiServerAddress, g_Config.m_Password);
+				Client()->Connect(g_Config.m_UiServerAddress, Client()->IsSixup(), g_Config.m_Password);
 			}
 
 			Box.HSplitBottom(60.f, &Box, &Part);

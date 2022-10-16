@@ -53,7 +53,8 @@ int main(int argc, const char **argv)
 
 	g_NetOp.Update();
 
-	while(g_NetOp.Recv(&Packet))
+	SECURITY_TOKEN ResponseToken;
+	while(g_NetOp.Recv(&Packet, &ResponseToken, false))
 	{
 		if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(Packet.m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 		{
