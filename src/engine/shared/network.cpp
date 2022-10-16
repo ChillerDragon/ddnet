@@ -6,8 +6,6 @@
 #include "huffman.h"
 #include "network.h"
 
-#include <base/dissector/dissector.h>
-
 const unsigned char SECURITY_TOKEN_MAGIC[4] = {'T', 'K', 'E', 'N'};
 
 void CNetRecvUnpacker::Clear()
@@ -192,11 +190,6 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 			io_write(ms_DataLogSent, aBuffer, FinalSize);
 			io_flush(ms_DataLogSent);
 		}
-	}
-
-	if(g_Config.m_Debug > 2)
-	{
-		print_packet(pPacket, aBuffer, FinalSize, pAddr, NETWORK_OUT, &g_Config);
 	}
 }
 

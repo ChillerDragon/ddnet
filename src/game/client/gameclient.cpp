@@ -74,8 +74,6 @@
 #include "prediction/entities/character.h"
 #include "prediction/entities/projectile.h"
 
-#include <base/dissector/snapshot.h>
-
 using namespace std::chrono_literals;
 
 const char *CGameClient::Version() const { return GAME_VERSION; }

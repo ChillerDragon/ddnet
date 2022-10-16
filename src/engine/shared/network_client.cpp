@@ -4,7 +4,6 @@
 #include <base/system.h>
 
 #include <engine/shared/config.h>
-#include <base/dissector/dissector.h>
 
 bool CNetClient::Open(NETADDR BindAddr)
 {
@@ -97,8 +96,6 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 		*pResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
 		if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup, &Token, pResponseToken) == 0)
 		{
-			if(g_Config.m_Debug > 1)
-				print_packet(&m_RecvUnpacker.m_Data, pData, Bytes, &Addr, NETWORK_IN, &g_Config);
 			if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
 			{
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
