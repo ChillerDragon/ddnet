@@ -98,3 +98,43 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 		}
 	}
 }
+
+void CBroadcast::RenderClientBroadcast7()
+{
+	const float SecondsRemaining = (m_BroadcastTick - Client()->GameTick(g_Config.m_ClDummy)) / (float)Client()->GameTickSpeed();
+	if(SecondsRemaining <= 0.0f)
+	{
+		TextRender()->DeleteTextContainer(m_ClientTextContainerIndex);
+		return;
+	}
+
+	const float Height = 300.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
+
+	if(m_BroadcastRenderOffset < 0.0f)
+		m_BroadcastRenderOffset = Width / 2.0f - TextRender()->TextWidth(12.0f, m_aClientBroadcastText7, -1, Width) / 2.0f;
+
+	if(!m_ClientTextContainerIndex.Valid())
+	{
+		CTextCursor Cursor;
+		TextRender()->SetCursor(&Cursor, m_BroadcastRenderOffset, 40.0f, 12.0f, TEXTFLAG_RENDER);
+		Cursor.m_LineWidth = Width;
+		TextRender()->CreateTextContainer(m_ClientTextContainerIndex, &Cursor, m_aClientBroadcastText7);
+	}
+	if(m_ClientTextContainerIndex.Valid())
+	{
+		const float Alpha = SecondsRemaining >= 1.0f ? 1.0f : SecondsRemaining;
+		ColorRGBA TextColor = TextRender()->DefaultTextColor();
+		TextColor.a *= Alpha;
+		ColorRGBA OutlineColor = TextRender()->DefaultTextOutlineColor();
+		OutlineColor.a *= Alpha;
+		TextRender()->RenderTextContainer(m_ClientTextContainerIndex, TextColor, OutlineColor);
+	}
+}
+
+void CBroadcast::DoClientBroadcast7(const char *pText)
+{
+	str_copy(m_aClientBroadcastText7, pText);
+	TextRender()->DeleteTextContainer(m_ClientTextContainerIndex);
+}

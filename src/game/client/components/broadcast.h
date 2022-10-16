@@ -10,11 +10,14 @@
 class CBroadcast : public CComponent
 {
 	// broadcasts
+	char m_aClientBroadcastText7[1024];
 	char m_aBroadcastText[1024];
 	int m_BroadcastTick;
 	float m_BroadcastRenderOffset;
 	STextContainerIndex m_TextContainerIndex;
+	STextContainerIndex m_ClientTextContainerIndex;
 
+	void RenderClientBroadcast7();
 	void RenderServerBroadcast();
 	void OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg);
 
@@ -24,6 +27,8 @@ public:
 	virtual void OnWindowResize() override;
 	virtual void OnRender() override;
 	virtual void OnMessage(int MsgType, void *pRawMsg) override;
+
+	void DoClientBroadcast7(const char *pText);
 };
 
 #endif
