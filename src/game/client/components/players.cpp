@@ -780,6 +780,8 @@ void CPlayers::OnRender()
 			const auto *pSkin = m_pClient->m_Skins.FindOrNullptr("x_ninja");
 			if(pSkin != nullptr)
 			{
+				aRenderInfo[i].m_Sixup.Reset();
+
 				aRenderInfo[i].m_OriginalRenderSkin = pSkin->m_OriginalSkin;
 				aRenderInfo[i].m_ColorableRenderSkin = pSkin->m_ColorableSkin;
 				aRenderInfo[i].m_BloodColor = pSkin->m_BloodColor;
