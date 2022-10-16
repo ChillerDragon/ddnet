@@ -122,6 +122,7 @@ public:
 	static int EstimateLatency(int Loc1, int Loc2);
 	static bool ParseLocation(int *pResult, const char *pString);
 	void InfoToString(char *pBuffer, int BufferSize) const;
+	const char *ShortVersion() const { return str_startswith(m_aVersion, "0.7") ? "0.7" : "0.6"; }
 };
 
 class CCommunityCountryServer
