@@ -9,11 +9,7 @@
 
 #include <base/system.h>
 #include <game/generated/protocolglue.h>
-
-#include <base/dissector/dissector.h>
-#include <base/dissector/compat.h>
-#include <base/dissector/snapshot.h>
-
+#include <game/generated/protocol7.h>
 
 
 // CSnapshot
@@ -243,6 +239,7 @@ void CSnapshotDelta::UndiffItem(const int *pPast, int *pDiff, int *pOut, int Siz
 CSnapshotDelta::CSnapshotDelta()
 {
 	mem_zero(m_aItemSizes, sizeof(m_aItemSizes));
+	mem_zero(m_aItemSizes7, sizeof(m_aItemSizes7));
 	mem_zero(m_aSnapshotDataRate, sizeof(m_aSnapshotDataRate));
 	mem_zero(m_aSnapshotDataUpdates, sizeof(m_aSnapshotDataUpdates));
 	mem_zero(&m_Empty, sizeof(m_Empty));
@@ -251,6 +248,7 @@ CSnapshotDelta::CSnapshotDelta()
 CSnapshotDelta::CSnapshotDelta(const CSnapshotDelta &Old)
 {
 	mem_copy(m_aItemSizes, Old.m_aItemSizes, sizeof(m_aItemSizes));
+	mem_copy(m_aItemSizes7, Old.m_aItemSizes7, sizeof(m_aItemSizes7));
 	mem_copy(m_aSnapshotDataRate, Old.m_aSnapshotDataRate, sizeof(m_aSnapshotDataRate));
 	mem_copy(m_aSnapshotDataUpdates, Old.m_aSnapshotDataUpdates, sizeof(m_aSnapshotDataUpdates));
 	mem_zero(&m_Empty, sizeof(m_Empty));
@@ -261,6 +259,13 @@ void CSnapshotDelta::SetStaticsize(int ItemType, int Size)
 	if(ItemType < 0 || ItemType >= MAX_NETOBJSIZES)
 		return;
 	m_aItemSizes[ItemType] = Size;
+}
+
+void CSnapshotDelta::SetStaticsize7(int ItemType, int Size)
+{
+	if(ItemType < 0 || ItemType >= MAX_NETOBJSIZES)
+		return;
+	m_aItemSizes7[ItemType] = Size;
 }
 
 const CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta() const
@@ -443,8 +448,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 			return -3;
 
 		int ItemSize;
-		init_compat();
-		const short * pItemSizes = Sixup ? _gs_aItemSizes : m_aItemSizes;
+		const short * pItemSizes = Sixup ? m_aItemSizes7 : m_aItemSizes;
 		if(Type < MAX_NETOBJSIZES && pItemSizes[Type7])
 			ItemSize = pItemSizes[Type7];
 		else

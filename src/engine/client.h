@@ -225,6 +225,7 @@ public:
 	virtual int SnapItemSize(int SnapID, int Index) const = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
+	virtual void SnapSetStaticsize7(int ItemType, int Size) = 0;
 
 	virtual int SendMsg(int Conn, CMsgPacker *pMsg, int Flags) = 0;
 	virtual int SendMsgActive(CMsgPacker *pMsg, int Flags) = 0;

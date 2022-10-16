@@ -84,6 +84,7 @@ private:
 		MAX_NETOBJSIZES = 64
 	};
 	short m_aItemSizes[MAX_NETOBJSIZES];
+	short m_aItemSizes7[MAX_NETOBJSIZES];
 	int m_aSnapshotDataRate[CSnapshot::MAX_TYPE + 1];
 	int m_aSnapshotDataUpdates[CSnapshot::MAX_TYPE + 1];
 	CData m_Empty;
@@ -97,6 +98,7 @@ public:
 	int GetDataRate(int Index) const { return m_aSnapshotDataRate[Index]; }
 	int GetDataUpdates(int Index) const { return m_aSnapshotDataUpdates[Index]; }
 	void SetStaticsize(int ItemType, int Size);
+	void SetStaticsize7(int ItemType, int Size);
 	const CData *EmptyDelta() const;
 	int CreateDelta(class CSnapshot *pFrom, class CSnapshot *pTo, void *pDstData);
 	int UnpackDelta(class CSnapshot *pFrom, class CSnapshot *pTo, const void *pSrcData, int DataSize, bool Sixup);

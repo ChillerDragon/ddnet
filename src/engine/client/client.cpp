@@ -1099,6 +1099,11 @@ void CClient::SnapSetStaticsize(int ItemType, int Size)
 	m_SnapshotDelta.SetStaticsize(ItemType, Size);
 }
 
+void CClient::SnapSetStaticsize7(int ItemType, int Size)
+{
+	m_SnapshotDelta.SetStaticsize7(ItemType, Size);
+}
+
 void CClient::DebugRender()
 {
 	static NETSTATS Prev, Current;

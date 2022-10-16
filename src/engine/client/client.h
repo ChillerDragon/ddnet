@@ -380,6 +380,7 @@ public:
 	const void *SnapFindItem(int SnapID, int Type, int ID) const override;
 	int SnapNumItems(int SnapID) const override;
 	void SnapSetStaticsize(int ItemType, int Size) override;
+	void SnapSetStaticsize7(int ItemType, int Size) override;
 
 	void Render();
 	void DebugRender();

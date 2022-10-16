@@ -255,6 +255,11 @@ void CGameClient::OnInit()
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
+	// HACK: only set static size for items, which were available in the first 0.7 release
+	// so new items don't break the snapshot delta
+	static const int OLD_NUM_NETOBJTYPES = 23;
+	for(int i = 0; i < OLD_NUM_NETOBJTYPES; i++)
+		Client()->SnapSetStaticsize7(i, m_NetObjHandler7.GetObjSize(i));
 
 	Client()->LoadFont();
 
