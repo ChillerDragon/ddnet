@@ -101,6 +101,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{COL_PLAYERS, IServerBrowser::SORT_NUMPLAYERS, "Players", 1, 85.0f, {0}, {0}},
 		{-1, -1, " ", 1, 10.0f, {0}, {0}},
 		{COL_PING, IServerBrowser::SORT_PING, "Ping", 1, 40.0f, {0}, {0}},
+		// {COL_VERSION, IServerBrowser::SORT_VERSION, "Version", 1, 40.0f, {0}, {0}},
 	};
 
 	int NumCols = std::size(s_aCols);
@@ -373,7 +374,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 			else if(ID == COL_VERSION)
 			{
-				const char *pVersion = pItem->m_aVersion;
+				const char *pVersion = pItem->ShortVersion();
 				UI()->DoLabelStreamed(*pItem->m_pUIElement->Rect(gs_OffsetColVersion), &Button, pVersion, FontSize, TEXTALIGN_MR);
 			}
 			else if(ID == COL_GAMETYPE)

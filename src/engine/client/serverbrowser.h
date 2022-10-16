@@ -190,6 +190,7 @@ private:
 	bool SortCompareName(int Index1, int Index2) const;
 	bool SortCompareMap(int Index1, int Index2) const;
 	bool SortComparePing(int Index1, int Index2) const;
+	bool SortCompareVersion(int Index1, int Index2) const;
 	bool SortCompareGametype(int Index1, int Index2) const;
 	bool SortCompareNumPlayers(int Index1, int Index2) const;
 	bool SortCompareNumClients(int Index1, int Index2) const;

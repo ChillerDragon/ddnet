@@ -623,7 +623,7 @@ void CDemoPlayer::DoTick()
 			// process delta snapshot
 			static char s_aNewsnap[CSnapshot::MAX_SIZE];
 			CSnapshot *pNewsnap = (CSnapshot *)s_aNewsnap;
-			DataSize = m_pSnapshotDelta->UnpackDelta((CSnapshot *)m_aLastSnapshotData, pNewsnap, s_aData, DataSize);
+			DataSize = m_pSnapshotDelta->UnpackDelta((CSnapshot *)m_aLastSnapshotData, pNewsnap, s_aData, DataSize, false /* TODO: 0.7 demos */);
 
 			if(DataSize < 0)
 			{

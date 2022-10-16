@@ -8,7 +8,10 @@
 #include "message.h"
 #include <base/hash.h>
 
+#include <engine/shared/translation_context.h>
+
 #include <game/generated/protocol.h>
+#include <game/generated/protocol7.h>
 
 #include <engine/friends.h>
 #include <functional>
@@ -98,6 +101,7 @@ public:
 	char m_aMapDownloadUrl[256];
 	int m_Points;
 	int64_t m_ReconnectTime;
+	CTranslationContext m_TranslationContext;
 
 	class CSnapItem
 	{
@@ -226,14 +230,15 @@ public:
 	virtual int SnapItemSize(int SnapID, int Index) const = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
+	virtual void SnapSetStaticsize7(int ItemType, int Size) = 0;
 
 	virtual int SendMsg(int Conn, CMsgPacker *pMsg, int Flags) = 0;
 	virtual int SendMsgActive(CMsgPacker *pMsg, int Flags) = 0;
 
 	template<class T>
-	int SendPackMsgActive(T *pMsg, int Flags)
+	int SendPackMsgActive(T *pMsg, int Flags, bool NoTranslate = false)
 	{
-		CMsgPacker Packer(T::ms_MsgID, false);
+		CMsgPacker Packer(T::ms_MsgID, false, NoTranslate);
 		if(pMsg->Pack(&Packer))
 			return -1;
 		return SendMsgActive(&Packer, Flags);
@@ -256,6 +261,8 @@ public:
 	virtual const char *GetCurrentMapPath() const = 0;
 	virtual SHA256_DIGEST GetCurrentMapSha256() const = 0;
 	virtual unsigned GetCurrentMapCrc() const = 0;
+
+	virtual bool IsSixup() = 0;
 
 	virtual int GetCurrentRaceTime() = 0;
 
@@ -337,6 +344,9 @@ public:
 	virtual bool IsDisplayingWarning() = 0;
 
 	virtual CNetObjHandler *GetNetObjHandler() = 0;
+	virtual protocol7::CNetObjHandler *GetNetObjHandler7() = 0;
+
+	virtual int ClientVersion7() const = 0;
 };
 
 void SnapshotRemoveExtraProjectileInfo(unsigned char *pData);

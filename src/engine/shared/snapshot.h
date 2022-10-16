@@ -61,6 +61,7 @@ public:
 
 	unsigned Crc();
 	void DebugDump();
+	int TranslateSevenToSix(CSnapshot *pSixSnapDest, class CTranslationContext &TranslationContext, float LocalTime);
 	bool IsValid(size_t ActualSize) const;
 };
 
@@ -84,6 +85,7 @@ private:
 		MAX_NETOBJSIZES = 64
 	};
 	short m_aItemSizes[MAX_NETOBJSIZES];
+	short m_aItemSizes7[MAX_NETOBJSIZES];
 	int m_aSnapshotDataRate[CSnapshot::MAX_TYPE + 1];
 	int m_aSnapshotDataUpdates[CSnapshot::MAX_TYPE + 1];
 	CData m_Empty;
@@ -97,9 +99,10 @@ public:
 	int GetDataRate(int Index) const { return m_aSnapshotDataRate[Index]; }
 	int GetDataUpdates(int Index) const { return m_aSnapshotDataUpdates[Index]; }
 	void SetStaticsize(int ItemType, int Size);
+	void SetStaticsize7(int ItemType, int Size);
 	const CData *EmptyDelta() const;
 	int CreateDelta(class CSnapshot *pFrom, class CSnapshot *pTo, void *pDstData);
-	int UnpackDelta(class CSnapshot *pFrom, class CSnapshot *pTo, const void *pSrcData, int DataSize);
+	int UnpackDelta(class CSnapshot *pFrom, class CSnapshot *pTo, const void *pSrcData, int DataSize, bool Sixup);
 };
 
 // CSnapshotStorage
@@ -118,9 +121,17 @@ public:
 
 		int m_SnapSize;
 		int m_AltSnapSize;
+		int m_TransSnapSize;
 
 		CSnapshot *m_pSnap;
 		CSnapshot *m_pAltSnap;
+
+		CSnapshot *m_pTransSnap; // translated snap from 0.7 to 0.6
+
+		CSnapshot *AltSnap()
+		{
+			return m_pTransSnap ? m_pTransSnap : m_pAltSnap;
+		}
 	};
 
 	CHolder *m_pFirst;
@@ -131,7 +142,7 @@ public:
 	void Init();
 	void PurgeAll();
 	void PurgeUntil(int Tick);
-	void Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData);
+	void Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData, int TransDataSize, void *pTransData);
 	int Get(int Tick, int64_t *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData);
 };
 

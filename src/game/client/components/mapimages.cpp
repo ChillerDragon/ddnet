@@ -111,7 +111,8 @@ void CMapImages::OnMapLoadImpl(class CLayers *pLayers, IMap *pMap)
 		{
 			char aPath[IO_MAX_PATH_LENGTH];
 			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
-			str_format(aPath, sizeof(aPath), "mapres/%s.png", pName);
+			bool Translated = Client()->IsSixup() && (!str_comp(pName, "grass_doodads") || !str_comp(pName, "grass_main") || !str_comp(pName, "generic_unhookable"));
+			str_format(aPath, sizeof(aPath), "mapres/%s%s.png", pName, Translated ? "_0.7" : "");
 			m_aTextures[i] = Graphics()->LoadTexture(aPath, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, LoadFlag);
 			pMap->UnloadData(pImg->m_ImageName);
 		}

@@ -13,6 +13,7 @@
 #include <game/client/components/statboard.h>
 #include <game/client/gameclient.h>
 #include <game/client/render.h>
+#include <game/generated/client_data7.h>
 #include <game/localization.h>
 
 #include "scoreboard.h"
@@ -327,6 +328,10 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 
 		int DDTeam = m_pClient->m_Teams.Team(pInfo->m_ClientID);
 		int NextDDTeam = 0;
+		bool RenderDead = Client()->m_TranslationContext.m_aClients[pInfo->m_ClientID].m_PlayerFlags7 & protocol7::PLAYERFLAG_DEAD;
+		float ColorAlpha = RenderDead ? 0.5f : 1.0f;
+
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
 		for(int j = i + 1; j < MAX_CLIENTS; j++)
 		{
@@ -430,14 +435,31 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		}
 
 		// avatar
-		CTeeRenderInfo TeeInfo = m_pClient->m_aClients[pInfo->m_ClientID].m_RenderInfo;
-		TeeInfo.m_Size *= TeeSizeMod;
-		const CAnimState *pIdleState = CAnimState::GetIdle();
-		vec2 OffsetToMid;
-		RenderTools()->GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
-		vec2 TeeRenderPos(TeeOffset + TeeLength / 2, y + LineHeight / 2.0f + OffsetToMid.y);
+		if(RenderDead)
+		{
+			Graphics()->BlendNormal();
+			Graphics()->TextureSet(client_data7::g_pData->m_aImages[client_data7::IMAGE_DEADTEE].m_Id);
+			Graphics()->QuadsBegin();
+			// if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+			// {
+			// 	vec4 Color = m_pClient->m_pSkins->GetColorV4(m_pClient->m_pSkins->GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientID].m_Team, SKINPART_BODY), false);
+			// 	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+			// }
+			IGraphics::CQuadItem QuadItem(TeeOffset + TeeLength / 2 - 25 * TeeSizeMod, y - 10.0f + Spacing, 50 * TeeSizeMod, 50 * TeeSizeMod);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+		}
+		else
+		{
+			CTeeRenderInfo TeeInfo = m_pClient->m_aClients[pInfo->m_ClientID].m_RenderInfo;
+			TeeInfo.m_Size *= TeeSizeMod;
+			const CAnimState *pIdleState = CAnimState::GetIdle();
+			vec2 OffsetToMid;
+			RenderTools()->GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
+			vec2 TeeRenderPos(TeeOffset + TeeLength / 2, y + LineHeight / 2.0f + OffsetToMid.y);
 
-		RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
+			RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
+		}
 
 		// name
 		TextRender()->SetCursor(&Cursor, NameOffset, y + (LineHeight - FontSize) / 2.f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END);
@@ -467,6 +489,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aName, -1);
 		}
 
+		// ready / watching
+		if(Client()->m_TranslationContext.m_aClients[pInfo->m_ClientID].m_PlayerFlags7 & protocol7::PLAYERFLAG_READY)
+		{
+			TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
+			TextRender()->TextEx(&Cursor, "\xE2\x9C\x93", str_length("\xE2\x9C\x93"));
+		}
+
 		// clan
 		if(str_comp(m_pClient->m_aClients[pInfo->m_ClientID].m_aClan,
 			   m_pClient->m_aClients[GameClient()->m_aLocalIDs[g_Config.m_ClDummy]].m_aClan) == 0)
@@ -475,14 +504,14 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			TextRender()->TextColor(Color);
 		}
 		else
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
 		tw = minimum(TextRender()->TextWidth(FontSize, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1, -1.0f), ClanLength);
 		TextRender()->SetCursor(&Cursor, ClanOffset + (ClanLength - tw) / 2, y + (LineHeight - FontSize) / 2.f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END);
 		Cursor.m_LineWidth = ClanLength;
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, ColorAlpha);
 
 		// country flag
 		m_pClient->m_CountryFlags.Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f),
