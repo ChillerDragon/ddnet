@@ -1015,15 +1015,16 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	bool FDDrace;
 	if(Version < 1)
 	{
-		Race = IsRace(pFallbackServerInfo);
-		FastCap = IsFastCap(pFallbackServerInfo);
-		FNG = IsFNG(pFallbackServerInfo);
-		DDRace = IsDDRace(pFallbackServerInfo);
-		DDNet = IsDDNet(pFallbackServerInfo);
-		BlockWorlds = IsBlockWorlds(pFallbackServerInfo);
-		City = IsCity(pFallbackServerInfo);
-		Vanilla = IsVanilla(pFallbackServerInfo);
-		Plus = IsPlus(pFallbackServerInfo);
+		const char *pGameType = pFallbackServerInfo->m_aGameType;
+		Race = str_find_nocase(pGameType, "race") || str_find_nocase(pGameType, "fastcap");
+		FastCap = str_find_nocase(pGameType, "fastcap");
+		FNG = str_find_nocase(pGameType, "fng");
+		DDRace = str_find_nocase(pGameType, "ddrace") || str_find_nocase(pGameType, "mkrace");
+		DDNet = str_find_nocase(pGameType, "ddracenet") || str_find_nocase(pGameType, "ddnet");
+		BlockWorlds = str_startswith(pGameType, "bw  ") || str_comp_nocase(pGameType, "bw") == 0;
+		City = str_find_nocase(pGameType, "city");
+		Vanilla = str_comp(pGameType, "DM") == 0 || str_comp(pGameType, "TDM") == 0 || str_comp(pGameType, "CTF") == 0;
+		Plus = str_find(pGameType, "+");
 		FDDrace = false;
 	}
 	else
@@ -1289,7 +1290,7 @@ void CGameClient::OnNewSnapshot()
 					pClient->m_SkinInfo.m_Size = 64;
 
 					// find new skin
-					const CSkin *pSkin = m_Skins.Get(m_Skins.Find(pClient->m_aSkinName));
+					const CSkin *pSkin = m_Skins.Find(pClient->m_aSkinName);
 					pClient->m_SkinInfo.m_OriginalRenderSkin = pSkin->m_OriginalSkin;
 					pClient->m_SkinInfo.m_ColorableRenderSkin = pSkin->m_ColorableSkin;
 					pClient->m_SkinInfo.m_SkinMetrics = pSkin->m_Metrics;
@@ -2524,7 +2525,7 @@ void CGameClient::UpdatePrediction()
 		if(m_Snap.m_aCharacters[i].m_Active)
 		{
 			bool IsLocal = (i == m_Snap.m_LocalClientID || (PredictDummy() && i == m_PredictedDummyID));
-			int GameTeam = (m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS) ? m_aClients[i].m_Team : i;
+			int GameTeam = (m_Snap.m_pGameInfoObj && (m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)) ? m_aClients[i].m_Team : i;
 			m_GameWorld.NetCharAdd(i, &m_Snap.m_aCharacters[i].m_Cur,
 				m_Snap.m_aCharacters[i].m_HasExtendedData ? &m_Snap.m_aCharacters[i].m_ExtendedData : 0,
 				GameTeam, IsLocal);
@@ -3268,7 +3269,7 @@ void CGameClient::RefindSkins()
 		Client.m_SkinInfo.m_ColorableRenderSkin.Reset();
 		if(Client.m_aSkinName[0] != '\0')
 		{
-			const CSkin *pSkin = m_Skins.Get(m_Skins.Find(Client.m_aSkinName));
+			const CSkin *pSkin = m_Skins.Find(Client.m_aSkinName);
 			Client.m_SkinInfo.m_OriginalRenderSkin = pSkin->m_OriginalSkin;
 			Client.m_SkinInfo.m_ColorableRenderSkin = pSkin->m_ColorableSkin;
 			Client.UpdateRenderInfo(IsTeamPlay());

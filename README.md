@@ -26,7 +26,7 @@ To clone this repository with history since we moved the libraries to https://gi
 
     git clone --shallow-exclude=included-libs https://github.com/ddnet/ddnet
 
-To clone the libraries if you have previously cloned DDNet without them:
+To clone the libraries if you have previously cloned DDNet without them, or if you require the ddnet-libs history instead of a shallow clone:
 
     git submodule update --init --recursive
 
@@ -42,11 +42,19 @@ On older distributions like Ubuntu 18.04 don't install `google-mock`, but instea
 Or on CentOS, RedHat and AlmaLinux like this:
 
     sudo yum install gcc gcc-c++ make cmake git python2 gtest-devel gmock-devel libcurl-devel openssl-devel freetype-devel glew-devel libnotify-devel libogg-devel opus-devel opusfile-devel SDL2-devel sqlite-devel wavpack-devel libx264-devel ffmpeg-devel vulkan-devel glslang spirv-tools libpng-devel
+ 
+Or on Fedora like this:  
 
+    sudo dnf install gcc gcc-c++ make cmake git python2 gtest-devel gmock-devel libcurl-devel openssl-devel freetype-devel glew-devel libnotify-devel libogg-devel opus-devel opusfile-devel SDL2-devel sqlite-devel wavpack-devel x264-devel ffmpeg-devel vulkan-devel glslang spirv-tools libpng-devel
+    
 Or on Arch Linux like this:
 
     sudo pacman -S --needed base-devel cmake curl freetype2 git glew gmock libnotify opusfile python sdl2 sqlite wavpack x264 ffmpeg vulkan-icd-loader vulkan-headers glslang spirv-tools libpng
 
+Or on Gentoo like this:
+
+    emerge --ask media-libs/freetype media-libs/glew media-libs/libogg media-libs/libsdl2 media-libs/opus media-libs/opusfile media-libs/pnglite media-video/ffmpeg dev-libs/glib dev-libs/openssl dev-db/sqlite media-libs/libglvnd media-libs/libpng media-sound/wavpack net-misc/curl media-libs/vulkan-loader[layers] media-libs/libsdl2[vulkan] x11-libs/gdk-pixbuf x11-libs/libnotify dev-util/spirv-tools dev-util/glslang dev-util/spirv-headers
+    
 On macOS you can use [homebrew](https://brew.sh/) to install build dependencies like this:
 
     brew install cmake freetype glew googletest opusfile SDL2 wavpack x264 ffmpeg molten-vk vulkan-headers glslang spirv-tools libpng
@@ -314,4 +322,16 @@ DDNet is available in the [Phoronix Test Suite](https://openbenchmarking.org/tes
 
 ```bash
 $ phoronix-test-suite benchmark ddnet
+```
+
+Better Git Blame
+----------------
+
+First, use a better tool than `git blame` itself, e.g. [`tig`](https://jonas.github.io/tig/). There's probably a good UI for Windows, too. Alternatively, use the GitHub UI, click "Blame" in any file view.
+
+For `tig`, use `tig blame path/to/file.cpp` to open the blame view, you can navigate with arrow keys or kj, press comma to go to the previous revision of the current line, q to quit.
+
+Only then you could also set up git to ignore specific formatting revisions:
+```bash
+git config blame.ignoreRevsFile formatting-revs.txt
 ```

@@ -719,6 +719,9 @@ static unsigned long __stdcall thread_run(void *user)
 #error not implemented
 #endif
 {
+#if defined(CONF_FAMILY_WINDOWS)
+	CWindowsComLifecycle WindowsComLifecycle(false);
+#endif
 	struct THREAD_RUN *data = (THREAD_RUN *)user;
 	void (*threadfunc)(void *) = data->threadfunc;
 	void *u = data->u;
@@ -3907,11 +3910,26 @@ int open_link(const char *link)
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[512];
 	MultiByteToWideChar(CP_UTF8, 0, link, -1, wBuffer, std::size(wBuffer));
+	SHELLEXECUTEINFOW info;
+	mem_zero(&info, sizeof(SHELLEXECUTEINFOW));
+	info.cbSize = sizeof(SHELLEXECUTEINFOW);
+	info.lpVerb = NULL; // NULL to use the default verb, as "open" may not be available
+	info.lpFile = wBuffer;
+	info.nShow = SW_SHOWNORMAL;
+	// The SEE_MASK_NOASYNC flag ensures that the ShellExecuteEx function
+	// finishes its DDE conversation before it returns, so it's not necessary
+	// to pump messages in the calling thread.
+	// The SEE_MASK_FLAG_NO_UI flag suppresses error messages that would pop up
+	// when the link cannot be opened, e.g. when a folder does not exist.
+	// The SEE_MASK_ASYNCOK flag is not used. It would allow the call to
+	// ShellExecuteEx to return earlier, but it also prevents us from doing
+	// our own error handling, as the function would always return TRUE.
+	info.fMask = SEE_MASK_NOASYNC | SEE_MASK_FLAG_NO_UI;
 	// Save and restore the FPU control word because ShellExecute might change it
 	unsigned oldcontrol87 = _control87(0u, 0u);
-	int status = (uintptr_t)ShellExecuteW(NULL, L"open", wBuffer, NULL, NULL, SW_SHOWDEFAULT) > 32;
+	BOOL success = ShellExecuteExW(&info);
 	_control87(oldcontrol87, 0xffffffffu);
-	return status;
+	return success;
 #elif defined(CONF_PLATFORM_LINUX)
 	const int pid = fork();
 	if(pid == 0)
@@ -4197,20 +4215,11 @@ static HMODULE exception_handling_module = nullptr;
 void init_exception_handler()
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	exception_handling_module = LoadLibraryA("exchndl.dll");
-	if(exception_handling_module != nullptr)
+	const char *module_name = "exchndl.dll";
+	exception_handling_module = LoadLibraryA(module_name);
+	if(exception_handling_module == nullptr)
 	{
-		// Intentional
-#ifdef __MINGW32__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
-		auto exc_hndl_init = (void APIENTRY (*)(void *))GetProcAddress(exception_handling_module, "ExcHndlInit");
-#ifdef __MINGW32__
-#pragma GCC diagnostic pop
-#endif
-		void *exception_handling_offset = (void *)GetModuleHandle(NULL);
-		exc_hndl_init(exception_handling_offset);
+		dbg_msg("exception_handling", "failed to load exception handling library '%s' (error %ld)", module_name, GetLastError());
 	}
 #else
 #error exception handling not implemented
@@ -4222,16 +4231,22 @@ void set_exception_handler_log_file(const char *log_file_path)
 #if defined(CONF_FAMILY_WINDOWS)
 	if(exception_handling_module != nullptr)
 	{
+		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+		MultiByteToWideChar(CP_UTF8, 0, log_file_path, -1, wBuffer, std::size(wBuffer));
 		// Intentional
 #ifdef __MINGW32__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
-		auto exception_log_file_path_func = (BOOL APIENTRY(*)(const char *))(GetProcAddress(exception_handling_module, "ExcHndlSetLogFileNameA"));
+		const char *function_name = "ExcHndlSetLogFileNameW";
+		auto exception_log_file_path_func = (BOOL APIENTRY(*)(const WCHAR *))(GetProcAddress(exception_handling_module, function_name));
 #ifdef __MINGW32__
 #pragma GCC diagnostic pop
 #endif
-		exception_log_file_path_func(log_file_path);
+		if(exception_log_file_path_func == nullptr)
+			dbg_msg("exception_handling", "could not find function '%s' in exception handling library (error %ld)", function_name, GetLastError());
+		else
+			exception_log_file_path_func(wBuffer);
 	}
 #else
 #error exception handling not implemented
@@ -4252,9 +4267,12 @@ int net_socket_read_wait(NETSOCKET sock, std::chrono::nanoseconds nanoseconds)
 }
 
 #if defined(CONF_FAMILY_WINDOWS)
-CWindowsComLifecycle::CWindowsComLifecycle()
+// See https://learn.microsoft.com/en-us/windows/win32/learnwin32/initializing-the-com-library
+CWindowsComLifecycle::CWindowsComLifecycle(bool HasWindow)
 {
-	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	HRESULT result = CoInitializeEx(NULL, (HasWindow ? COINIT_APARTMENTTHREADED : COINIT_MULTITHREADED) | COINIT_DISABLE_OLE1DDE);
+	dbg_assert(result != S_FALSE, "COM library already initialized on this thread");
+	dbg_assert(result == S_OK, "COM library initialization failed");
 }
 CWindowsComLifecycle::~CWindowsComLifecycle()
 {
