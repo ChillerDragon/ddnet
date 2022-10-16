@@ -471,8 +471,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 			return -4;
 
 		int *pTransData = pData;
-		if(Sixup)
-			pTransData = PreProcessItemData(pData, Type7, Type, ID);
+		// if(Sixup)
+		// 	pTransData = PreProcessItemData(pData, Type7, Type, ID);
 
 		const int FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
