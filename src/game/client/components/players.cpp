@@ -468,8 +468,8 @@ void CPlayers::RenderPlayer(
 
 	CTeeRenderInfo RenderInfo = *pRenderInfo;
 
-	int PlayerClass = (GameClient()->m_GameInfo.m_InfClass && (ClientId >= 0)) ? GameClient()->m_aClients[ClientId].m_InfClassPlayerClass : -1;
-	
+	const CGameClient::CClientData *pClientData = (GameClient()->m_GameInfo.m_InfClass && ClientId >= 0) ? &GameClient()->m_aClients[ClientId] : nullptr;
+	const int PlayerClass = pClientData ? pClientData->m_InfClassPlayerClass : -1;
 	bool Local = GameClient()->m_Snap.m_LocalClientId == ClientId;
 	bool OtherTeam = GameClient()->IsOtherTeam(ClientId);
 	float Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
@@ -483,6 +483,10 @@ void CPlayers::RenderPlayer(
 	if(PlayerClass == PLAYERCLASS_BOOMER)
 	{
 		RenderInfo.m_Size = 68.0f;
+	}
+	if(PlayerClass == PLAYERCLASS_TANK)
+	{
+		RenderInfo.m_Size = 70.0f;
 	}
 
 	if(ClientId >= 0)
@@ -614,7 +618,13 @@ void CPlayers::RenderPlayer(
 				else
 					Graphics()->QuadsSetRotation(Direction.x < 0.0f ? 100.0f : 500.0f);
 
-				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, WeaponPosition.x, WeaponPosition.y);
+				float Scale = 1.0f;
+				if(PlayerClass == PLAYERCLASS_TANK)
+				{
+					Scale = 1.45f;
+					WeaponPosition += Direction * 8;
+				}
+				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, WeaponPosition.x, WeaponPosition.y, Scale, Scale);
 			}
 			else if(Player.m_Weapon == WEAPON_NINJA)
 			{
@@ -751,6 +761,11 @@ void CPlayers::RenderPlayer(
 			case WEAPON_GUN: RenderHand(&RenderInfo, WeaponPosition, Direction, -3.0f * pi / 4.0f, vec2(-15.0f, 4.0f), Alpha); break;
 			case WEAPON_SHOTGUN: RenderHand(&RenderInfo, WeaponPosition, Direction, -pi / 2.0f, vec2(-5.0f, 4.0f), Alpha); break;
 			case WEAPON_GRENADE: RenderHand(&RenderInfo, WeaponPosition, Direction, -pi / 2.0f, vec2(-4.0f, 7.0f), Alpha); break;
+			}
+
+			if(PlayerClass == PLAYERCLASS_TANK)
+			{
+				RenderHand(&RenderInfo, WeaponPosition, Direction, -3 * pi / 4, vec2(-5, 4), Alpha);
 			}
 		}
 	}
