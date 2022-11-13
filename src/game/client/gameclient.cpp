@@ -3,6 +3,7 @@
 
 #include "gameclient.h"
 
+#include <game/classes.h>
 #include <game/damage_type.h>
 
 #include "components/background.h"
