@@ -1860,6 +1860,14 @@ set_src(BASE GLOB_RECURSE src/base
   bezier.h
   color.h
   detect.h
+  dissector/byte_printer.cpp
+  dissector/byte_printer.h
+  dissector/compat.cpp
+  dissector/compat.h
+  dissector/dissector.cpp
+  dissector/dissector.h
+  dissector/snapshot.cpp
+  dissector/snapshot.h
   dynamic.h
   hash.cpp
   hash.h

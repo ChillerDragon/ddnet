@@ -78,6 +78,8 @@
 #include <chrono>
 #include <thread>
 
+#include <base/dissector/snapshot.h>
+
 using namespace std::chrono_literals;
 
 static const ColorRGBA gs_ClientNetworkPrintColor{0.7f, 1, 0.7f, 1.0f};
@@ -1925,6 +1927,22 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		}
 		else if(Msg == NETMSG_SNAP || Msg == NETMSG_SNAPSINGLE || Msg == NETMSG_SNAPEMPTY)
 		{
+			CUnpacker PrintPacker = Unpacker; // create copy that will be modified during print
+			print_snapshot(Msg,
+				PrintPacker,
+				Config(),
+				m_aReceivedSnapshots[g_Config.m_ClDummy],
+				m_aSnapshotParts[g_Config.m_ClDummy],
+				m_SnapshotDelta,
+				m_aCurrentRecvTick[g_Config.m_ClDummy],
+				m_aSnapshotStorage[g_Config.m_ClDummy],
+				m_SnapCrcErrors,
+				// const class CSmoothTime &GameTime,
+				m_aaSnapshotIncomingData[g_Config.m_ClDummy],
+				m_aapSnapshots[g_Config.m_ClDummy],
+				this,
+				true);
+
 			int GameTick = Unpacker.GetInt();
 			int DeltaTick = GameTick - Unpacker.GetInt();
 
