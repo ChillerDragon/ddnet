@@ -262,7 +262,7 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 		}
 
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), Localize("DDNet %s is out!"), Client()->LatestVersion());
+		str_format(aBuf, sizeof(aBuf), CUi::ReplaceHardcodedGameName(Localize("DDNet %s is out!")), Client()->LatestVersion());
 		SLabelProperties UpdateLabelProps;
 		UpdateLabelProps.SetColor(ColorRGBA(1.0f, 0.4f, 0.4f, 1.0f));
 		Ui()->DoLabel(&VersionUpdate, aBuf, 14.0f, TEXTALIGN_ML, UpdateLabelProps);
