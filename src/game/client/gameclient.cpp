@@ -1149,6 +1149,126 @@ void CGameClient::InvalidateSnapshot()
 	SnapCollectEntities();
 }
 
+bool CGameClient::OnSnapItem7(const IClient::CSnapItem &Item, const void *pData)
+{
+	if(!m_pClient->IsSixup())
+		return false;
+
+	if(Item.m_Type == protocol7::NETOBJTYPE_CHARACTER)
+	{
+		if(Item.m_ID < MAX_CLIENTS)
+		{
+			const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, protocol7::NETOBJTYPE_CHARACTER, Item.m_ID);
+			m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
+			if(pOld)
+			{
+				m_Snap.m_aCharacters[Item.m_ID].m_Active = true;
+				m_Snap.m_aCharacters[Item.m_ID].m_Prev = *((const CNetObj_Character *)pOld);
+
+				// limit evolving to 3 seconds
+				bool EvolvePrev = Client()->PrevGameTick(g_Config.m_ClDummy) - m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick <= 3 * Client()->GameTickSpeed();
+				bool EvolveCur = Client()->GameTick(g_Config.m_ClDummy) - m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick <= 3 * Client()->GameTickSpeed();
+
+				// reuse the result from the previous evolve if the snapped character didn't change since the previous snapshot
+				if(EvolveCur && m_aClients[Item.m_ID].m_Evolved.m_Tick == Client()->PrevGameTick(g_Config.m_ClDummy))
+				{
+					if(mem_comp(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, &m_aClients[Item.m_ID].m_Snapped, sizeof(CNetObj_Character)) == 0)
+						m_Snap.m_aCharacters[Item.m_ID].m_Prev = m_aClients[Item.m_ID].m_Evolved;
+					if(mem_comp(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, &m_aClients[Item.m_ID].m_Snapped, sizeof(CNetObj_Character)) == 0)
+						m_Snap.m_aCharacters[Item.m_ID].m_Cur = m_aClients[Item.m_ID].m_Evolved;
+				}
+
+				if(EvolvePrev && m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick)
+					Evolve(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick(g_Config.m_ClDummy));
+				if(EvolveCur && m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
+					Evolve(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick(g_Config.m_ClDummy));
+
+				m_aClients[Item.m_ID].m_Snapped = *((const CNetObj_Character *)pData);
+				m_aClients[Item.m_ID].m_Evolved = m_Snap.m_aCharacters[Item.m_ID].m_Cur;
+			}
+			else
+			{
+				m_aClients[Item.m_ID].m_Evolved.m_Tick = -1;
+			}
+		}
+		dbg_msg("snap_item_7", "character");
+	}
+	else if(Item.m_Type == protocol7::NETOBJTYPE_GAMEDATA)
+	{
+		const protocol7::CNetObj_GameData *pGameData7 = (const protocol7::CNetObj_GameData *)pData;
+
+		mem_zero(&m_GameInfoObjBuffer, sizeof(m_GameInfoObjBuffer));
+
+		if(pGameData7->m_GameStateFlags & protocol7::GAMESTATEFLAG_SUDDENDEATH)
+			m_GameInfoObjBuffer.m_GameStateFlags |= GAMESTATEFLAG_SUDDENDEATH;
+		else if(pGameData7->m_GameStateFlags & protocol7::GAMESTATEFLAG_GAMEOVER)
+			m_GameInfoObjBuffer.m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
+		else if(pGameData7->m_GameStateFlags & protocol7::GAMESTATEFLAG_PAUSED)
+			m_GameInfoObjBuffer.m_GameStateFlags |= GAMESTATEFLAG_PAUSED;
+		else if(pGameData7->m_GameStateFlags & protocol7::GAMESTATEFLAG_WARMUP)
+		{
+			// TODO: 0.7 only flag
+		}
+		else if(pGameData7->m_GameStateFlags & protocol7::GAMESTATEFLAG_ROUNDOVER)
+		{
+			// TODO: 0.7 only flag
+		}
+		else if(pGameData7->m_GameStateFlags & protocol7::GAMESTATEFLAG_STARTCOUNTDOWN)
+		{
+			// TODO: 0.7 only flag
+		}
+
+		m_Snap.m_pGameInfoObj = &m_GameInfoObjBuffer;
+
+		static int s_LastGameFlags = 0;
+		int GameFlags = m_Snap.m_pGameInfoObj->m_GameStateFlags;
+		if(!(s_LastGameFlags & GAMESTATEFLAG_GAMEOVER) && GameFlags & GAMESTATEFLAG_GAMEOVER)
+			OnGameOver();
+		else if(s_LastGameFlags & GAMESTATEFLAG_GAMEOVER && !(GameFlags & GAMESTATEFLAG_GAMEOVER))
+			OnStartGame();
+
+		s_LastGameFlags = GameFlags;
+
+		dbg_msg("snap_item_7", "gamedata -> gameinfo flags %d -> %d", pGameData7->m_GameStateFlags, GameFlags);
+	}
+	else
+	{
+		dbg_msg("snap_item_6", "type=%d gamedata=%d", Item.m_Type, protocol7::NETOBJTYPE_GAMEDATA);
+		return false;
+	}
+	return true;
+}
+
+// void *CGameClient::PreProcessObj(int *pObjID, CUnpacker *pUnpacker, int ClientID)
+// {
+//   static char s_aRawObj[1024];
+
+//   if(*pObjID == protocol7::NETOBJTYPE_GAMEINFO)
+//   {
+//     protocol7::CNetObj_GameInfo *pObj7 = (protocol7::CNetObj_GameInfo *)pRawMsg;
+//   }
+
+//   if(*pMsgID == protocol7::NETMSGTYPE_CL_SAY)
+//   {
+//     protocol7::CNetMsg_Cl_Say *pMsg7 = (protocol7::CNetMsg_Cl_Say *)pRawMsg;
+//     // Should probably use a placement new to start the lifetime of the object to avoid future weirdness
+//     ::CNetMsg_Cl_Say *pMsg = (::CNetMsg_Cl_Say *)s_aRawMsg;
+
+//     if(pMsg7->m_Target >= 0)
+//     {
+//       if(ProcessSpamProtection(ClientID))
+//         return 0;
+
+//       // Should we maybe recraft the message so that it can go through the usual path?
+//       WhisperID(ClientID, pMsg7->m_Target, pMsg7->m_pMessage);
+//       return 0;
+//     }
+
+//     pMsg->m_Team = pMsg7->m_Mode == protocol7::CHAT_TEAM;
+//     pMsg->m_pMessage = pMsg7->m_pMessage;
+//   }
+// }
+
 void CGameClient::OnNewSnapshot()
 {
 	auto &&Evolve = [this](CNetObj_Character *pCharacter, int Tick) {
@@ -1213,6 +1333,9 @@ void CGameClient::OnNewSnapshot()
 		{
 			IClient::CSnapItem Item;
 			const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
+
+			if(OnSnapItem7(Item, pData))
+				continue;
 
 			if(Item.m_Type == NETOBJTYPE_CLIENTINFO)
 			{

@@ -416,9 +416,6 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 			return -102;
 
 		int Type = *pData++;
-		int Type7 = Type;
-		if(Sixup)
-			Type = Obj_SevenToSix(Type7);
 		if(Type < 0 || Type > CSnapshot::MAX_TYPE)
 			return -202;
 
@@ -428,8 +425,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 
 		int ItemSize;
 		const short *pItemSizes = Sixup ? m_aItemSizes7 : m_aItemSizes;
-		if(Type < MAX_NETOBJSIZES && pItemSizes[Type7])
-			ItemSize = pItemSizes[Type7];
+		if(Type < MAX_NETOBJSIZES && pItemSizes[Type])
+			ItemSize = pItemSizes[Type];
 		else
 		{
 			if(pData + 1 > pEnd)

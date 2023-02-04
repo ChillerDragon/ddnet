@@ -271,6 +271,9 @@ public:
 	CCharacterCore m_PredictedPrevChar;
 	CCharacterCore m_PredictedChar;
 
+	// snap item memory buffers for bridge client
+	CNetObj_GameInfo m_GameInfoObjBuffer;
+
 	// snap pointers
 	struct CSnapState
 	{
@@ -476,6 +479,17 @@ public:
 	virtual void OnStartGame();
 	virtual void OnStartRound();
 	virtual void OnFlagGrab(int TeamID);
+
+	/*
+		Function: OnSnapItem7
+			Checks if the given item is different int 0.7
+			If so and it is a 0.7 connection parse the item
+
+		Returns:
+			true - if the given snap item is processed
+			false - if the given item is ignored
+	*/
+	bool OnSnapItem7(const IClient::CSnapItem &Item, const void *pData);
 
 	void OnWindowResize();
 	static void OnWindowResizeCB(void *pUser);
