@@ -416,9 +416,18 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 			return -102;
 
 		int Type = *pData++;
-		int Type7 = Type;
-		if(Sixup)
-			Type = Obj_SevenToSix(Type7);
+		// int Type7 = Type;
+		// if(Sixup)
+		// 	Type = Obj_SevenToSix(Type7);
+
+		// const short *pItemSizesDebug = Sixup ? m_aItemSizes7 : m_aItemSizes;
+		// dbg_msg("snap", "------------------");
+		// dbg_msg("snap", "trans type %d -> %d", Type7, Type);
+		// dbg_msg("snap", "m_aItemSizes7[Type7 %d] = %d", Type7, m_aItemSizes7[Type7] / 4);
+		// dbg_msg("snap", "trans size %d -> %d", m_aItemSizes[Type] / 4, m_aItemSizes7[Type7] / 4);
+
+		// Type = Type7; // no trans
+
 		if(Type < 0 || Type > CSnapshot::MAX_TYPE)
 			return -202;
 
@@ -428,8 +437,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, const void *pS
 
 		int ItemSize;
 		const short *pItemSizes = Sixup ? m_aItemSizes7 : m_aItemSizes;
-		if(Type < MAX_NETOBJSIZES && pItemSizes[Type7])
-			ItemSize = pItemSizes[Type7];
+		if(Type < MAX_NETOBJSIZES && pItemSizes[Type])
+			ItemSize = pItemSizes[Type];
 		else
 		{
 			if(pData + 1 > pEnd)
@@ -522,7 +531,7 @@ void CSnapshotStorage::PurgeUntil(int Tick)
 	m_pLast = 0;
 }
 
-void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData)
+void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData, int TransDataSize, void *pTransData)
 {
 	// allocate memory for holder + snapshot_data
 	int TotalSize = sizeof(CHolder) + DataSize;
@@ -530,6 +539,10 @@ void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData,
 	if(AltDataSize > 0)
 	{
 		TotalSize += AltDataSize;
+	}
+	if(TransDataSize > 0)
+	{
+		TotalSize += TransDataSize;
 	}
 
 	CHolder *pHolder = (CHolder *)malloc(TotalSize);
@@ -551,6 +564,21 @@ void CSnapshotStorage::Add(int Tick, int64_t Tagtime, int DataSize, void *pData,
 	{
 		pHolder->m_pAltSnap = 0;
 		pHolder->m_AltSnapSize = 0;
+	}
+
+	if(TransDataSize > 0)
+	{
+		if(AltDataSize > 0)
+			pHolder->m_pTransSnap = (CSnapshot *)(((char *)pHolder->m_pAltSnap) + AltDataSize);
+		else
+			pHolder->m_pTransSnap = (CSnapshot *)(((char *)pHolder->m_pSnap) + DataSize);
+		mem_copy(pHolder->m_pTransSnap, pTransData, TransDataSize);
+		pHolder->m_TransSnapSize = TransDataSize;
+	}
+	else
+	{
+		pHolder->m_pTransSnap = 0;
+		pHolder->m_TransSnapSize = 0;
 	}
 
 	// link

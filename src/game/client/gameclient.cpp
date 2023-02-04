@@ -724,6 +724,66 @@ void CGameClient::OnRelease()
 		pComponent->OnRelease();
 }
 
+void *CGameClient::PreProcessMsg(int *pMsgID, CUnpacker *pUnpacker)
+{
+	if(!m_pClient->IsSixup())
+	{
+		return m_NetObjHandler.SecureUnpackMsg(*pMsgID, pUnpacker);
+	}
+
+	void *pRawMsg = m_NetObjHandler7.SecureUnpackMsg(*pMsgID, pUnpacker);
+	static char s_aRawMsg[1024];
+
+	if(*pMsgID == protocol7::NETMSGTYPE_SV_MOTD)
+	{
+		return 0; // TODO: do stuff w motd
+	}
+	else if(*pMsgID == protocol7::NETMSGTYPE_SV_SERVERSETTINGS)
+	{
+		return 0; // TODO: implement
+	}
+	else if(*pMsgID == protocol7::NETMSGTYPE_SV_VOTECLEAROPTIONS)
+	{
+		return 0; // TODO: implement
+	}
+	else if(*pMsgID == protocol7::NETMSGTYPE_SV_READYTOENTER)
+	{
+		*pMsgID = NETMSGTYPE_SV_READYTOENTER;
+		return s_aRawMsg; // TODO: this is weird ready to enter has no payload we just dont want to return 0
+	}
+	else if(*pMsgID == protocol7::NETMSGTYPE_SV_CLIENTINFO)
+	{
+		protocol7::CNetMsg_Sv_ClientInfo *pMsg7 = (protocol7::CNetMsg_Sv_ClientInfo *)pRawMsg;
+		if(pMsg7->m_Local)
+		{
+			m_pClient->m_TranslationContext.m_LocalClientID = pMsg7->m_ClientID;
+		}
+	}
+	else if(*pMsgID == protocol7::NETMSGTYPE_SV_GAMEINFO)
+	{
+		protocol7::CNetMsg_Sv_GameInfo *pMsg7 = (protocol7::CNetMsg_Sv_GameInfo *)pRawMsg;
+		m_pClient->m_TranslationContext.m_GameFlags = pMsg7->m_GameFlags;
+		m_pClient->m_TranslationContext.m_ScoreLimit = pMsg7->m_ScoreLimit;
+		m_pClient->m_TranslationContext.m_TimeLimit = pMsg7->m_TimeLimit;
+		m_pClient->m_TranslationContext.m_MatchNum = pMsg7->m_MatchNum;
+		m_pClient->m_TranslationContext.m_MatchCurrent = pMsg7->m_MatchCurrent;
+		m_pClient->m_TranslationContext.m_ShouldSendGameInfo = true;
+		return 0; // Added to snap by translation context
+	}
+	else if(*pMsgID == protocol7::NETMSGTYPE_SV_EMOTICON)
+	{
+		*pMsgID = NETMSGTYPE_SV_EMOTICON;
+		return s_aRawMsg; // TODO: this is weird ready to enter has no payload we just dont want to return 0
+	}
+	else
+	{
+		dbg_msg("sixup", "todo unsupported message %d", *pMsgID);
+		exit(1);
+	}
+
+	return 0; // TODO: unfinished
+}
+
 void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy)
 {
 	// special messages
@@ -753,7 +813,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		return;
 	}
 
-	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
+	void *pRawMsg = PreProcessMsg(&MsgId, pUnpacker);
+
 	if(!pRawMsg)
 	{
 		char aBuf[256];
@@ -1308,6 +1369,7 @@ void CGameClient::OnNewSnapshot()
 			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
 			{
+				// dbg_msg("gameclient", "type=%d got character with id = %d", Item.m_Type, Item.m_ID);
 				if(Item.m_ID < MAX_CLIENTS)
 				{
 					const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);

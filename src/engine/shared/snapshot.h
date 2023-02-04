@@ -61,6 +61,7 @@ public:
 
 	unsigned Crc();
 	void DebugDump();
+	int TranslateSevenToSix(CSnapshot *pSixSnapDest, class CTranslationContext &TranslationContext);
 	bool IsValid(size_t ActualSize) const;
 };
 
@@ -120,9 +121,17 @@ public:
 
 		int m_SnapSize;
 		int m_AltSnapSize;
+		int m_TransSnapSize;
 
 		CSnapshot *m_pSnap;
 		CSnapshot *m_pAltSnap;
+
+		CSnapshot *m_pTransSnap; // translated snap from 0.7 to 0.6
+
+		CSnapshot *AltSnap()
+		{
+			return m_pTransSnap ? m_pTransSnap : m_pAltSnap;
+		}
 	};
 
 	CHolder *m_pFirst;
@@ -133,7 +142,7 @@ public:
 	void Init();
 	void PurgeAll();
 	void PurgeUntil(int Tick);
-	void Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData);
+	void Add(int Tick, int64_t Tagtime, int DataSize, void *pData, int AltDataSize, void *pAltData, int TransDataSize, void *pTransData);
 	int Get(int Tick, int64_t *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData);
 };
 

@@ -806,6 +806,15 @@ void CPlayers::OnRender()
 	ScreenY0 -= BorderBuffer;
 	ScreenY1 += BorderBuffer;
 
+	// // debug snap data
+	// for(int ClientID = 0; ClientID < MAX_CLIENTS; ClientID++)
+	// {
+	// 	dbg_msg(
+	// 		"players.cpp",
+	// 		"ClientID=%d LocalClientID=%d Active=%d IsPlayerInfoAvailable=%d",
+	// 		ClientID, LocalClientID, m_pClient->m_Snap.m_aCharacters[ClientID].m_Active, IsPlayerInfoAvailable(ClientID));
+	// }
+
 	// render everyone else's hook, then our own
 	for(int ClientID = 0; ClientID < MAX_CLIENTS; ClientID++)
 	{

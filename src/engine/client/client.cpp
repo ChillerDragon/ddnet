@@ -1034,9 +1034,9 @@ int CClient::LoadData()
 void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
 {
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
-	const CSnapshotItem *pSnapshotItem = m_aapSnapshots[g_Config.m_ClDummy][SnapID]->m_pAltSnap->GetItem(Index);
-	pItem->m_DataSize = m_aapSnapshots[g_Config.m_ClDummy][SnapID]->m_pAltSnap->GetItemSize(Index);
-	pItem->m_Type = m_aapSnapshots[g_Config.m_ClDummy][SnapID]->m_pAltSnap->GetItemType(Index);
+	const CSnapshotItem *pSnapshotItem = m_aapSnapshots[g_Config.m_ClDummy][SnapID]->AltSnap()->GetItem(Index);
+	pItem->m_DataSize = m_aapSnapshots[g_Config.m_ClDummy][SnapID]->AltSnap()->GetItemSize(Index);
+	pItem->m_Type = m_aapSnapshots[g_Config.m_ClDummy][SnapID]->AltSnap()->GetItemType(Index);
 	pItem->m_ID = pSnapshotItem->ID();
 	return (void *)pSnapshotItem->Data();
 }
@@ -1044,7 +1044,7 @@ void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
 int CClient::SnapItemSize(int SnapID, int Index) const
 {
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
-	return m_aapSnapshots[g_Config.m_ClDummy][SnapID]->m_pAltSnap->GetItemSize(Index);
+	return m_aapSnapshots[g_Config.m_ClDummy][SnapID]->AltSnap()->GetItemSize(Index);
 }
 
 const void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
@@ -1052,7 +1052,7 @@ const void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
 	if(!m_aapSnapshots[g_Config.m_ClDummy][SnapID])
 		return 0x0;
 
-	return m_aapSnapshots[g_Config.m_ClDummy][SnapID]->m_pAltSnap->FindItem(Type, ID);
+	return m_aapSnapshots[g_Config.m_ClDummy][SnapID]->AltSnap()->FindItem(Type, ID);
 }
 
 int CClient::SnapNumItems(int SnapID) const
@@ -1060,7 +1060,7 @@ int CClient::SnapNumItems(int SnapID) const
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
 	if(!m_aapSnapshots[g_Config.m_ClDummy][SnapID])
 		return 0;
-	return m_aapSnapshots[g_Config.m_ClDummy][SnapID]->m_pAltSnap->NumItems();
+	return m_aapSnapshots[g_Config.m_ClDummy][SnapID]->AltSnap()->NumItems();
 }
 
 void CClient::SnapSetStaticsize(int ItemType, int Size)
@@ -1149,7 +1149,7 @@ void CClient::DebugRender()
 		{
 			if(m_SnapshotDelta.GetDataRate(i) && m_aapSnapshots[g_Config.m_ClDummy][IClient::SNAP_CURRENT])
 			{
-				int Type = m_aapSnapshots[g_Config.m_ClDummy][IClient::SNAP_CURRENT]->m_pAltSnap->GetExternalItemType(i);
+				int Type = m_aapSnapshots[g_Config.m_ClDummy][IClient::SNAP_CURRENT]->AltSnap()->GetExternalItemType(i);
 				if(Type == UUID_INVALID)
 				{
 					str_format(aBuffer, sizeof(aBuffer), "%5d %20s: %8d %8d %8d", i, "Unknown UUID", m_SnapshotDelta.GetDataRate(i) / 8, m_SnapshotDelta.GetDataUpdates(i),
@@ -2185,11 +2185,23 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					}
 
 					// add new
-					// TODO: 0.7 add support for 0.7 validation in UnpackAndValidateSnapshot
+					unsigned char aTmpTranslateBuffer[CSnapshot::MAX_SIZE];
+					CSnapshot *pTmpTranslateBuffer = nullptr;
+					int TranslatedSize = 0;
 					if(IsSixup())
-						m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, SnapSize, pTmpBuffer3);
-					else
-						m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, AltSnapSize, pAltSnapBuffer);
+					{
+						pTmpTranslateBuffer = (CSnapshot *)aTmpTranslateBuffer;
+						TranslatedSize = pTmpBuffer3->TranslateSevenToSix(pTmpTranslateBuffer, m_TranslationContext);
+					}
+					m_aSnapshotStorage[Conn].Add(
+						GameTick,
+						time_get(),
+						SnapSize,
+						pTmpBuffer3,
+						AltSnapSize,
+						pAltSnapBuffer,
+						TranslatedSize,
+						pTmpTranslateBuffer);
 
 					if(!Dummy)
 					{

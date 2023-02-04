@@ -8,6 +8,8 @@
 #include "message.h"
 #include <base/hash.h>
 
+#include <engine/shared/translation_context.h>
+
 #include <game/generated/protocol.h>
 #include <game/generated/protocol7.h>
 
@@ -99,6 +101,7 @@ public:
 	char m_aMapDownloadUrl[256];
 	int m_Points;
 	int64_t m_ReconnectTime;
+	CTranslationContext m_TranslationContext;
 
 	class CSnapItem
 	{
