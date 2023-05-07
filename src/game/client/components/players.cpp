@@ -745,6 +745,7 @@ inline bool CPlayers::IsPlayerInfoAvailable(int ClientID) const
 
 void CPlayers::OnRender()
 {
+	dbg_msg("crashme", "tile = %d", Collision()->GetTile(0, 0));
 	// update RenderInfo for ninja
 	bool IsTeamplay = false;
 	if(m_pClient->m_Snap.m_pGameInfoObj)
