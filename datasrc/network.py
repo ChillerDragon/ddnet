@@ -540,6 +540,13 @@ Messages = [
 	NetMessageEx("Sv_MyOwnMessage", "my-own-message@heinrich5991.de", [
 		NetIntAny("m_Test"),
 	]),
+    
+	NetMessageEx("Inf_KillMsg", "kill-ex1@infclass", [
+		NetIntRange("m_Victim", 0, 'MAX_CLIENTS-1'),
+		NetIntRange("m_Killer", -1, 'MAX_CLIENTS-1'),
+		NetIntAny("m_InfDamageType"),
+		NetIntRange("m_Weapon", -3, 'NUM_WEAPONS-1'),
+	]),
 
 	NetMessageEx("Cl_ShowDistance", "show-distance@netmsg.ddnet.tw", [
 		NetIntAny("m_X"),
