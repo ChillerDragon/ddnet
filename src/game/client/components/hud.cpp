@@ -1715,6 +1715,9 @@ void CHud::RenderObjectOwnerIcons(int ClientId)
 
 void CHud::RenderClassExtraHud(int ClientId)
 {
+	if(ClientId < 0)
+		return;
+
 	const CGameClient::CClientData *pClientData = &GameClient()->m_aClients[ClientId];
 	if(!pClientData || !GameClient()->m_GameInfo.m_InfClass)
 		return;
@@ -2133,6 +2136,7 @@ void CHud::OnRender()
 				RenderPlayerState(SpectatorId);
 			}
 			RenderMovementInformation();
+			RenderClassExtraHud(SpectatorId);
 			RenderSpectatorHud();
 		}
 
