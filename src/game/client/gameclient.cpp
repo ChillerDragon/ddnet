@@ -3335,7 +3335,16 @@ void CGameClient::ConchainRecCam(IConsole::IResult *pResult, void *pUserData, IC
 			pSelf->m_IsCamPlaying = true;
 			dbg_msg("cam", "start play at offset = %d", pSelf->m_CamLogOffset);
 		}
+		else
+		{
+			pSelf->m_CamLogIndex = 0;
+			pSelf->m_IsCamLogging = false;
+			pSelf->m_IsCamPlaying = false;
+			dbg_msg("cam", "stopped cam");
+		}
 	}
+	else
+		pfnCallback(pResult, pCallbackUserData);
 }
 
 void CGameClient::DummyResetInput()

@@ -169,7 +169,6 @@ void CCamera::OnRender()
 		else
 			m_Center = m_pClient->m_LocalCharacterPos + s_aCurrentCameraOffset[g_Config.m_ClDummy];
 	}
-
 	if(m_ForceFreeviewPos != vec2(-1, -1))
 	{
 		m_CamType = CAMTYPE_SPEC;
