@@ -12,6 +12,7 @@
 #endif
 
 MACRO_CONFIG_INT(ClRecCam, cl_rec_cam, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "0=off 1=rec 2=play")
+MACRO_CONFIG_INT(ClRecCamGametick, cl_rec_cam_gametick, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "sync to gametick instead of replay start time")
 
 // client
 MACRO_CONFIG_INT(ClPredict, cl_predict, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict client movements")

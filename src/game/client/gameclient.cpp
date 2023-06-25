@@ -637,7 +637,9 @@ void CGameClient::CamLog()
 	// dbg_msg("camlog", "onrender tick=%d x=%f y=%f", Client()->GameTick(g_Config.m_ClDummy), m_Camera.m_Center.x, m_Camera.m_Center.y);
 	if (m_IsCamLogging)
 	{
-		int idx = m_CamLogOffset + Client()->GameTick(g_Config.m_ClDummy);
+		int idx = m_CamLogIndex++;
+		if(g_Config.m_ClRecCamGametick)
+			idx = m_CamLogOffset + Client()->GameTick(g_Config.m_ClDummy);
 		if (idx < 0 || idx >= MAX_CAM_LOG)
 		{
 			dbg_msg("camlog", "invalid index %d", idx);
@@ -647,7 +649,9 @@ void CGameClient::CamLog()
 	}
 	else if (m_IsCamPlaying)
 	{
-		int idx = m_CamLogOffset + Client()->GameTick(g_Config.m_ClDummy);
+		int idx = m_CamLogIndex++;
+		if(g_Config.m_ClRecCamGametick)
+			idx = m_CamLogOffset + Client()->GameTick(g_Config.m_ClDummy);
 		if (idx < 0 || idx >= MAX_CAM_LOG)
 		{
 			dbg_msg("camlog", "invalid index %d", idx);
@@ -3318,6 +3322,7 @@ void CGameClient::ConchainRecCam(IConsole::IResult *pResult, void *pUserData, IC
 		if (val == 1)
 		{
 			pSelf->m_CamLogOffset = pSelf->Client()->GameTick(g_Config.m_ClDummy);
+			pSelf->m_CamLogIndex = 0;
 			pSelf->m_IsCamLogging = true;
 			pSelf->m_IsCamPlaying = false;
 			dbg_msg("cam", "start rec at offset = %d", pSelf->m_CamLogOffset);
@@ -3325,6 +3330,7 @@ void CGameClient::ConchainRecCam(IConsole::IResult *pResult, void *pUserData, IC
 		else if (val == 2)
 		{
 			pSelf->m_CamLogOffset = pSelf->Client()->GameTick(g_Config.m_ClDummy);
+			pSelf->m_CamLogIndex = 0;
 			pSelf->m_IsCamLogging = false;
 			pSelf->m_IsCamPlaying = true;
 			dbg_msg("cam", "start play at offset = %d", pSelf->m_CamLogOffset);

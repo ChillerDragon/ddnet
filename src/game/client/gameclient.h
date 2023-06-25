@@ -732,6 +732,7 @@ private:
 		MAX_CAM_LOG = 100000
 	};
 	int m_CamLogOffset;
+	int m_CamLogIndex;
 	bool m_IsCamLogging;
 	bool m_IsCamPlaying;
 	vec2 m_aCamLog[MAX_CAM_LOG];
