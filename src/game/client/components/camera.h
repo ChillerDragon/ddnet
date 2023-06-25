@@ -37,6 +37,7 @@ class CCamera : public CComponent
 	float MaxZoomLevel();
 
 public:
+	vec2 m_ForceFreeviewPos;
 	vec2 m_Center;
 	bool m_ZoomSet;
 	bool m_Zooming;
@@ -57,8 +58,6 @@ private:
 	static void ConZoomMinus(IConsole::IResult *pResult, void *pUserData);
 	static void ConZoom(IConsole::IResult *pResult, void *pUserData);
 	static void ConSetView(IConsole::IResult *pResult, void *pUserData);
-
-	vec2 m_ForceFreeviewPos;
 };
 
 #endif

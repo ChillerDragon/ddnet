@@ -213,6 +213,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("cl_text_entities_size", ConchainClTextEntitiesSize, this);
 
 	Console()->Chain("cl_menu_map", ConchainMenuMap, this);
+	Console()->Chain("cl_rec_cam", ConchainRecCam, this);
 
 	//
 	m_SuppressEvents = false;
@@ -626,8 +627,40 @@ void CGameClient::UpdatePositions()
 	UpdateRenderedCharacters();
 }
 
+void CGameClient::CamLog()
+{
+	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		return;
+	if (!g_Config.m_ClRecCam)
+		return;
+	
+	// dbg_msg("camlog", "onrender tick=%d x=%f y=%f", Client()->GameTick(g_Config.m_ClDummy), m_Camera.m_Center.x, m_Camera.m_Center.y);
+	if (m_IsCamLogging)
+	{
+		int idx = m_CamLogOffset + Client()->GameTick(g_Config.m_ClDummy);
+		if (idx < 0 || idx >= MAX_CAM_LOG)
+		{
+			dbg_msg("camlog", "invalid index %d", idx);
+			return;
+		}
+		m_aCamLog[idx] = m_Camera.m_Center;
+	}
+	else if (m_IsCamPlaying)
+	{
+		int idx = m_CamLogOffset + Client()->GameTick(g_Config.m_ClDummy);
+		if (idx < 0 || idx >= MAX_CAM_LOG)
+		{
+			dbg_msg("camlog", "invalid index %d", idx);
+			return;
+		}
+		m_Camera.m_ForceFreeviewPos = m_aCamLog[idx];
+	}
+}
+
+
 void CGameClient::OnRender()
 {
+	CamLog();
 	// update the local character and spectate position
 	UpdatePositions();
 
@@ -3274,6 +3307,29 @@ void CGameClient::ConchainMenuMap(IConsole::IResult *pResult, void *pUserData, I
 	}
 	else
 		pfnCallback(pResult, pCallbackUserData);
+}
+
+void CGameClient::ConchainRecCam(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	CGameClient *pSelf = (CGameClient *)pUserData;
+	if(pResult->NumArguments())
+	{
+		int val = pResult->GetInteger(0);
+		if (val == 1)
+		{
+			pSelf->m_CamLogOffset = pSelf->Client()->GameTick(g_Config.m_ClDummy);
+			pSelf->m_IsCamLogging = true;
+			pSelf->m_IsCamPlaying = false;
+			dbg_msg("cam", "start rec at offset = %d", pSelf->m_CamLogOffset);
+		}
+		else if (val == 2)
+		{
+			pSelf->m_CamLogOffset = pSelf->Client()->GameTick(g_Config.m_ClDummy);
+			pSelf->m_IsCamLogging = false;
+			pSelf->m_IsCamPlaying = true;
+			dbg_msg("cam", "start play at offset = %d", pSelf->m_CamLogOffset);
+		}
+	}
 }
 
 void CGameClient::DummyResetInput()

@@ -206,6 +206,7 @@ private:
 	static void ConTuneZone(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConchainMenuMap(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainRecCam(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
@@ -726,6 +727,15 @@ private:
 	float m_LastZoom;
 	float m_LastScreenAspect;
 	bool m_LastDummyConnected;
+
+	enum {
+		MAX_CAM_LOG = 100000
+	};
+	int m_CamLogOffset;
+	bool m_IsCamLogging;
+	bool m_IsCamPlaying;
+	vec2 m_aCamLog[MAX_CAM_LOG];
+	void CamLog();
 };
 
 ColorRGBA CalculateNameColor(ColorHSLA TextColorHSL);

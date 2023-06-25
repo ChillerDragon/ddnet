@@ -170,8 +170,9 @@ void CCamera::OnRender()
 			m_Center = m_pClient->m_LocalCharacterPos + s_aCurrentCameraOffset[g_Config.m_ClDummy];
 	}
 
-	if(m_ForceFreeviewPos != vec2(-1, -1) && m_CamType == CAMTYPE_SPEC)
+	if(m_ForceFreeviewPos != vec2(-1, -1))
 	{
+		m_CamType = CAMTYPE_SPEC;
 		m_Center = m_pClient->m_Controls.m_aMousePos[g_Config.m_ClDummy] = m_ForceFreeviewPos;
 		m_ForceFreeviewPos = vec2(-1, -1);
 	}
