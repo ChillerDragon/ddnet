@@ -1197,6 +1197,9 @@ void CChat::Say(int Team, const char *pLine)
 {
 	m_LastChatSend = time();
 
+	if(pLine[0] == '/' && Client()->SendChatCommand(g_Config.m_ClDummy, pLine + 1))
+		return;
+
 	// send chat message
 	CNetMsg_Cl_Say Msg;
 	Msg.m_Team = Team;

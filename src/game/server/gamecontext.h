@@ -305,6 +305,7 @@ public:
 	const char *NetVersion() const override;
 
 	// DDRace
+	void OnChatCommand(int ClientID, const char *pCmd) override;
 	void OnPreTickTeehistorian() override;
 	bool OnClientDDNetVersionKnown(int ClientID);
 	void FillAntibot(CAntibotRoundData *pData) override;

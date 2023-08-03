@@ -205,6 +205,8 @@ public:
 	virtual bool UseTempRconCommands() const = 0;
 	virtual void Rcon(const char *pLine) = 0;
 
+	virtual bool SendChatCommand(int Conn, const char *pCmd) = 0;
+
 	// server info
 	virtual void GetServerInfo(class CServerInfo *pServerInfo) const = 0;
 

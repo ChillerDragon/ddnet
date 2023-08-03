@@ -102,6 +102,7 @@ public:
 	bool m_PingEx;
 	bool m_AllowDummy;
 	bool m_SyncWeaponInput;
+	bool m_ChatCommands;
 };
 
 class CClient : public IClient, public CDemoPlayer::IListener
@@ -330,6 +331,8 @@ public:
 	bool UseTempRconCommands() const override { return m_UseTempRconCommands != 0; }
 	void RconAuth(const char *pName, const char *pPassword) override;
 	void Rcon(const char *pCmd) override;
+
+	bool SendChatCommand(int Conn, const char *pCmd) override;
 
 	bool ConnectionProblems() const override;
 

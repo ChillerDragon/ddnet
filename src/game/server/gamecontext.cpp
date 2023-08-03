@@ -1898,6 +1898,40 @@ void CGameContext::CensorMessage(char *pCensoredMessage, const char *pMessage, i
 	}
 }
 
+void CGameContext::OnChatCommand(int ClientID, const char *pCmd)
+{
+	CPlayer *pPlayer = m_apPlayers[ClientID];
+	if(!Server()->ClientIngame(ClientID))
+		return;
+	if(g_Config.m_SvSpamprotection && !str_startswith(pCmd, "timeout ") && pPlayer->m_aLastCommands[0] && pPlayer->m_aLastCommands[0] + Server()->TickSpeed() > Server()->Tick() && pPlayer->m_aLastCommands[1] && pPlayer->m_aLastCommands[1] + Server()->TickSpeed() > Server()->Tick() && pPlayer->m_aLastCommands[2] && pPlayer->m_aLastCommands[2] + Server()->TickSpeed() > Server()->Tick() && pPlayer->m_aLastCommands[3] && pPlayer->m_aLastCommands[3] + Server()->TickSpeed() > Server()->Tick())
+		return;
+
+	int64_t Now = Server()->Tick();
+	pPlayer->m_aLastCommands[pPlayer->m_LastCommandPos] = Now;
+	pPlayer->m_LastCommandPos = (pPlayer->m_LastCommandPos + 1) % 4;
+
+	Console()->SetFlagMask(CFGFLAG_CHAT);
+	int Authed = Server()->GetAuthedState(ClientID);
+	if(Authed)
+		Console()->SetAccessLevel(Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : Authed == AUTHED_MOD ? IConsole::ACCESS_LEVEL_MOD : IConsole::ACCESS_LEVEL_HELPER);
+	else
+		Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_USER);
+
+	{
+		CClientChatLogger Logger(this, ClientID, log_get_scope_logger());
+		CLogScope Scope(&Logger);
+		Console()->ExecuteLine(pCmd, ClientID, false);
+	}
+	// m_apPlayers[ClientID] can be NULL, if the player used a
+	// timeout code and replaced another client.
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "%d used /%s", ClientID, pCmd);
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "chat-command", aBuf);
+
+	Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_ADMIN);
+	Console()->SetFlagMask(CFGFLAG_SERVER);
+}
+
 void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 {
 	if(m_TeeHistorianActive)
@@ -2002,33 +2036,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				}
 				else
 				{
-					if(g_Config.m_SvSpamprotection && !str_startswith(pMsg->m_pMessage + 1, "timeout ") && pPlayer->m_aLastCommands[0] && pPlayer->m_aLastCommands[0] + Server()->TickSpeed() > Server()->Tick() && pPlayer->m_aLastCommands[1] && pPlayer->m_aLastCommands[1] + Server()->TickSpeed() > Server()->Tick() && pPlayer->m_aLastCommands[2] && pPlayer->m_aLastCommands[2] + Server()->TickSpeed() > Server()->Tick() && pPlayer->m_aLastCommands[3] && pPlayer->m_aLastCommands[3] + Server()->TickSpeed() > Server()->Tick())
-						return;
-
-					int64_t Now = Server()->Tick();
-					pPlayer->m_aLastCommands[pPlayer->m_LastCommandPos] = Now;
-					pPlayer->m_LastCommandPos = (pPlayer->m_LastCommandPos + 1) % 4;
-
-					Console()->SetFlagMask(CFGFLAG_CHAT);
-					int Authed = Server()->GetAuthedState(ClientID);
-					if(Authed)
-						Console()->SetAccessLevel(Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : Authed == AUTHED_MOD ? IConsole::ACCESS_LEVEL_MOD : IConsole::ACCESS_LEVEL_HELPER);
-					else
-						Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_USER);
-
-					{
-						CClientChatLogger Logger(this, ClientID, log_get_scope_logger());
-						CLogScope Scope(&Logger);
-						Console()->ExecuteLine(pMsg->m_pMessage + 1, ClientID, false);
-					}
-					// m_apPlayers[ClientID] can be NULL, if the player used a
-					// timeout code and replaced another client.
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "%d used %s", ClientID, pMsg->m_pMessage);
-					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "chat-command", aBuf);
-
-					Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_ADMIN);
-					Console()->SetFlagMask(CFGFLAG_SERVER);
+					OnChatCommand(ClientID, pMsg->m_pMessage + 1);
 				}
 			}
 			else

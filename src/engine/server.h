@@ -323,6 +323,8 @@ public:
 
 	// DDRace
 
+	virtual void OnChatCommand(int ClientID, const char *pCmd) = 0;
+
 	virtual void OnPreTickTeehistorian() = 0;
 
 	virtual void OnSetAuthed(int ClientID, int Level) = 0;

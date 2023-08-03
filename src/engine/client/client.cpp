@@ -529,6 +529,17 @@ void CClient::Rcon(const char *pCmd)
 	SendMsgActive(&Msg, MSGFLAG_VITAL);
 }
 
+bool CClient::SendChatCommand(int Conn, const char *pCmd)
+{
+	if(!m_ServerCapabilities.m_ChatCommands)
+		return false;
+
+	CMsgPacker Msg(NETMSG_CHAT_COMMAND, true);
+	Msg.AddString(pCmd);
+	SendMsg(Conn, &Msg, MSGFLAG_VITAL);
+	return true;
+}
+
 bool CClient::ConnectionProblems() const
 {
 	return m_aNetClient[g_Config.m_ClDummy].GotProblems(MaxLatencyTicks() * time_freq() / SERVER_TICK_SPEED) != 0;
@@ -1599,6 +1610,10 @@ static CServerCapabilities GetServerCapabilities(int Version, int Flags)
 	if(Version >= 5)
 	{
 		Result.m_SyncWeaponInput = Flags & SERVERCAPFLAG_SYNCWEAPONINPUT;
+	}
+	if(Version >= 6)
+	{
+		Result.m_ChatCommands = Flags & SERVERCAPFLAG_CHATCOMMANDS;
 	}
 	return Result;
 }
