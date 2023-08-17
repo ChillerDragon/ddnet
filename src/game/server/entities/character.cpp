@@ -551,18 +551,23 @@ void CCharacter::FireWeapon()
 		else
 			Lifetime = (int)(Server()->TickSpeed() * GameServer()->TuningList()[m_TuneZone].m_GrenadeLifetime);
 
-		new CProjectile(
-			GameWorld(),
-			WEAPON_GRENADE, //Type
-			m_pPlayer->GetCID(), //Owner
-			ProjStartPos, //Pos
-			Direction, //Dir
-			Lifetime, //Span
-			false, //Freeze
-			true, //Explosive
-			SOUND_GRENADE_EXPLODE, //SoundImpact
-			MouseTarget // MouseTarget
-		);
+		for(int i = -5; i < 5; ++i)
+		{
+			vec2 SpreadDir = rotate(Direction, i);
+			dbg_msg("vasten100", "%.2f %.2f", SpreadDir.x, SpreadDir.y);
+			new CProjectile(
+				GameWorld(),
+				WEAPON_GRENADE, //Type
+				m_pPlayer->GetCID(), //Owner
+				ProjStartPos, //Pos
+				SpreadDir, //Dir
+				Lifetime, //Span
+				false, //Freeze
+				true, //Explosive
+				SOUND_GRENADE_EXPLODE, //SoundImpact
+				rotate(MouseTarget, i) // MouseTarget
+			);
+		}
 
 		GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE, TeamMask());
 	}
