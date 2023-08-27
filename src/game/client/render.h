@@ -26,6 +26,8 @@ struct CMapItemGroup;
 struct CMapItemGroupEx;
 struct CQuad;
 
+#include <game/generated/protocol.h>
+
 class CTeeRenderInfo
 {
 public:
@@ -52,6 +54,12 @@ public:
 	int m_GotAirJump;
 	int m_TeeRenderFlags;
 	bool m_FeetFlipped;
+
+	// 0.7
+	IGraphics::CTextureHandle m_aTextures[NUM_SKINPARTS];
+	vec4 m_aColors[NUM_SKINPARTS];
+	IGraphics::CTextureHandle m_BotTexture;
+	vec4 m_BotColor;
 };
 
 // Tee Render Flags
@@ -120,7 +128,9 @@ public:
 	void Init(class IGraphics *pGraphics, class ITextRender *pTextRender);
 
 	void SelectSprite(CDataSprite *pSprite, int Flags = 0, int sx = 0, int sy = 0);
+	void SelectSprite7(client_data7::CDataSprite *pSprite, int Flags = 0, int sx = 0, int sy = 0);
 	void SelectSprite(int Id, int Flags = 0, int sx = 0, int sy = 0);
+	void SelectSprite7(int Id, int Flags = 0, int sx = 0, int sy = 0);
 
 	void GetSpriteScale(client_data7::CDataSprite *pSprite, float &ScaleX, float &ScaleY);
 	void GetSpriteScale(CDataSprite *pSprite, float &ScaleX, float &ScaleY);
@@ -145,6 +155,7 @@ public:
 	void GetRenderTeeOffsetToRenderedTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, vec2 &TeeOffsetToMid);
 	// object render methods
 	void RenderTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha = 1.0f);
+	void RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
 
 	// map render methods (render_map.cpp)
 	static void RenderEvalEnvelope(const IEnvelopePointAccess *pPoints, int Channels, std::chrono::nanoseconds TimeNanos, ColorRGBA &Result);

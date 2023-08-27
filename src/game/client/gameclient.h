@@ -51,6 +51,7 @@
 #include "components/race_demo.h"
 #include "components/scoreboard.h"
 #include "components/skins.h"
+#include "components/skins7.h"
 #include "components/sounds.h"
 #include "components/spectator.h"
 #include "components/statboard.h"
@@ -123,6 +124,7 @@ public:
 	CParticles m_Particles;
 	CMenus m_Menus;
 	CSkins m_Skins;
+	CSkins7 m_Skins7;
 	CCountryFlags m_CountryFlags;
 	CFlow m_Flow;
 	CHud m_Hud;
