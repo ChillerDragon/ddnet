@@ -16,6 +16,18 @@ int PlayerFlags_SevenToSix(int Flags)
 	return Six;
 }
 
+int PlayerFlags_SixToSeven(int Flags)
+{
+	int Seven = 0;
+	if(Flags & PLAYERFLAG_CHATTING)
+		Seven |= protocol7::PLAYERFLAG_CHATTING;
+	if(Flags & PLAYERFLAG_SCOREBOARD)
+		Seven |= protocol7::PLAYERFLAG_SCOREBOARD;
+	if(Flags & PLAYERFLAG_AIM)
+		Seven |= protocol7::PLAYERFLAG_AIM;
+	return Seven;
+}
+
 void PickupType_SevenToSix(int Type7, int &Type6, int &SubType6)
 {
 	SubType6 = 0;
