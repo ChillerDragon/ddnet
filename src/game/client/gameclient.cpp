@@ -1083,6 +1083,24 @@ void *CGameClient::PreProcessMsg(int *pMsgID, CUnpacker *pUnpacker)
 		else
 			str_copy(Client.m_aSkinName, "default", sizeof(Client.m_aSkinName));
 
+
+		CClientData *pClient = &m_aClients[pMsg7->m_ClientID];
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			int ID = m_Skins7.FindSkinPart(p, pMsg7->m_apSkinPartNames[p], false);
+			const CSkins7::CSkinPart *pSkinPart = m_Skins7.GetSkinPart(p, ID);
+			if(pMsg7->m_aUseCustomColors[p])
+			{
+				pClient->m_SkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+				pClient->m_SkinInfo.m_aColors[p] = m_Skins7.GetColorV4(pMsg7->m_aSkinPartColors[p], p == protocol7::SKINPART_MARKING);
+			}
+			else
+			{
+				pClient->m_SkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
+				pClient->m_SkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f); // TODO: custom colors
+			}
+		}
+
 		if(m_pClient->m_TranslationContext.m_LocalClientID == -1)
 			return nullptr;
 		if(pMsg7->m_Silent || pMsg7->m_Local)
@@ -2789,9 +2807,9 @@ void CGameClient::SendStartInfo7(bool Dummy)
 	static const int NUM_SKINPARTS = 6;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		Msg.m_apSkinPartNames[p] = "default";
-		Msg.m_aUseCustomColors[p] = 0;
-		Msg.m_aSkinPartColors[p] = 0;
+		Msg.m_apSkinPartNames[p] = CSkins7::ms_apSkinVariables[p];
+		Msg.m_aUseCustomColors[p] = *CSkins7::ms_apUCCVariables[p];
+		Msg.m_aSkinPartColors[p] = *CSkins7::ms_apColorVariables[p];
 	}
 	CMsgPacker Packer(&Msg, false, true);
 	if(Msg.Pack(&Packer))
