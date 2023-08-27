@@ -3,6 +3,7 @@
 #include <base/math.h>
 
 #include <engine/shared/config.h>
+#include <engine/shared/protocolglue.h>
 
 #include <game/client/components/camera.h>
 #include <game/client/components/chat.h>
@@ -327,7 +328,10 @@ int CControls::SnapInput(int *pData)
 		return 0;
 
 	LastSendTime = time_get();
+	int PlayerFlagsSix = m_aInputData[g_Config.m_ClDummy].m_PlayerFlags;
+	m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PlayerFlags_SixToSeven(PlayerFlagsSix);
 	mem_copy(pData, &m_aInputData[g_Config.m_ClDummy], sizeof(m_aInputData[0]));
+	m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PlayerFlagsSix;
 	return sizeof(m_aInputData[0]);
 }
 

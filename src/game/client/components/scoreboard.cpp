@@ -490,7 +490,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		}
 
 		// ready / watching
-		if(Client()->m_TranslationContext.m_aClients[pInfo->m_ClientID].m_PlayerFlags7 & protocol7::PLAYERFLAG_READY)
+		if(Client()->IsSixup() && Client()->m_TranslationContext.m_aClients[pInfo->m_ClientID].m_PlayerFlags7 & protocol7::PLAYERFLAG_READY)
 		{
 			TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
 			TextRender()->TextEx(&Cursor, "\xE2\x9C\x93", str_length("\xE2\x9C\x93"));
