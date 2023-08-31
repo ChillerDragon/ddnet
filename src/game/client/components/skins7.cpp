@@ -8,6 +8,7 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <engine/shared/jsonwriter.h>
+#include <engine/shared/protocol7.h>
 #include <engine/storage.h>
 
 #include <game/client/gameclient.h>
@@ -15,9 +16,6 @@
 
 #include "menus.h"
 #include "skins7.h"
-
-// TODO: remove
-#define MAX_SKIN_ARRAY_SIZE 24
 
 const char *const CSkins7::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "marking", "decoration", "hands", "feet", "eyes"}; /* Localize("body","skins");Localize("marking","skins");Localize("decoration","skins");Localize("hands","skins");Localize("feet","skins");Localize("eyes","skins"); */
 const char *const CSkins7::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
@@ -35,8 +33,18 @@ int CSkins7::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser
 	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
+	size_t PartNameSize, PartNameCount;
+	str_utf8_stats(pName, str_length(pName) - str_length(".png") + 1, IO_MAX_PATH_LENGTH, &PartNameSize, &PartNameCount);
+	if(PartNameSize >= protocol7::MAX_SKIN_ARRAY_SIZE || PartNameCount > protocol7::MAX_SKIN_LENGTH)
+	{
+		char aBuf[IO_MAX_PATH_LENGTH + 64];
+		str_format(aBuf, sizeof(aBuf), "failed to load skin part '%s': name too long", pName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0;
+	}
+
 	CSkinPart Part;
-	str_copy(Part.m_aName, pName, sizeof(Part.m_aName));
+	str_copy(Part.m_aName, pName, minimum<int>(PartNameSize + 1, sizeof(Part.m_aName)));
 	if(pSelf->FindSkinPart(pSelf->m_ScanningPart, Part.m_aName, true) != -1)
 		return 0;
 
@@ -434,7 +442,7 @@ void CSkins7::RandomizeSkin()
 		const CSkins7::CSkinPart *s = GetSkinPart(p, rand() % NumSkinPart(p));
 		while(s->m_Flags & CSkins7::SKINFLAG_SPECIAL)
 			s = GetSkinPart(p, rand() % NumSkinPart(p));
-		mem_copy(CSkins7::ms_apSkinVariables[p], s->m_aName, MAX_SKIN_ARRAY_SIZE);
+		mem_copy(CSkins7::ms_apSkinVariables[p], s->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
 	}
 }
 
@@ -489,7 +497,7 @@ bool CSkins7::ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCusto
 		// TODO: adjust eye color here as well?
 		if(str_comp(apPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(apPartNames[SKINPART_EYES], "negative") == 0)
 		{
-			str_copy(apPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE);
+			str_copy(apPartNames[SKINPART_EYES], "standard", protocol7::MAX_SKIN_ARRAY_SIZE);
 			return false;
 		}
 	}
@@ -522,7 +530,7 @@ bool CSkins7::ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCusto
 
 		// 		// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
 		// 		if(OrgEyeHsl.l < DARKEST_COLOR_LGT/255.f)
-		// 			str_copy(apPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE); // black
+		// 			str_copy(apPartNames[SKINPART_EYES], "standard", protocol7::MAX_SKIN_ARRAY_SIZE); // black
 		// 		else
 		// 		{
 		// 			pUseCustomColors[SKINPART_EYES] = 1;
