@@ -22,6 +22,46 @@ int CSnapshot::TranslateSevenToSix(CSnapshot *pSixSnapDest, CTranslationContext 
 	CSnapshotBuilder Builder;
 	Builder.Init();
 
+	// hack to put game info in the snap
+	// even though in 0.7 we get it as a game message
+	// this message has to be on the top
+	// the client looks at the items in order and needs the gameinfo at the top
+	// otherwise it will not render skins with team colors
+	if(TranslationContext.m_ShouldSendGameInfo)
+	{
+		// TODO: should we ever stop putting game info in every snap?
+		// id 0 should never conflict since
+		// this is the only place this item is added
+		void *pObj = Builder.NewItem(NETOBJTYPE_GAMEINFO, 0, sizeof(CNetObj_GameInfo));
+		if(!pObj)
+			return -1;
+
+		int GameStateFlagsSix = 0;
+		if(TranslationContext.m_GameStateFlags7 & protocol7::GAMESTATEFLAG_GAMEOVER)
+			GameStateFlagsSix |= GAMESTATEFLAG_GAMEOVER;
+		if(TranslationContext.m_GameStateFlags7 & protocol7::GAMESTATEFLAG_SUDDENDEATH)
+			GameStateFlagsSix |= GAMESTATEFLAG_SUDDENDEATH;
+		if(TranslationContext.m_GameStateFlags7 & protocol7::GAMESTATEFLAG_PAUSED)
+			GameStateFlagsSix |= GAMESTATEFLAG_PAUSED;
+
+		/*
+			These are 0.7 only flags that we just ignore for now
+
+			GAMESTATEFLAG_WARMUP
+			GAMESTATEFLAG_ROUNDOVER
+			GAMESTATEFLAG_STARTCOUNTDOWN
+		*/
+
+		CNetObj_GameInfo Info6 = {};
+		Info6.m_GameFlags = TranslationContext.m_GameFlags;
+		Info6.m_GameStateFlags = GameStateFlagsSix;
+		Info6.m_ScoreLimit = TranslationContext.m_ScoreLimit;
+		Info6.m_TimeLimit = TranslationContext.m_TimeLimit;
+		Info6.m_RoundNum = TranslationContext.m_MatchNum;
+		Info6.m_RoundCurrent = TranslationContext.m_MatchCurrent;
+		mem_copy(pObj, &Info6, sizeof(CNetObj_GameInfo));
+	}
+
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		const CTranslationContext::CClientData &Client = TranslationContext.m_aClients[i];
@@ -332,43 +372,6 @@ int CSnapshot::TranslateSevenToSix(CSnapshot *pSixSnapDest, CTranslationContext 
 		GameData.m_FlagCarrierRed = TranslationContext.m_FlagCarrierRed;
 		GameData.m_FlagCarrierBlue = TranslationContext.m_FlagCarrierBlue;
 		mem_copy(pObj, &GameData, sizeof(CNetObj_GameData));
-	}
-
-	// hack to put game info in the snap
-	// even though in 0.7 we get it as a game message
-	if(TranslationContext.m_ShouldSendGameInfo)
-	{
-		// TODO: should we ever stop putting game info in every snap?
-		// id 0 should never conflict since
-		// this is the only place this item is added
-		void *pObj = Builder.NewItem(NETOBJTYPE_GAMEINFO, 0, sizeof(CNetObj_GameInfo));
-		if(!pObj)
-			return -1;
-
-		int GameStateFlagsSix = 0;
-		if(TranslationContext.m_GameStateFlags7 & protocol7::GAMESTATEFLAG_GAMEOVER)
-			GameStateFlagsSix |= GAMESTATEFLAG_GAMEOVER;
-		if(TranslationContext.m_GameStateFlags7 & protocol7::GAMESTATEFLAG_SUDDENDEATH)
-			GameStateFlagsSix |= GAMESTATEFLAG_SUDDENDEATH;
-		if(TranslationContext.m_GameStateFlags7 & protocol7::GAMESTATEFLAG_PAUSED)
-			GameStateFlagsSix |= GAMESTATEFLAG_PAUSED;
-
-		/*
-			These are 0.7 only flags that we just ignore for now
-
-			GAMESTATEFLAG_WARMUP
-			GAMESTATEFLAG_ROUNDOVER
-			GAMESTATEFLAG_STARTCOUNTDOWN
-		*/
-
-		CNetObj_GameInfo Info6 = {};
-		Info6.m_GameFlags = TranslationContext.m_GameFlags;
-		Info6.m_GameStateFlags = GameStateFlagsSix;
-		Info6.m_ScoreLimit = TranslationContext.m_ScoreLimit;
-		Info6.m_TimeLimit = TranslationContext.m_TimeLimit;
-		Info6.m_RoundNum = TranslationContext.m_MatchNum;
-		Info6.m_RoundCurrent = TranslationContext.m_MatchCurrent;
-		mem_copy(pObj, &Info6, sizeof(CNetObj_GameInfo));
 	}
 
 	return Builder.Finish(pSixSnapDest);

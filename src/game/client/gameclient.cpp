@@ -383,7 +383,7 @@ void CGameClient::OnInit()
 	{
 		if(client_data7::g_pData->m_aImages[i].m_pFilename[0] == '\0') // handle special null image without filename
 			client_data7::g_pData->m_aImages[i].m_Id = IGraphics::CTextureHandle();
-		else
+		else if(!str_comp(client_data7::g_pData->m_aImages[i].m_pFilename, "deadtee.png"))
 			client_data7::g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(client_data7::g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 		m_Menus.RenderLoading(pLoadingDDNetCaption, Localize("Initializing assets"), 1);
 	}
@@ -2726,11 +2726,15 @@ void CGameClient::CClientData::UpdateRenderInfo(bool IsTeamPlay)
 		{
 			m_RenderInfo.m_ColorBody = color_cast<ColorRGBA>(ColorHSLA(aTeamColors[m_Team]));
 			m_RenderInfo.m_ColorFeet = color_cast<ColorRGBA>(ColorHSLA(aTeamColors[m_Team]));
+			for(auto &aColor : m_RenderInfo.m_aColors)
+				aColor = color_cast<ColorRGBA>(ColorHSLA(aTeamColors[m_Team]));
 		}
 		else
 		{
 			m_RenderInfo.m_ColorBody = color_cast<ColorRGBA>(ColorHSLA(12829350));
 			m_RenderInfo.m_ColorFeet = color_cast<ColorRGBA>(ColorHSLA(12829350));
+			for(auto &aColor : m_RenderInfo.m_aColors)
+				aColor = color_cast<ColorRGBA>(ColorHSLA(12829350));
 		}
 	}
 }

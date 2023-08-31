@@ -7,6 +7,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/linereader.h>
 #include <engine/shared/localization.h>
+#include <engine/shared/protocol7.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/updater.h>
@@ -773,13 +774,13 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 		CTeeRenderInfo OwnSkinInfo;
 		OwnSkinInfo.m_Size = 50.0f;
 
-		char aSkinParts[NUM_SKINPARTS][32 /* TODO: check this size MAX_SKIN_ARRAY_SIZE */];
+		char aSkinParts[NUM_SKINPARTS][protocol7::MAX_SKIN_ARRAY_SIZE];
 		char *apSkinPartsPtr[NUM_SKINPARTS];
 		int aUCCVars[NUM_SKINPARTS];
 		int aColorVars[NUM_SKINPARTS];
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			str_copy(aSkinParts[p], CSkins7::ms_apSkinVariables[p], 32 /* TODO: check this size MAX_SKIN_ARRAY_SIZE */);
+			str_copy(aSkinParts[p], CSkins7::ms_apSkinVariables[p], protocol7::MAX_SKIN_ARRAY_SIZE);
 			apSkinPartsPtr[p] = aSkinParts[p];
 			aUCCVars[p] = *CSkins7::ms_apUCCVariables[p];
 			aColorVars[p] = *CSkins7::ms_apColorVariables[p];
@@ -831,7 +832,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			str_copy(aSkinParts[p], CSkins7::ms_apSkinVariables[p], 32 /* TODO: check this size MAX_SKIN_ARRAY_SIZE */);
+			str_copy(aSkinParts[p], CSkins7::ms_apSkinVariables[p], protocol7::MAX_SKIN_ARRAY_SIZE);
 			apSkinPartsPtr[p] = aSkinParts[p];
 			aUCCVars[p] = *CSkins7::ms_apUCCVariables[p];
 			aColorVars[p] = *CSkins7::ms_apColorVariables[p];
@@ -991,7 +992,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 
 	float ButtonWidth = (Patterns.w / 6.0f) - (SpacingW * 5.0) / 6.0f;
 
-	static CButtonContainer s_aPatternButtons[6];
+	static CButtonContainer s_aPatternButtons[NUM_SKINPARTS];
 	for(int i = 0; i < NUM_SKINPARTS; i++)
 	{
 		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
@@ -1111,7 +1112,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		mem_copy(Config()->m_ClPlayer7Skin, m_pSelectedSkin->m_aName, sizeof(Config()->m_ClPlayer7Skin));
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			mem_copy(CSkins7::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, 32 /* TODO: check this size MAX_SKIN_ARRAY_SIZE */);
+			mem_copy(CSkins7::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
 			*CSkins7::ms_apUCCVariables[p] = m_pSelectedSkin->m_aUseCustomColors[p];
 			*CSkins7::ms_apColorVariables[p] = m_pSelectedSkin->m_aPartColors[p];
 		}
@@ -1122,7 +1123,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 void CMenus::RenderSkinPartSelection(CUIRect MainView)
 {
 	static bool s_InitSkinPartList = true;
-	static std::vector<const CSkins7::CSkinPart *> s_paList[6];
+	static std::vector<const CSkins7::CSkinPart *> s_paList[NUM_SKINPARTS];
 	static CListBox s_ListBox;
 	if(s_InitSkinPartList)
 	{
@@ -1208,7 +1209,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		const CSkins7::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
-		mem_copy(CSkins7::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 32 /* TODO: check this size MAX_SKIN_ARRAY_SIZE */);
+		mem_copy(CSkins7::ms_apSkinVariables[m_TeePartSelected], s->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
 		Config()->m_ClPlayer7Skin[0] = 0;
 		m_SkinModified = true;
 	}
