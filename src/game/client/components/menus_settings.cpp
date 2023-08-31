@@ -313,7 +313,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 				*CSkins7::ms_apColorVariables[p] = NewVal;
 		}
 		if(UseAlpha)
-			Config()->m_PlayerColorMarking = (Alp << 24) + NewVal;
+			Config()->m_ClPlayer7ColorMarking = (Alp << 24) + NewVal;
 		m_SkinModified = true;
 	}
 }
@@ -929,7 +929,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 		if(DoButton_Menu(&s_RandomizeSkinButton, Localize("Randomize"), 0, &Button))
 		{
 			m_pClient->m_Skins7.RandomizeSkin();
-			Config()->m_PlayerSkin[0] = 0;
+			Config()->m_ClPlayer7Skin[0] = 0;
 			m_SkinModified = true;
 		}
 		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
@@ -1059,7 +1059,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		const CSkins7::CSkin *s = s_paSkinList[i];
 		if(s == 0)
 			continue;
-		if(!str_comp(s->m_aName, Config()->m_PlayerSkin))
+		if(!str_comp(s->m_aName, Config()->m_ClPlayer7Skin))
 		{
 			m_pSelectedSkin = s;
 			OldSelected = i;
@@ -1108,7 +1108,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	{
 		s_LastSelectionTime = Client()->LocalTime();
 		m_pSelectedSkin = s_paSkinList[NewSelected];
-		mem_copy(Config()->m_PlayerSkin, m_pSelectedSkin->m_aName, sizeof(Config()->m_PlayerSkin));
+		mem_copy(Config()->m_ClPlayer7Skin, m_pSelectedSkin->m_aName, sizeof(Config()->m_ClPlayer7Skin));
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			mem_copy(CSkins7::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, 32 /* TODO: check this size MAX_SKIN_ARRAY_SIZE */);
@@ -1209,7 +1209,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	{
 		const CSkins7::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
 		mem_copy(CSkins7::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 32 /* TODO: check this size MAX_SKIN_ARRAY_SIZE */);
-		Config()->m_PlayerSkin[0] = 0;
+		Config()->m_ClPlayer7Skin[0] = 0;
 		m_SkinModified = true;
 	}
 	OldSelected = NewSelected;
