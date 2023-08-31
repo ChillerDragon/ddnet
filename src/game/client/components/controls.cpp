@@ -329,9 +329,11 @@ int CControls::SnapInput(int *pData)
 
 	LastSendTime = time_get();
 	int PlayerFlagsSix = m_aInputData[g_Config.m_ClDummy].m_PlayerFlags;
-	m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PlayerFlags_SixToSeven(PlayerFlagsSix);
+	if(Client()->IsSixup())
+		m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PlayerFlags_SixToSeven(PlayerFlagsSix);
 	mem_copy(pData, &m_aInputData[g_Config.m_ClDummy], sizeof(m_aInputData[0]));
-	m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PlayerFlagsSix;
+	if(Client()->IsSixup())
+		m_aInputData[g_Config.m_ClDummy].m_PlayerFlags = PlayerFlagsSix;
 	return sizeof(m_aInputData[0]);
 }
 
