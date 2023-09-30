@@ -51,16 +51,16 @@ public:
 	static const char *const ms_apSkinPartNames[NUM_SKINPARTS];
 	static const char *const ms_apColorComponents[NUM_COLOR_COMPONENTS];
 
-	static char *ms_apSkinVariables[NUM_SKINPARTS];
-	static int *ms_apUCCVariables[NUM_SKINPARTS]; // use custom color
-	static int *ms_apColorVariables[NUM_SKINPARTS];
+	static char *ms_apSkinVariables[NUM_DUMMIES][NUM_SKINPARTS];
+	static int *ms_apUCCVariables[NUM_DUMMIES][NUM_SKINPARTS]; // use custom color
+	static int *ms_apColorVariables[NUM_DUMMIES][NUM_SKINPARTS];
 	IGraphics::CTextureHandle m_XmasHatTexture;
 	IGraphics::CTextureHandle m_BotTexture;
 
 	int GetInitAmount() const;
 	void OnInit() override;
 
-	void AddSkin(const char *pSkinName);
+	void AddSkin(const char *pSkinName, int Dummy);
 	void RemoveSkin(const CSkin *pSkin);
 
 	int Num();
@@ -69,7 +69,7 @@ public:
 	int Find(const char *pName, bool AllowSpecialSkin);
 	const CSkinPart *GetSkinPart(int Part, int Index);
 	int FindSkinPart(int Part, const char *pName, bool AllowSpecialPart);
-	void RandomizeSkin();
+	void RandomizeSkin(int Dummy);
 
 	vec3 GetColorV3(int v) const;
 	vec4 GetColorV4(int v, bool UseAlpha) const;
@@ -78,7 +78,7 @@ public:
 	// returns true if everything was valid and nothing changed
 	bool ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const;
 
-	bool SaveSkinfile(const char *pSaveSkinName);
+	bool SaveSkinfile(const char *pSaveSkinName, int Dummy);
 
 	virtual int Sizeof() const override { return sizeof(*this); }
 

@@ -20,9 +20,9 @@
 const char *const CSkins7::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "marking", "decoration", "hands", "feet", "eyes"}; /* Localize("body","skins");Localize("marking","skins");Localize("decoration","skins");Localize("hands","skins");Localize("feet","skins");Localize("eyes","skins"); */
 const char *const CSkins7::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
 
-char *CSkins7::ms_apSkinVariables[NUM_SKINPARTS] = {0};
-int *CSkins7::ms_apUCCVariables[NUM_SKINPARTS] = {0};
-int *CSkins7::ms_apColorVariables[NUM_SKINPARTS] = {0};
+char *CSkins7::ms_apSkinVariables[NUM_DUMMIES][NUM_SKINPARTS] = {{0}};
+int *CSkins7::ms_apUCCVariables[NUM_DUMMIES][NUM_SKINPARTS] = {{0}};
+int *CSkins7::ms_apColorVariables[NUM_DUMMIES][NUM_SKINPARTS] = {{0}};
 
 // TODO: uncomment
 // const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
@@ -233,24 +233,45 @@ int CSkins7::GetInitAmount() const
 
 void CSkins7::OnInit()
 {
-	ms_apSkinVariables[SKINPART_BODY] = Config()->m_ClPlayer7SkinBody;
-	ms_apSkinVariables[SKINPART_MARKING] = Config()->m_ClPlayer7SkinMarking;
-	ms_apSkinVariables[SKINPART_DECORATION] = Config()->m_ClPlayer7SkinDecoration;
-	ms_apSkinVariables[SKINPART_HANDS] = Config()->m_ClPlayer7SkinHands;
-	ms_apSkinVariables[SKINPART_FEET] = Config()->m_ClPlayer7SkinFeet;
-	ms_apSkinVariables[SKINPART_EYES] = Config()->m_ClPlayer7SkinEyes;
-	ms_apUCCVariables[SKINPART_BODY] = &Config()->m_ClPlayer7UseCustomColorBody;
-	ms_apUCCVariables[SKINPART_MARKING] = &Config()->m_ClPlayer7UseCustomColorMarking;
-	ms_apUCCVariables[SKINPART_DECORATION] = &Config()->m_ClPlayer7UseCustomColorDecoration;
-	ms_apUCCVariables[SKINPART_HANDS] = &Config()->m_ClPlayer7UseCustomColorHands;
-	ms_apUCCVariables[SKINPART_FEET] = &Config()->m_ClPlayer7UseCustomColorFeet;
-	ms_apUCCVariables[SKINPART_EYES] = &Config()->m_ClPlayer7UseCustomColorEyes;
-	ms_apColorVariables[SKINPART_BODY] = &Config()->m_ClPlayer7ColorBody;
-	ms_apColorVariables[SKINPART_MARKING] = &Config()->m_ClPlayer7ColorMarking;
-	ms_apColorVariables[SKINPART_DECORATION] = &Config()->m_ClPlayer7ColorDecoration;
-	ms_apColorVariables[SKINPART_HANDS] = &Config()->m_ClPlayer7ColorHands;
-	ms_apColorVariables[SKINPART_FEET] = &Config()->m_ClPlayer7ColorFeet;
-	ms_apColorVariables[SKINPART_EYES] = &Config()->m_ClPlayer7ColorEyes;
+	int Dummy = 0;
+	ms_apSkinVariables[Dummy][SKINPART_BODY] = Config()->m_ClPlayer7SkinBody;
+	ms_apSkinVariables[Dummy][SKINPART_MARKING] = Config()->m_ClPlayer7SkinMarking;
+	ms_apSkinVariables[Dummy][SKINPART_DECORATION] = Config()->m_ClPlayer7SkinDecoration;
+	ms_apSkinVariables[Dummy][SKINPART_HANDS] = Config()->m_ClPlayer7SkinHands;
+	ms_apSkinVariables[Dummy][SKINPART_FEET] = Config()->m_ClPlayer7SkinFeet;
+	ms_apSkinVariables[Dummy][SKINPART_EYES] = Config()->m_ClPlayer7SkinEyes;
+	ms_apUCCVariables[Dummy][SKINPART_BODY] = &Config()->m_ClPlayer7UseCustomColorBody;
+	ms_apUCCVariables[Dummy][SKINPART_MARKING] = &Config()->m_ClPlayer7UseCustomColorMarking;
+	ms_apUCCVariables[Dummy][SKINPART_DECORATION] = &Config()->m_ClPlayer7UseCustomColorDecoration;
+	ms_apUCCVariables[Dummy][SKINPART_HANDS] = &Config()->m_ClPlayer7UseCustomColorHands;
+	ms_apUCCVariables[Dummy][SKINPART_FEET] = &Config()->m_ClPlayer7UseCustomColorFeet;
+	ms_apUCCVariables[Dummy][SKINPART_EYES] = &Config()->m_ClPlayer7UseCustomColorEyes;
+	ms_apColorVariables[Dummy][SKINPART_BODY] = &Config()->m_ClPlayer7ColorBody;
+	ms_apColorVariables[Dummy][SKINPART_MARKING] = &Config()->m_ClPlayer7ColorMarking;
+	ms_apColorVariables[Dummy][SKINPART_DECORATION] = &Config()->m_ClPlayer7ColorDecoration;
+	ms_apColorVariables[Dummy][SKINPART_HANDS] = &Config()->m_ClPlayer7ColorHands;
+	ms_apColorVariables[Dummy][SKINPART_FEET] = &Config()->m_ClPlayer7ColorFeet;
+	ms_apColorVariables[Dummy][SKINPART_EYES] = &Config()->m_ClPlayer7ColorEyes;
+
+	Dummy = 1;
+	ms_apSkinVariables[Dummy][SKINPART_BODY] = Config()->m_ClDummy7SkinBody;
+	ms_apSkinVariables[Dummy][SKINPART_MARKING] = Config()->m_ClDummy7SkinMarking;
+	ms_apSkinVariables[Dummy][SKINPART_DECORATION] = Config()->m_ClDummy7SkinDecoration;
+	ms_apSkinVariables[Dummy][SKINPART_HANDS] = Config()->m_ClDummy7SkinHands;
+	ms_apSkinVariables[Dummy][SKINPART_FEET] = Config()->m_ClDummy7SkinFeet;
+	ms_apSkinVariables[Dummy][SKINPART_EYES] = Config()->m_ClDummy7SkinEyes;
+	ms_apUCCVariables[Dummy][SKINPART_BODY] = &Config()->m_ClDummy7UseCustomColorBody;
+	ms_apUCCVariables[Dummy][SKINPART_MARKING] = &Config()->m_ClDummy7UseCustomColorMarking;
+	ms_apUCCVariables[Dummy][SKINPART_DECORATION] = &Config()->m_ClDummy7UseCustomColorDecoration;
+	ms_apUCCVariables[Dummy][SKINPART_HANDS] = &Config()->m_ClDummy7UseCustomColorHands;
+	ms_apUCCVariables[Dummy][SKINPART_FEET] = &Config()->m_ClDummy7UseCustomColorFeet;
+	ms_apUCCVariables[Dummy][SKINPART_EYES] = &Config()->m_ClDummy7UseCustomColorEyes;
+	ms_apColorVariables[Dummy][SKINPART_BODY] = &Config()->m_ClDummy7ColorBody;
+	ms_apColorVariables[Dummy][SKINPART_MARKING] = &Config()->m_ClDummy7ColorMarking;
+	ms_apColorVariables[Dummy][SKINPART_DECORATION] = &Config()->m_ClDummy7ColorDecoration;
+	ms_apColorVariables[Dummy][SKINPART_HANDS] = &Config()->m_ClDummy7ColorHands;
+	ms_apColorVariables[Dummy][SKINPART_FEET] = &Config()->m_ClDummy7ColorFeet;
+	ms_apColorVariables[Dummy][SKINPART_EYES] = &Config()->m_ClDummy7ColorEyes;
 
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
@@ -355,18 +376,18 @@ void CSkins7::OnInit()
 	GameClient()->m_Menus.RenderLoading(Localize("Loading DDNet Client"), Localize("Loading skin files"), 0);
 }
 
-void CSkins7::AddSkin(const char *pSkinName)
+void CSkins7::AddSkin(const char *pSkinName, int Dummy)
 {
 	CSkin Skin = m_DummySkin;
 	Skin.m_Flags = 0;
 	str_copy(Skin.m_aName, pSkinName, sizeof(Skin.m_aName));
 	for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; ++PartIndex)
 	{
-		int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[PartIndex], false);
+		int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[Dummy][PartIndex], false);
 		if(SkinPart > -1)
 			Skin.m_apParts[PartIndex] = GetSkinPart(PartIndex, SkinPart);
-		Skin.m_aUseCustomColors[PartIndex] = *ms_apUCCVariables[PartIndex];
-		Skin.m_aPartColors[PartIndex] = *ms_apColorVariables[PartIndex];
+		Skin.m_aUseCustomColors[PartIndex] = *ms_apUCCVariables[Dummy][PartIndex];
+		Skin.m_aPartColors[PartIndex] = *ms_apColorVariables[Dummy][PartIndex];
 	}
 	int SkinIndex = Find(Skin.m_aName, false);
 	if(SkinIndex != -1)
@@ -422,7 +443,7 @@ int CSkins7::FindSkinPart(int Part, const char *pName, bool AllowSpecialPart)
 	return -1;
 }
 
-void CSkins7::RandomizeSkin()
+void CSkins7::RandomizeSkin(int Dummy)
 {
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
@@ -433,8 +454,8 @@ void CSkins7::RandomizeSkin()
 		if(p == 1) // SKINPART_MARKING
 			Alp = rand() % 255;
 		int ColorVariable = (Alp << 24) | (Hue << 16) | (Sat << 8) | Lgt;
-		*CSkins7::ms_apUCCVariables[p] = true;
-		*CSkins7::ms_apColorVariables[p] = ColorVariable;
+		*CSkins7::ms_apUCCVariables[Dummy][p] = true;
+		*CSkins7::ms_apColorVariables[Dummy][p] = ColorVariable;
 	}
 
 	for(int p = 0; p < NUM_SKINPARTS; p++)
@@ -442,7 +463,7 @@ void CSkins7::RandomizeSkin()
 		const CSkins7::CSkinPart *s = GetSkinPart(p, rand() % NumSkinPart(p));
 		while(s->m_Flags & CSkins7::SKINFLAG_SPECIAL)
 			s = GetSkinPart(p, rand() % NumSkinPart(p));
-		mem_copy(CSkins7::ms_apSkinVariables[p], s->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
+		mem_copy(CSkins7::ms_apSkinVariables[Dummy][p], s->m_aName, protocol7::MAX_SKIN_ARRAY_SIZE);
 	}
 }
 
@@ -566,7 +587,7 @@ bool CSkins7::ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCusto
 	return true;
 }
 
-bool CSkins7::SaveSkinfile(const char *pSaveSkinName)
+bool CSkins7::SaveSkinfile(const char *pSaveSkinName, int Dummy)
 {
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s.json", pSaveSkinName);
@@ -581,7 +602,7 @@ bool CSkins7::SaveSkinfile(const char *pSaveSkinName)
 	Writer.BeginObject();
 	for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; PartIndex++)
 	{
-		if(!ms_apSkinVariables[PartIndex][0])
+		if(!ms_apSkinVariables[Dummy][PartIndex][0])
 			continue;
 
 		// part start
@@ -589,7 +610,7 @@ bool CSkins7::SaveSkinfile(const char *pSaveSkinName)
 		Writer.BeginObject();
 		{
 			Writer.WriteAttribute("filename");
-			Writer.WriteStrValue(ms_apSkinVariables[PartIndex]);
+			Writer.WriteStrValue(ms_apSkinVariables[Dummy][PartIndex]);
 
 			const bool CustomColors = *ms_apUCCVariables[PartIndex];
 			Writer.WriteAttribute("custom_colors");
@@ -599,13 +620,13 @@ bool CSkins7::SaveSkinfile(const char *pSaveSkinName)
 			{
 				for(int c = 0; c < NUM_COLOR_COMPONENTS - 1; c++)
 				{
-					int Val = (*ms_apColorVariables[PartIndex] >> (2 - c) * 8) & 0xff;
+					int Val = (*ms_apColorVariables[Dummy][PartIndex] >> (2 - c) * 8) & 0xff;
 					Writer.WriteAttribute(ms_apColorComponents[c]);
 					Writer.WriteIntValue(Val);
 				}
 				if(PartIndex == SKINPART_MARKING)
 				{
-					int Val = (*ms_apColorVariables[PartIndex] >> 24) & 0xff;
+					int Val = (*ms_apColorVariables[Dummy][PartIndex] >> 24) & 0xff;
 					Writer.WriteAttribute(ms_apColorComponents[3]);
 					Writer.WriteIntValue(Val);
 				}
@@ -617,6 +638,6 @@ bool CSkins7::SaveSkinfile(const char *pSaveSkinName)
 	Writer.EndObject();
 
 	// add new skin to the skin list
-	AddSkin(pSaveSkinName);
+	AddSkin(pSaveSkinName, Dummy);
 	return true;
 }

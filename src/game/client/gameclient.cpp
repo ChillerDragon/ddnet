@@ -2842,9 +2842,9 @@ void CGameClient::SendStartInfo7(bool Dummy)
 	static const int NUM_SKINPARTS = 6;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		Msg.m_apSkinPartNames[p] = CSkins7::ms_apSkinVariables[p];
-		Msg.m_aUseCustomColors[p] = *CSkins7::ms_apUCCVariables[p];
-		Msg.m_aSkinPartColors[p] = *CSkins7::ms_apColorVariables[p];
+		Msg.m_apSkinPartNames[p] = CSkins7::ms_apSkinVariables[(int)Dummy][p];
+		Msg.m_aUseCustomColors[p] = *CSkins7::ms_apUCCVariables[(int)Dummy][p];
+		Msg.m_aSkinPartColors[p] = *CSkins7::ms_apColorVariables[(int)Dummy][p];
 	}
 	CMsgPacker Packer(&Msg, false, true);
 	if(Msg.Pack(&Packer))

@@ -104,8 +104,10 @@ CMenus::CMenus()
 	m_TeePartSelected = SKINPART_BODY;
 	m_pSelectedSkin = 0;
 	m_SkinModified = false;
-	// TODO: init this buffer
-	// m_SkinNameInput.SetBuffer(m_aSaveSkinName, sizeof(m_aSaveSkinName), MAX_SKIN_LENGTH);
+	// TODO: remove this and add a search
+	m_RefreshSkinSelector = true;
+	m_aSaveSkinName[0] = '\0';
+	m_SkinNameInput.SetBuffer(m_aSaveSkinName, sizeof(m_aSaveSkinName), protocol7::MAX_SKIN_LENGTH);
 }
 
 int CMenus::DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active)

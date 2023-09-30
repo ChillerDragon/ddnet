@@ -241,6 +241,7 @@ protected:
 	bool m_RefreshSkinSelector;
 	const CSkins7::CSkin *m_pSelectedSkin;
 	bool m_SkinModified;
+	char m_aSaveSkinName[protocol7::MAX_SKIN_ARRAY_SIZE];
 	CLineInput m_SkinNameInput;
 
 	// for map download popup
