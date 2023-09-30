@@ -48,6 +48,8 @@
 #include <game/generated/protocol7.h>
 #include <game/generated/protocolglue.h>
 
+#include <engine/shared/protocolglue.h>
+
 #include <game/localization.h>
 #include <game/version.h>
 
@@ -634,7 +636,18 @@ void CClient::SendInput()
 
 			// pack it
 			for(int k = 0; k < Size / 4; k++)
-				Msg.AddInt(m_aInputs[i][m_aCurrentInput[i]].m_aData[k]);
+			{
+				static const int FlagsOffset = offsetof(CNetObj_PlayerInput, m_PlayerFlags) / sizeof(int);
+				if(k == FlagsOffset && IsSixup())
+				{
+					int PlayerFlags = m_aInputs[i][m_aCurrentInput[i]].m_aData[k];
+					Msg.AddInt(PlayerFlags_SixToSeven(PlayerFlags));
+				}
+				else
+				{
+					Msg.AddInt(m_aInputs[i][m_aCurrentInput[i]].m_aData[k]);
+				}
+			}
 
 			m_aCurrentInput[i]++;
 			m_aCurrentInput[i] %= 200;
