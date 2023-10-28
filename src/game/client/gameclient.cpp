@@ -65,6 +65,8 @@
 #include <engine/textrender.h>
 #include <engine/updater.h>
 
+#include <engine/shared/infclass.h>
+
 #include <generated/client_data.h>
 #include <generated/client_data7.h>
 #include <generated/protocol.h>
@@ -2142,6 +2144,10 @@ void CGameClient::OnNewSnapshot()
 		CMsgPacker Msg(NETMSGTYPE_CL_ISDDNETLEGACY, false);
 		Msg.AddInt(DDNetVersion());
 		Client()->SendMsg(i, &Msg, MSGFLAG_VITAL);
+
+		CMsgPacker MsgVerInfclass(NETMSG_CLIENTVER_INFCLASS, true);
+		MsgVerInfclass.AddInt(INFCLASS_CLIENT_VERSION);
+		Client()->SendMsg(i, &MsgVerInfclass, MSGFLAG_VITAL);
 		m_aDDRaceMsgSent[i] = true;
 	}
 
