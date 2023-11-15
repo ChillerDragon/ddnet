@@ -884,7 +884,7 @@ void CGameContext::ConLockTeam(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	int Team = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams.m_Core.Team(pResult->m_ClientID);
+	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientID);
 
 	bool Lock = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams.TeamLocked(Team);
 
@@ -930,7 +930,7 @@ void CGameContext::ConUnlockTeam(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	int Team = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams.m_Core.Team(pResult->m_ClientID);
+	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientID);
 
 	if(Team <= TEAM_FLOCK || Team >= TEAM_SUPER)
 		return;
@@ -1114,7 +1114,7 @@ void CGameContext::ConJoinTeam(IConsole::IResult *pResult, void *pUserData)
 				aBuf,
 				sizeof(aBuf),
 				"You are in team %d",
-				((CGameControllerDDRace *)pSelf->m_pController)->m_Teams.m_Core.Team(pResult->m_ClientID));
+				pSelf->GetDDRaceTeam(pResult->m_ClientID));
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chatresp",
 				aBuf);
 		}
@@ -1490,7 +1490,7 @@ void CGameContext::ConRescue(IConsole::IResult *pResult, void *pUserData)
 		return;
 
 	CGameTeams &Teams = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams;
-	int Team = Teams.m_Core.Team(pResult->m_ClientID);
+	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientID);
 	if(!g_Config.m_SvRescue && !Teams.IsPractice(Team))
 	{
 		pSelf->SendChatTarget(pPlayer->GetCID(), "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
@@ -1514,7 +1514,7 @@ void CGameContext::ConTele(IConsole::IResult *pResult, void *pUserData)
 		return;
 
 	CGameTeams &Teams = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams;
-	int Team = Teams.m_Core.Team(pResult->m_ClientID);
+	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientID);
 	if(!Teams.IsPractice(Team))
 	{
 		pSelf->SendChatTarget(pPlayer->GetCID(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
@@ -1566,7 +1566,7 @@ void CGameContext::ConLastTele(IConsole::IResult *pResult, void *pUserData)
 		return;
 
 	CGameTeams &Teams = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams;
-	int Team = Teams.m_Core.Team(pResult->m_ClientID);
+	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientID);
 	if(!Teams.IsPractice(Team))
 	{
 		pSelf->SendChatTarget(pPlayer->GetCID(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
@@ -1600,7 +1600,7 @@ void CGameContext::ConPracticeUnSolo(IConsole::IResult *pResult, void *pUserData
 	}
 
 	CGameTeams &Teams = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams;
-	int Team = Teams.m_Core.Team(pResult->m_ClientID);
+	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientID);
 	if(!Teams.IsPractice(Team))
 	{
 		pSelf->SendChatTarget(pPlayer->GetCID(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
@@ -1623,7 +1623,7 @@ void CGameContext::ConPracticeUnDeep(IConsole::IResult *pResult, void *pUserData
 		return;
 
 	CGameTeams &Teams = ((CGameControllerDDRace *)pSelf->m_pController)->m_Teams;
-	int Team = Teams.m_Core.Team(pResult->m_ClientID);
+	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientID);
 	if(!Teams.IsPractice(Team))
 	{
 		pSelf->SendChatTarget(pPlayer->GetCID(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");

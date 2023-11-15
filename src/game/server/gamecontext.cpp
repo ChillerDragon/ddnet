@@ -522,7 +522,7 @@ void CGameContext::SendChatTarget(int To, const char *pText, int Flags)
 void CGameContext::SendChatTeam(int Team, const char *pText)
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		if(m_apPlayers[i] != nullptr && ((CGameControllerDDRace *)m_pController)->m_Teams.m_Core.Team(i) == Team)
+		if(m_apPlayers[i] != nullptr && GetDDRaceTeam(i) == Team)
 			SendChatTarget(i, pText);
 }
 
@@ -2033,7 +2033,7 @@ void CGameContext::OnSayNetMessage(const CNetMsg_Cl_Say *pMsg, int ClientID, con
 	if(Length == 0 || (pMsg->m_pMessage[0] != '/' && (g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat + Server()->TickSpeed() * ((31 + Length) / 32) > Server()->Tick())))
 		return;
 
-	int GameTeam = ((CGameControllerDDRace *)m_pController)->m_Teams.m_Core.Team(pPlayer->GetCID());
+	int GameTeam = GetDDRaceTeam(pPlayer->GetCID());
 	if(Team)
 		Team = ((pPlayer->GetTeam() == TEAM_SPECTATORS) ? CHAT_SPEC : GameTeam);
 	else

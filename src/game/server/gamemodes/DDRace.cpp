@@ -246,5 +246,5 @@ void CGameControllerDDRace::InitTeleporter()
 
 int CGameControllerDDRace::GetPlayerTeam(int ClientID) const
 {
-	return m_Teams.m_Core.Team(ClientID);
+	return GameServer()->GetDDRaceTeam(ClientID);
 }
