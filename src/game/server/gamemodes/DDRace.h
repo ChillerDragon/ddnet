@@ -5,9 +5,6 @@
 #include <game/server/gamecontroller.h>
 #include <game/server/teams.h>
 
-#include <map>
-#include <vector>
-
 struct CScoreLoadBestTimeResult;
 class CGameControllerDDRace : public IGameController
 {
@@ -36,9 +33,6 @@ public:
 	int GetPlayerTeam(int ClientID) const;
 
 	CGameTeams m_Teams;
-
-	std::map<int, std::vector<vec2>> m_TeleOuts;
-	std::map<int, std::vector<vec2>> m_TeleCheckOuts;
 
 	std::shared_ptr<CScoreLoadBestTimeResult> m_pLoadBestTimeResult;
 };

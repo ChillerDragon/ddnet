@@ -7,6 +7,7 @@
 #include <engine/map.h>
 #include <engine/shared/protocol.h>
 
+#include <map>
 #include <vector>
 
 /*
@@ -147,6 +148,8 @@ public:
 	// DDRace
 
 	float m_CurrentRecord;
+	std::map<int, std::vector<vec2>> m_TeleOuts;
+	std::map<int, std::vector<vec2>> m_TeleCheckOuts;
 };
 
 #endif
