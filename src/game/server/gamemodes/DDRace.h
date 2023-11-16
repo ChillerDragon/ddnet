@@ -25,8 +25,6 @@ public:
 
 	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg = true) override;
 
-	CClientMask GetMaskForPlayerWorldEvent(int Asker, int ExceptID = -1) override;
-
 	void InitTeleporter();
 
 	int GetPlayerTeam(int ClientID) const;
