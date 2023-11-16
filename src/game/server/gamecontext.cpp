@@ -574,7 +574,7 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText, in
 	}
 	else
 	{
-		CTeamsCore *pTeams = &m_pController->m_Teams.m_Core;
+		CTeamsCore *pTeams = &m_pController->Teams().m_Core;
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 1;
 		Msg.m_ClientID = ChatterClientID;
@@ -911,13 +911,13 @@ void CGameContext::OnPreTickTeehistorian()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_apPlayers[i] != nullptr)
-			m_TeeHistorian.RecordPlayerTeam(i, pController->m_Teams.m_Core.Team(i));
+			m_TeeHistorian.RecordPlayerTeam(i, pController->Teams().m_Core.Team(i));
 		else
 			m_TeeHistorian.RecordPlayerTeam(i, 0);
 	}
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		m_TeeHistorian.RecordTeamPractice(i, pController->m_Teams.IsPractice(i));
+		m_TeeHistorian.RecordTeamPractice(i, pController->Teams().IsPractice(i));
 	}
 }
 
@@ -1726,7 +1726,7 @@ bool CGameContext::OnClientDDNetVersionKnown(int ClientID)
 		pPlayer->m_TimerType = g_Config.m_SvDefaultTimerType;
 
 	// First update the teams state.
-	m_pController->m_Teams.SendTeamsState(ClientID);
+	m_pController->Teams().SendTeamsState(ClientID);
 
 	// Then send records.
 	SendRecord(ClientID);
@@ -4223,8 +4223,7 @@ bool CGameContext::ProcessSpamProtection(int ClientID, bool RespectChatInitialDe
 
 int CGameContext::GetDDRaceTeam(int ClientID)
 {
-	CGameControllerDDRace *pController = (CGameControllerDDRace *)m_pController;
-	return pController->m_Teams.m_Core.Team(ClientID);
+	return m_pController->Teams().m_Core.Team(ClientID);
 }
 
 void CGameContext::ResetTuning()

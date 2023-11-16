@@ -25,6 +25,8 @@ class IGameController
 	class CConfig *m_pConfig;
 	class IServer *m_pServer;
 
+	CGameTeams m_Teams;
+
 protected:
 	CGameContext *GameServer() const { return m_pGameServer; }
 	CConfig *Config() { return m_pConfig; }
@@ -148,7 +150,6 @@ public:
 	// DDRace
 
 	float m_CurrentRecord;
-	CGameTeams m_Teams;
 	CGameTeams &Teams() { return m_Teams; }
 };
 
