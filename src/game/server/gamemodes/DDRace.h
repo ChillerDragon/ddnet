@@ -3,7 +3,6 @@
 #define GAME_SERVER_GAMEMODES_DDRACE_H
 
 #include <game/server/gamecontroller.h>
-#include <game/server/teams.h>
 
 struct CScoreLoadBestTimeResult;
 class CGameControllerDDRace : public IGameController
@@ -31,8 +30,6 @@ public:
 	void InitTeleporter();
 
 	int GetPlayerTeam(int ClientID) const;
-
-	CGameTeams m_Teams;
 
 	std::shared_ptr<CScoreLoadBestTimeResult> m_pLoadBestTimeResult;
 };
