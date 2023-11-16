@@ -6,6 +6,7 @@
 #include <base/vmath.h>
 #include <engine/map.h>
 #include <engine/shared/protocol.h>
+#include <game/server/teams.h>
 
 #include <vector>
 
@@ -147,6 +148,8 @@ public:
 	// DDRace
 
 	float m_CurrentRecord;
+	CGameTeams m_Teams;
+	CGameTeams &Teams() { return m_Teams; }
 };
 
 #endif
