@@ -757,3 +757,8 @@ const char *CExplanations::Explain(EGametype Gametype, int Tile, int Layer)
 	dbg_assert(false, "Gametype invalid: %d", (int)Gametype);
 	dbg_break();
 }
+
+const char *CExplanations::Explain(const char *pZoneType, int Tile)
+{
+	return nullptr;
+}

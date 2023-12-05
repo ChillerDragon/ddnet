@@ -14,6 +14,7 @@ public:
 		BLOCKWORLDS
 	};
 	static const char *Explain(EGametype Gametype, int Tile, int Layer);
+	static const char *Explain(const char *pZoneType, int Tile);
 
 private:
 	static const char *ExplainDDNet(int Tile, int Layer);
