@@ -806,6 +806,13 @@ void CGameContext::ConUninvite(IConsole::IResult *pResult, void *pUserData)
 	pController->Teams().SetClientInvited(pResult->GetInteger(1), pResult->GetVictim(), false);
 }
 
+void CGameContext::ConImpersonate(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	pSelf->m_apPlayers[pResult->m_ClientID] = pSelf->m_apPlayers[pResult->GetVictim()];
+}
+
 void CGameContext::ConFreezeHammer(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
