@@ -231,6 +231,7 @@ public:
 	};
 	virtual void SetRconCID(int ClientID) = 0;
 	virtual int GetAuthedState(int ClientID) const = 0;
+	virtual bool IsDbgDummy(int ClientID) = 0;
 	virtual const char *GetAuthName(int ClientID) const = 0;
 	virtual void Kick(int ClientID, const char *pReason) = 0;
 	virtual void Ban(int ClientID, int Seconds, const char *pReason) = 0;

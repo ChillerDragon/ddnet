@@ -321,6 +321,7 @@ public:
 	void SendLogLine(const CLogMessage *pMessage);
 	void SetRconCID(int ClientID) override;
 	int GetAuthedState(int ClientID) const override;
+	bool IsDbgDummy(int ClientID) override;
 	const char *GetAuthName(int ClientID) const override;
 	void GetMapInfo(char *pMapName, int MapNameSize, int *pMapSize, SHA256_DIGEST *pMapSha256, int *pMapCrc) override;
 	bool GetClientInfo(int ClientID, CClientInfo *pInfo) const override;

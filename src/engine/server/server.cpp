@@ -652,6 +652,11 @@ int CServer::GetAuthedState(int ClientID) const
 	return m_aClients[ClientID].m_Authed;
 }
 
+bool CServer::IsDbgDummy(int ClientID)
+{
+	return m_aClients[ClientID].m_DebugDummy;
+}
+
 const char *CServer::GetAuthName(int ClientID) const
 {
 	int Key = m_aClients[ClientID].m_AuthKey;
@@ -994,6 +999,7 @@ void CServer::DoSnapshot()
 		{
 			m_SnapshotBuilder.Init(m_aClients[i].m_Sixup);
 
+			dbg_msg("server", "snap for i=%d", i);
 			GameServer()->OnSnap(i);
 
 			// finish snapshot
@@ -2845,9 +2851,6 @@ int CServer::Run()
 						}
 					}
 
-#ifdef CONF_DEBUG
-					UpdateDebugDummies(true);
-#endif
 					GameServer()->OnShutdown(m_pPersistentData);
 
 					for(int ClientID = 0; ClientID < MAX_CLIENTS; ClientID++)
@@ -2938,7 +2941,8 @@ int CServer::Run()
 				GameServer()->OnPreTickTeehistorian();
 
 #ifdef CONF_DEBUG
-				UpdateDebugDummies(false);
+				if(m_CurrentGameTick > 5)
+					UpdateDebugDummies(false);
 #endif
 
 				for(int c = 0; c < MAX_CLIENTS; c++)

@@ -24,6 +24,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, uint32_t UniqueClientID, int ClientI
 {
 	m_pGameServer = pGameServer;
 	m_ClientID = ClientID;
+	dbg_msg("player", "ClientID = %d", ClientID);
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 	m_NumInputs = 0;
 	Reset();
@@ -412,7 +413,10 @@ void CPlayer::Snap(int SnappingClient)
 	if(!pDDNetPlayer)
 		return;
 
-	pDDNetPlayer->m_AuthLevel = Server()->GetAuthedState(id);
+	dbg_msg("player", "this=%p GetCID()=%d dummy=%d id/m_ClientID=%d SnappingClient=%d", this, GetCID(), Server()->IsDbgDummy(id), id, SnappingClient);
+
+	// pDDNetPlayer->m_AuthLevel = Server()->IsDbgDummy(id) ? AUTHED_NO : Server()->GetAuthedState(id);
+	pDDNetPlayer->m_AuthLevel = Server()->GetAuthedState(m_ClientID);
 	pDDNetPlayer->m_Flags = 0;
 	if(m_Afk)
 		pDDNetPlayer->m_Flags |= EXPLAYERFLAG_AFK;

@@ -1604,6 +1604,9 @@ void CGameContext::OnClientConnected(int ClientID, void *pData)
 	SendSettings(ClientID);
 
 	Server()->ExpireServerInfo();
+
+	dbg_msg("gamecontext", "create player with id = %d", ClientID);
+	dbg_msg("gamecontext", "m_apPlayers[%d].m_ClientID = %d", ClientID, m_apPlayers[ClientID]->GetCID());
 }
 
 void CGameContext::OnClientDrop(int ClientID, const char *pReason)
@@ -4015,7 +4018,11 @@ void CGameContext::OnSnap(int ClientID)
 	for(auto &pPlayer : m_apPlayers)
 	{
 		if(pPlayer)
+		{
+			dbg_msg("gamecontext", " onsnap m_apPlayers[%d].m_ClientID=%d", ClientID, m_apPlayers[ClientID]->GetCID());
+			dbg_msg("gamecontext", " onsnap pPlayer(%p).m_ClientID=%d", pPlayer, pPlayer->GetCID());
 			pPlayer->Snap(ClientID);
+		}
 	}
 
 	if(ClientID > -1)
