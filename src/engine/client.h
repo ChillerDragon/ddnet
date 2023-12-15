@@ -302,6 +302,7 @@ public:
 	};
 	virtual EInfoState InfoState() const = 0;
 	virtual void RequestDDNetInfo() = 0;
+	virtual void RequestInfclassInfo() = 0;
 	virtual bool EditorHasUnsavedData() const = 0;
 
 	virtual void GenerateTimeoutSeed() = 0;

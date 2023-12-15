@@ -165,6 +165,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	EInfoState m_InfoState = EInfoState::ERROR;
 	std::shared_ptr<CHttpRequest> m_pDDNetInfoTask = nullptr;
+	std::shared_ptr<CHttpRequest> m_pInfClassInfoTask;
 
 	// time
 	CSmoothTime m_aGameTime[NUM_DUMMIES];
@@ -386,6 +387,10 @@ public:
 	void ResetDDNetInfoTask();
 	void LoadDDNetInfo();
 
+	void RequestInfclassInfo() override;
+	void ResetInfclassInfoTask();
+	void LoadInfclassInfo();
+	
 	bool IsSixup() const override { return m_Sixup; }
 
 	const NETADDR &ServerAddress() const override { return *m_aNetClient[CONN_MAIN].ServerAddress(); }
