@@ -152,6 +152,8 @@ public:
 	virtual void OnRender() override;
 	virtual void OnMapLoad() override;
 
+	void RefreshTileBuffers(std::function<void()> RenderLoading);
+
 	void RenderTileLayer(int LayerIndex, ColorRGBA &Color, CMapItemLayerTilemap *pTileLayer, CMapItemGroup *pGroup);
 	void RenderTileBorder(int LayerIndex, const ColorRGBA &Color, CMapItemLayerTilemap *pTileLayer, CMapItemGroup *pGroup, int BorderX0, int BorderY0, int BorderX1, int BorderY1);
 	void RenderKillTileBorder(int LayerIndex, const ColorRGBA &Color, CMapItemLayerTilemap *pTileLayer, CMapItemGroup *pGroup);

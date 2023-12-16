@@ -957,6 +957,12 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 			m_CharOrder.GiveWeak(ID.first);
 		}
 	}
+	else if(MsgId == NETMSGTYPE_SV_MODIFYTILE)
+	{
+		CNetMsg_Sv_ModifyTile *pMsg = (CNetMsg_Sv_ModifyTile *)pRawMsg;
+		Collision()->ModifyTile(pMsg->m_X, pMsg->m_Y, pMsg->m_Group, pMsg->m_Layer, pMsg->m_Index, pMsg->m_Flags);
+		m_MapLayersForeground.RefreshTileBuffers([&]() {});
+	}
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)

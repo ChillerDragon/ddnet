@@ -327,21 +327,9 @@ CMapLayers::~CMapLayers()
 	}
 }
 
-void CMapLayers::OnMapLoad()
+void CMapLayers::RefreshTileBuffers(std::function<void()> RenderLoading)
 {
-	if(!Graphics()->IsTileBufferingEnabled() && !Graphics()->IsQuadBufferingEnabled())
-		return;
-
-	const char *pConnectCaption = GameClient()->DemoPlayer()->IsPlaying() ? Localize("Preparing demo playback") : Localize("Connected");
-	const char *pLoadMapContent = Localize("Uploading map data to GPU");
-
-	auto CurTime = time_get_nanoseconds();
-	auto &&RenderLoading = [&]() {
-		if(CanRenderMenuBackground())
-			GameClient()->m_Menus.RenderLoading(pConnectCaption, pLoadMapContent, 0, false);
-		else if(time_get_nanoseconds() - CurTime > 500ms)
-			GameClient()->m_Menus.RenderLoading(pConnectCaption, pLoadMapContent, 0, false, false);
-	};
+	RenderLoading();
 
 	//clear everything and destroy all buffers
 	if(!m_vpTileLayerVisuals.empty())
@@ -899,6 +887,26 @@ void CMapLayers::OnMapLoad()
 			}
 		}
 	}
+}
+
+
+void CMapLayers::OnMapLoad()
+{
+	if(!Graphics()->IsTileBufferingEnabled() && !Graphics()->IsQuadBufferingEnabled())
+		return;
+
+	const char *pConnectCaption = GameClient()->DemoPlayer()->IsPlaying() ? Localize("Preparing demo playback") : Localize("Connected");
+	const char *pLoadMapContent = Localize("Uploading map data to GPU");
+
+	auto CurTime = time_get_nanoseconds();
+	auto &&RenderLoading = [&]() {
+		if(CanRenderMenuBackground())
+			GameClient()->m_Menus.RenderLoading(pConnectCaption, pLoadMapContent, 0, false);
+		else if(time_get_nanoseconds() - CurTime > 500ms)
+			GameClient()->m_Menus.RenderLoading(pConnectCaption, pLoadMapContent, 0, false, false);
+	};
+
+	RefreshTileBuffers(RenderLoading);
 }
 
 void CMapLayers::RenderTileLayer(int LayerIndex, ColorRGBA &Color, CMapItemLayerTilemap *pTileLayer, CMapItemGroup *pGroup)

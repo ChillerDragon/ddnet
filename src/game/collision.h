@@ -48,6 +48,7 @@ public:
 	// DDRace
 
 	void Dest();
+	void ModifyTile(int x, int y, int Group, int Layer, int Index, int Flags);
 	void SetCollisionAt(float x, float y, int id);
 	void SetDTile(float x, float y, bool State);
 	void SetDCollisionAt(float x, float y, int Type, int Flags, int Number);

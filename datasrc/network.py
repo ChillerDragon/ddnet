@@ -551,6 +551,15 @@ Messages = [
 		NetIntRange("m_First", -1, 'MAX_CLIENTS-1'),
 	]),
 
+	NetMessageEx("Sv_ModifyTile", "modify-tile@netmsg.ddnet.org", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_Group"),
+		NetIntAny("m_Layer"),
+		NetIntAny("m_Index"),
+		NetIntAny("m_Flags"),
+	]),
+
 	NetMessageEx("Sv_YourVote", "yourvote@netmsg.ddnet.org", [
 		NetIntRange("m_Voted", -1, 1),
 	]),

@@ -443,6 +443,29 @@ void CCharacter::FireWeapon()
 		if(m_Core.m_HammerHitDisabled)
 			break;
 
+		int x = round_to_int(m_Core.m_Pos.x + (Direction.x * 32)) / 32;
+		int y = round_to_int(m_Core.m_Pos.y + (Direction.y * 32)) / 32;
+		dbg_msg("minetee", "x=%d y=%d pos(%.2f/%.2f) dir(%.2f/%.2f)", x, y, m_Core.m_Pos.x, m_Core.m_Pos.y, Direction.x, Direction.y);
+		// clear dirt
+		CNetMsg_Sv_ModifyTile Msg;
+		Msg.m_X = x;
+		Msg.m_Y = y;
+		Msg.m_Group = 1;
+		Msg.m_Layer = 1;
+		Msg.m_Index = 0;
+		Msg.m_Flags = 0;
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+		// clear collision
+		Msg.m_X = x;
+		Msg.m_Y = y;
+		Msg.m_Group = 1;
+		Msg.m_Layer = 0;
+		Msg.m_Index = 0;
+		Msg.m_Flags = 0;
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+		// update collsion server side
+		Collision()->ModifyTile(Msg.m_X, Msg.m_Y, Msg.m_Group, Msg.m_Layer, Msg.m_Index, Msg.m_Flags);
+
 		CEntity *apEnts[MAX_CLIENTS];
 		int Hits = 0;
 		int Num = GameServer()->m_World.FindEntities(ProjStartPos, GetProximityRadius() * 0.5f, apEnts,
