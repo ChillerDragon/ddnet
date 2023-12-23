@@ -24,6 +24,8 @@ char *CSkins7::ms_apSkinVariables[NUM_DUMMIES][protocol7::NUM_SKINPARTS] = {{0}}
 int *CSkins7::ms_apUCCVariables[NUM_DUMMIES][protocol7::NUM_SKINPARTS] = {{0}};
 int *CSkins7::ms_apColorVariables[NUM_DUMMIES][protocol7::NUM_SKINPARTS] = {{0}};
 
+#define SKINS_DIR "skins7"
+
 // TODO: uncomment
 // const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
 
@@ -49,7 +51,7 @@ int CSkins7::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser
 		return 0;
 
 	char aBuf[IO_MAX_PATH_LENGTH];
-	str_format(aBuf, sizeof(aBuf), "skins/%s/%s", CSkins7::ms_apSkinPartNames[pSelf->m_ScanningPart], pName);
+	str_format(aBuf, sizeof(aBuf), SKINS_DIR "/%s/%s", CSkins7::ms_apSkinPartNames[pSelf->m_ScanningPart], pName);
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
 	{
@@ -128,7 +130,7 @@ int CSkins7::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	// read file data into buffer
 	char aBuf[IO_MAX_PATH_LENGTH];
-	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
+	str_format(aBuf, sizeof(aBuf), SKINS_DIR "/%s", pName);
 	IOHANDLE File = pSelf->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 		return 0;
@@ -290,7 +292,7 @@ void CSkins7::OnInit()
 
 		// load skin parts
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "skins/%s", ms_apSkinPartNames[p]);
+		str_format(aBuf, sizeof(aBuf), SKINS_DIR "/%s", ms_apSkinPartNames[p]);
 		m_ScanningPart = p;
 		Storage()->ListDirectory(IStorage::TYPE_ALL, aBuf, SkinPartScan, this);
 
@@ -327,7 +329,7 @@ void CSkins7::OnInit()
 
 	// load skins
 	m_aSkins.clear();
-	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins", SkinScan, this);
+	Storage()->ListDirectory(IStorage::TYPE_ALL, SKINS_DIR, SkinScan, this);
 	GameClient()->m_Menus.RenderLoading(Localize("Loading DDNet Client"), Localize("Loading skin files"), 0);
 
 	// add dummy skin
@@ -336,7 +338,7 @@ void CSkins7::OnInit()
 
 	{
 		// add xmas hat
-		const char *pFileName = "skins/xmas_hat.png";
+		const char *pFileName = SKINS_DIR "/xmas_hat.png";
 		CImageInfo Info;
 		if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 128 || Info.m_Height != 512)
 		{
@@ -357,7 +359,7 @@ void CSkins7::OnInit()
 
 	{
 		// add bot decoration
-		const char *pFileName = "skins/bot.png";
+		const char *pFileName = SKINS_DIR "/bot.png";
 		CImageInfo Info;
 		if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 384 || Info.m_Height != 160)
 		{
@@ -470,7 +472,8 @@ void CSkins7::RandomizeSkin(int Dummy)
 
 vec3 CSkins7::GetColorV3(int v) const
 {
-	ColorRGBA color = color_cast<ColorRGBA>(ColorHSLA(v));
+	float Dark = DARKEST_COLOR_LGT / 255.0f;
+	ColorRGBA color = color_cast<ColorRGBA>(ColorHSLA(v).UnclampLighting(Dark));
 	return vec3(color.r, color.g, color.b);
 }
 
