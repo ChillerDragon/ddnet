@@ -361,6 +361,13 @@ public:
 		int m_Country;
 		char m_aSkinName[64];
 		int m_SkinColor;
+
+		// 0.7 Skin
+		char m_aaSkinPartNames[NUM_SKINPARTS][MAX_SKIN_LENGTH];
+		int m_aUseCustomColors[NUM_SKINPARTS];
+		int m_aSkinPartColors[NUM_SKINPARTS];
+		int m_SkinPartIDs[NUM_SKINPARTS];
+
 		int m_Team;
 		int m_Emoticon;
 		float m_EmoticonStartFraction;
@@ -480,6 +487,8 @@ public:
 	void OnInit() override;
 	void OnConsoleInit() override;
 	void OnStateChange(int NewState, int OldState) override;
+	template <typename T>
+	void ApplySkin7InfoFromGameMsg(const T *pMsg, CClientData *pClient);
 	void *TranslateGameMsg(int *pMsgID, CUnpacker *pUnpacker);
 	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy) override;
 	void InvalidateSnapshot() override;
