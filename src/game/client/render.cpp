@@ -432,33 +432,32 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 				}
 				Graphics()->QuadsEnd();
 
-				// TODO: ddnet has own hats
 				// draw xmas hat
-				// if(!OutLine && pInfo->m_HatTexture.IsValid())
-				// {
-				// 	Graphics()->TextureSet(pInfo->m_HatTexture);
-				// 	Graphics()->QuadsBegin();
-				// 	Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi * 2);
-				// 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-				// 	int Flag = Direction.x < 0.0f ? SPRITE_FLAG_FLIP_X : 0;
-				// 	switch(pInfo->m_HatSpriteIndex)
-				// 	{
-				// 	case 0:
-				// 		SelectSprite7(SPRITE_TEE_HATS_TOP1, Flag, 0, 0);
-				// 		break;
-				// 	case 1:
-				// 		SelectSprite7(SPRITE_TEE_HATS_TOP2, Flag, 0, 0);
-				// 		break;
-				// 	case 2:
-				// 		SelectSprite7(SPRITE_TEE_HATS_SIDE1, Flag, 0, 0);
-				// 		break;
-				// 	case 3:
-				// 		SelectSprite7(SPRITE_TEE_HATS_SIDE2, Flag, 0, 0);
-				// 	}
-				// 	Item = BodyItem;
-				// 	Graphics()->QuadsDraw(&Item, 1);
-				// 	Graphics()->QuadsEnd();
-				// }
+				if(!OutLine && pInfo->m_HatTexture.IsValid())
+				{
+					Graphics()->TextureSet(pInfo->m_HatTexture);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					int Flag = Direction.x < 0.0f ? SPRITE_FLAG_FLIP_X : 0;
+					switch(pInfo->m_HatSpriteIndex)
+					{
+					case 0:
+						SelectSprite7(client_data7::SPRITE_TEE_HATS_TOP1, Flag, 0, 0);
+						break;
+					case 1:
+						SelectSprite7(client_data7::SPRITE_TEE_HATS_TOP2, Flag, 0, 0);
+						break;
+					case 2:
+						SelectSprite7(client_data7::SPRITE_TEE_HATS_SIDE1, Flag, 0, 0);
+						break;
+					case 3:
+						SelectSprite7(client_data7::SPRITE_TEE_HATS_SIDE2, Flag, 0, 0);
+					}
+					Item = BodyItem;
+					Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->QuadsEnd();
+				}
 			}
 
 			// draw feet

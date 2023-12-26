@@ -68,7 +68,9 @@ public:
 	// 0.7
 	IGraphics::CTextureHandle m_aTextures[NUM_SKINPARTS];
 	ColorRGBA m_aColors[NUM_SKINPARTS];
+	IGraphics::CTextureHandle m_HatTexture;
 	IGraphics::CTextureHandle m_BotTexture;
+	int m_HatSpriteIndex;
 	ColorRGBA m_BotColor;
 };
 
