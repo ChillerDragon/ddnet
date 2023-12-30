@@ -48,6 +48,13 @@ public:
 		m_GotAirJump = true;
 		m_TeeRenderFlags = 0;
 		m_FeetFlipped = false;
+
+		for(ColorRGBA &PartColor : m_aColors)
+		{
+			PartColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+		m_HatSpriteIndex = 0;
+		m_BotColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 	CSkin::SSkinTextures m_OriginalRenderSkin;
