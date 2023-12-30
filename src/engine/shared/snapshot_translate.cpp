@@ -235,18 +235,53 @@ int CSnapshot::TranslateSevenToSix(
 			Char6.m_Emote = pChar7->m_Emote;
 			Char6.m_AttackTick = pChar7->m_AttackTick;
 
-			// the other triggered events such as air jump already work
+			if(pChar7->m_TriggeredEvents & protocol7::COREEVENTFLAG_GROUND_JUMP)
+			{
+				void *pEvent = Builder.NewItem(NETEVENTTYPE_SOUNDWORLD, pItem7->Id(), sizeof(CNetEvent_SoundWorld));
+				if(!pEvent)
+					return -7;
+
+				CNetEvent_SoundWorld Sound = {};
+				Sound.m_X = pChar7->m_X;
+				Sound.m_Y = pChar7->m_Y;
+				Sound.m_SoundId = SOUND_PLAYER_JUMP;
+				mem_copy(pEvent, &Sound, sizeof(CNetEvent_SoundWorld));
+			}
 			if(pChar7->m_TriggeredEvents & protocol7::COREEVENTFLAG_HOOK_ATTACH_PLAYER)
 			{
 				void *pEvent = Builder.NewItem(NETEVENTTYPE_SOUNDWORLD, pItem7->Id(), sizeof(CNetEvent_SoundWorld));
 				if(!pEvent)
 					return -7;
 
-				CNetEvent_SoundWorld Death6 = {};
-				Death6.m_X = pChar7->m_X;
-				Death6.m_Y = pChar7->m_Y;
-				Death6.m_SoundId = SOUND_HOOK_ATTACH_PLAYER;
-				mem_copy(pEvent, &Death6, sizeof(CNetEvent_SoundWorld));
+				CNetEvent_SoundWorld Sound = {};
+				Sound.m_X = pChar7->m_X;
+				Sound.m_Y = pChar7->m_Y;
+				Sound.m_SoundId = SOUND_HOOK_ATTACH_PLAYER;
+				mem_copy(pEvent, &Sound, sizeof(CNetEvent_SoundWorld));
+			}
+			if(pChar7->m_TriggeredEvents & protocol7::COREEVENTFLAG_HOOK_ATTACH_GROUND)
+			{
+				void *pEvent = Builder.NewItem(NETEVENTTYPE_SOUNDWORLD, pItem7->Id(), sizeof(CNetEvent_SoundWorld));
+				if(!pEvent)
+					return -7;
+
+				CNetEvent_SoundWorld Sound = {};
+				Sound.m_X = pChar7->m_X;
+				Sound.m_Y = pChar7->m_Y;
+				Sound.m_SoundId = SOUND_HOOK_ATTACH_GROUND;
+				mem_copy(pEvent, &Sound, sizeof(CNetEvent_SoundWorld));
+			}
+			if(pChar7->m_TriggeredEvents & protocol7::COREEVENTFLAG_HOOK_HIT_NOHOOK)
+			{
+				void *pEvent = Builder.NewItem(NETEVENTTYPE_SOUNDWORLD, pItem7->Id(), sizeof(CNetEvent_SoundWorld));
+				if(!pEvent)
+					return -7;
+
+				CNetEvent_SoundWorld Sound = {};
+				Sound.m_X = pChar7->m_X;
+				Sound.m_Y = pChar7->m_Y;
+				Sound.m_SoundId = SOUND_HOOK_NOATTACH;
+				mem_copy(pEvent, &Sound, sizeof(CNetEvent_SoundWorld));
 			}
 
 			mem_copy(pObj, &Char6, sizeof(CNetObj_Character));
