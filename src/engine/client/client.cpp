@@ -1972,12 +1972,17 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					if(IsSixup())
 					{
 						pTmpTranslateBuffer = (CSnapshot *)aTmpTranslateBuffer;
-						TranslatedSize = pTmpBuffer3->TranslateSevenToSix(pTmpTranslateBuffer, m_TranslationContext, LocalTime(), CClient::GameTick(g_Config.m_ClDummy));
+						CTranslatedGameMessage GameMsg;
+						TranslatedSize = pTmpBuffer3->TranslateSevenToSix(pTmpTranslateBuffer, m_TranslationContext, LocalTime(), CClient::GameTick(g_Config.m_ClDummy), GameMsg);
 						if(TranslatedSize < 0)
 						{
 							dbg_msg("sixup", "failed to translate snapshot. error=%d", TranslatedSize);
 							pTmpTranslateBuffer = nullptr;
 							TranslatedSize = 0;
+						}
+						else if(GameMsg.IsValid())
+						{
+							GameClient()->OnMessage(GameMsg.m_MsgId, &GameMsg.m_Unpacker, Conn, Dummy, false);
 						}
 					}
 					m_aSnapshotStorage[Conn].Add(
@@ -2502,12 +2507,17 @@ void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 	if(IsSixup())
 	{
 		pTmpTranslateBuffer = (CSnapshot *)aTmpTranslateBuffer;
-		TranslatedSize = ((CSnapshot *)pData)->TranslateSevenToSix(pTmpTranslateBuffer, m_TranslationContext, LocalTime(), GameTick(g_Config.m_ClDummy));
+		CTranslatedGameMessage GameMsg;
+		TranslatedSize = ((CSnapshot *)pData)->TranslateSevenToSix(pTmpTranslateBuffer, m_TranslationContext, LocalTime(), GameTick(g_Config.m_ClDummy), GameMsg);
 		if(TranslatedSize < 0)
 		{
 			dbg_msg("sixup", "failed to translate snapshot. error=%d", TranslatedSize);
 			pTmpTranslateBuffer = nullptr;
 			TranslatedSize = 0;
+		}
+		else if(GameMsg.IsValid())
+		{
+			GameClient()->OnMessage(GameMsg.m_MsgId, &GameMsg.m_Unpacker, CONN_MAIN, false, false);
 		}
 	}
 

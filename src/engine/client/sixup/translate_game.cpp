@@ -122,11 +122,6 @@ void CGameClient::ApplySkin7InfoFromGameMsg(const T *pMsg, int ClientID)
 
 void *CGameClient::TranslateGameMsg(int *pMsgID, CUnpacker *pUnpacker)
 {
-	if(!m_pClient->IsSixup())
-	{
-		return m_NetObjHandler.SecureUnpackMsg(*pMsgID, pUnpacker);
-	}
-
 	void *pRawMsg = m_NetObjHandler7.SecureUnpackMsg(*pMsgID, pUnpacker);
 	if(!pRawMsg)
 	{

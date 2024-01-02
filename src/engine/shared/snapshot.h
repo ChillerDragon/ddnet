@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <engine/shared/protocolglue.h>
+
 // CSnapshot
 
 class CSnapshotItem
@@ -58,7 +60,7 @@ public:
 
 	unsigned Crc() const;
 	void DebugDump() const;
-	int TranslateSevenToSix(CSnapshot *pSixSnapDest, class CTranslationContext &TranslationContext, float LocalTime, int GameTick) const;
+	int TranslateSevenToSix(CSnapshot *pSixSnapDest, class CTranslationContext &TranslationContext, float LocalTime, int GameTick, CTranslatedGameMessage &GameMsg) const;
 	bool IsValid(size_t ActualSize) const;
 
 	static const CSnapshot *EmptySnapshot() { return &ms_EmptySnapshot; }

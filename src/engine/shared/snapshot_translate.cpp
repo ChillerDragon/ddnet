@@ -17,7 +17,7 @@
 
 #include <game/gamecore.h>
 
-int CSnapshot::TranslateSevenToSix(CSnapshot *pSixSnapDest, CTranslationContext &TranslationContext, float LocalTime, int GameTick) const
+int CSnapshot::TranslateSevenToSix(CSnapshot *pSixSnapDest, CTranslationContext &TranslationContext, float LocalTime, int GameTick, CTranslatedGameMessage &GameMsg) const
 {
 	CSnapshotBuilder Builder;
 	Builder.Init();
@@ -210,6 +210,18 @@ int CSnapshot::TranslateSevenToSix(CSnapshot *pSixSnapDest, CTranslationContext 
 			Char6.m_Weapon = pChar7->m_Weapon;
 			Char6.m_Emote = pChar7->m_Emote;
 			Char6.m_AttackTick = pChar7->m_AttackTick;
+
+			if(pChar7->m_TriggeredEvents & protocol7::COREEVENTFLAG_HOOK_ATTACH_PLAYER)
+			{
+				CPacker Packer;
+				Packer.Reset();
+				Packer.AddInt(SOUND_HOOK_ATTACH_PLAYER);
+				Packer.AddInt(pChar7->m_X);
+				Packer.AddInt(pChar7->m_Y);
+
+				GameMsg.m_MsgId = NETMSGTYPE_SOUNDWORLD;
+				GameMsg.m_Unpacker.Reset(Packer.Data(), Packer.Size());
+			}
 
 			// got 0.7
 			// int m_Health;

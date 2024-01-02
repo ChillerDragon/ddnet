@@ -490,7 +490,7 @@ public:
 	template<typename T>
 	void ApplySkin7InfoFromGameMsg(const T *pMsg, int ClientID);
 	void *TranslateGameMsg(int *pMsgID, CUnpacker *pUnpacker);
-	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy) override;
+	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy, bool Translate = true) override;
 	void InvalidateSnapshot() override;
 	void OnNewSnapshot() override;
 	void OnPredict() override;

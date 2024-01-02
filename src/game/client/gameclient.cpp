@@ -825,7 +825,7 @@ void CGameClient::OnRelease()
 		pComponent->OnRelease();
 }
 
-void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy)
+void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy, bool Translate)
 {
 	// special messages
 	if(MsgId == NETMSGTYPE_SV_TUNEPARAMS || (Client()->IsSixup() && MsgId == protocol7::NETMSGTYPE_SV_TUNEPARAMS))
@@ -857,7 +857,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		return;
 	}
 
-	void *pRawMsg = TranslateGameMsg(&MsgId, pUnpacker);
+	void *pRawMsg;
+	if(!m_pClient->IsSixup() || !Translate)
+		pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
+	else
+		pRawMsg = TranslateGameMsg(&MsgId, pUnpacker);
 
 	if(!pRawMsg)
 	{

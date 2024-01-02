@@ -324,7 +324,7 @@ public:
 	virtual void OnUpdate() = 0;
 	virtual void OnStateChange(int NewState, int OldState) = 0;
 	virtual void OnConnected() = 0;
-	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int Conn, bool Dummy) = 0;
+	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int Conn, bool Dummy, bool Translate = true) = 0;
 	virtual void OnPredict() = 0;
 	virtual void OnActivateEditor() = 0;
 	virtual void OnWindowResize() = 0;
