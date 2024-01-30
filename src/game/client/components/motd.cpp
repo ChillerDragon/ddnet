@@ -46,6 +46,8 @@ void CMotd::OnRender()
 	if(!IsActive())
 		return;
 
+	dbg_msg("ccache", "how fast can you go???");
+
 	const float FontSize = 32.0f; // also the size of the margin and rect rounding
 	const float ScreenHeight = 40.0f * FontSize; // multiple of the font size to get perfect alignment
 	const float ScreenWidth = ScreenHeight * Graphics()->ScreenAspect();
