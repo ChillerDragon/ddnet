@@ -2000,7 +2000,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Graphics"),
 		Localize("Sound"),
 		Localize("DDNet"),
-		Localize("Assets")};
+		Localize("Assets"),
+		Localize("tiles")};
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 
 	for(int i = 0; i < SETTINGS_LENGTH; i++)
@@ -2063,6 +2064,11 @@ void CMenus::RenderSettings(CUIRect MainView)
 	{
 		m_pBackground->ChangePosition(CMenuBackground::POS_SETTINGS_ASSETS);
 		RenderSettingsCustom(MainView);
+	}
+	else if(g_Config.m_UiSettingsPage == SETTINGS_TILES)
+	{
+		m_pBackground->ChangePosition(CMenuBackground::POS_SETTINGS_ASSETS);
+		RenderSettingsTiles(MainView);
 	}
 
 	if(m_NeedRestartGraphics || m_NeedRestartSound || m_NeedRestartUpdate)

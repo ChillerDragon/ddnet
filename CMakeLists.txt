@@ -2221,6 +2221,7 @@ if(CLIENT)
     components/menus_ingame.cpp
     components/menus_settings.cpp
     components/menus_settings_assets.cpp
+    components/menus_settings_tiles.cpp
     components/menus_start.cpp
     components/motd.cpp
     components/motd.h
