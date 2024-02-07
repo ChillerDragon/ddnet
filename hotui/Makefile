@@ -1,8 +1,12 @@
 all: sample main
 
+CXX = clang++
+
+CXX_FLAGS = -I../src -std=c++17
+
 sample:	sample.cpp
-	g++ $(DEBUG) -I../src -c -fPIC sample.cpp -o sample.o
-	g++ $(DEBUG) -I../src -shared -Wl,-soname,sample.so -o sample.so sample.o
+	$(CXX) $(DEBUG) $(CXX_FLAGS) -c -fPIC sample.cpp -o sample.o
+	$(CXX) $(DEBUG) $(CXX_FLAGS) -shared -Wl,-soname,sample.so -o sample.so sample.o
 	test -d ../debug && cp *.so ../debug
 	test -d ../build && cp *.so ../build
 
@@ -11,7 +15,7 @@ debug: DEBUG=-g
 debug: sample main
 
 main:		main.cpp
-	g++ $(DEBUG) main.cpp -o main -ldl -I../src
+	$(CXX) $(DEBUG) main.cpp -o main -ldl $(CXX_FLAGS)
 
 test: sample main
 	LD_LIBRARY_PATH=. ./main
@@ -20,4 +24,3 @@ clean:
 	rm *.o
 	rm *.so
 	rm *.gch
-
