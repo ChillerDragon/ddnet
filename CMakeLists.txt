@@ -3285,9 +3285,10 @@ macro(source_group_tree dir)
 endmacro()
 source_group_tree(src)
 
+# Allow the antibot library to use functions from the server binary.
+# Allow the hotui library to use functions from the client binary.
+add_cxx_compiler_flag_if_supported(OUR_FLAGS_LINK -rdynamic)
 if(ANTIBOT)
-  # Allow the antibot library to use functions from the server binary.
-  add_cxx_compiler_flag_if_supported(OUR_FLAGS_LINK -rdynamic)
   set_own_rpath(game-server)
 endif()
 

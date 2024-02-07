@@ -5,7 +5,7 @@
 
 #include "../src/game/client/ui_rect.h"
 
-typedef void (*plugin_ptr_t)();
+typedef void (*plugin_ptr_t)(CUIRect &View);
 
 int main()
 {
@@ -28,8 +28,9 @@ int main()
 		exit(1);
 	}
 
-	tick_ptr();
+	CUIRect View;
+
+	tick_ptr(View);
 
 	dlclose(handle);
 }
-
