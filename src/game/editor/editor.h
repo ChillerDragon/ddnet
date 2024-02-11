@@ -499,6 +499,7 @@ public:
 	void FreeDynamicPopupMenus();
 	void UpdateColorPipette();
 	void RenderMousePointer();
+	void RenderPrompt(CUIRect View);
 
 	std::vector<CQuad *> GetSelectedQuads();
 	std::shared_ptr<CLayer> GetSelectedLayerType(int Index, int Type) const;
@@ -606,6 +607,7 @@ public:
 	char m_aFileDialogCurrentLink[IO_MAX_PATH_LENGTH];
 	char m_aFilesSelectedName[IO_MAX_PATH_LENGTH];
 	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_FileDialogFilterInput;
+	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_PromptInput;
 	char *m_pFileDialogPath;
 	int m_FileDialogFileType;
 	bool m_FileDialogMultipleStorages = false;
@@ -632,6 +634,8 @@ public:
 	};
 	std::vector<CFilelistItem> m_vCompleteFileList;
 	std::vector<const CFilelistItem *> m_vpFilteredFileList;
+	std::vector<const char *> m_vpFilteredPrompList;
+
 
 	static bool CompareFilenameAscending(const CFilelistItem *pLhs, const CFilelistItem *pRhs)
 	{
