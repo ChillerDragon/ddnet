@@ -918,6 +918,8 @@ public:
 		CPoint m_aPoints[NUM_POINTS];
 	};
 	void DoMapEditor(CUIRect View);
+	float m_RawMouseX;
+	float m_RawMouseY;
 	void DoToolbarLayers(CUIRect Toolbar);
 	void DoToolbarSounds(CUIRect Toolbar);
 	void DoQuad(int LayerIndex, const std::shared_ptr<CLayerQuads> &pLayer, CQuad *pQuad, int Index);

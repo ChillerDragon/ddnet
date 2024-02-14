@@ -8453,8 +8453,22 @@ void CEditor::HandleCursorMovement()
 	OnMouseMove(s_MouseX, s_MouseY);
 }
 
+#include "../../ddnet_hotui/loader.h"
+
 void CEditor::OnMouseMove(float MouseX, float MouseY)
 {
+	m_RawMouseX = MouseX;
+	m_RawMouseY = MouseY;
+	static float s_MouseX = -1.f;
+	static float s_MouseY = -1.f;
+	if(MouseX == s_MouseX && MouseY == s_MouseY)
+		return;
+	s_MouseX = MouseX;
+	s_MouseY = MouseY;
+
+	HotEditorCuiRects(this);
+
+
 	for(CEditorComponent &Component : m_vComponents)
 		Component.BeforeHoverTile();
 	for(size_t g = 0; g < m_Map.m_vpGroups.size(); g++)
