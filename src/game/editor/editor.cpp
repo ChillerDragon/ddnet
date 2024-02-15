@@ -8474,9 +8474,15 @@ void CEditor::HandleCursorMovement()
 
 void CEditor::OnMouseMove(float MouseX, float MouseY)
 {
-	m_vHoverTiles.clear();
+	int i = 0;
+	mem_zero((void *)m_aHoverTiles, sizeof(m_aHoverTiles));
 	for(size_t g = 0; g < m_Map.m_vpGroups.size(); g++)
 	{
+		if(i >= MAX_HOVER_TILES)
+		{
+			dbg_msg("editor", "reached maximum amount of overlapping tiles");
+			break;
+		}
 		const std::shared_ptr<CLayerGroup> pGroup = m_Map.m_vpGroups[g];
 		for(size_t l = 0; l < pGroup->m_vpLayers.size(); l++)
 		{
@@ -8513,8 +8519,15 @@ void CEditor::OnMouseMove(float MouseX, float MouseY)
 				continue;
 			CTile Tile = pTiles->GetTile(x, y);
 			if(Tile.m_Index)
-				m_vHoverTiles.emplace_back(CHoverTile(
-					g, l, x, y, Tile));
+			{
+				m_aHoverTiles[i].m_Group = g;
+				m_aHoverTiles[i].m_Layer = l;
+				m_aHoverTiles[i].m_X = x;
+				m_aHoverTiles[i].m_Y = y;
+				m_aHoverTiles[i].m_Tile = Tile;
+				m_aHoverTiles[i].m_Valid = true;
+				i++;
+			}
 		}
 	}
 	UI()->MapScreen();

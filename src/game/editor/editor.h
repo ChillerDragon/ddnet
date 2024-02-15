@@ -439,16 +439,24 @@ public:
 			m_Y(y),
 			m_Tile(Tile)
 		{
+			m_Valid = true;
+		}
+		CHoverTile() : m_Tile(CTile())
+		{
+			m_Valid = false;
 		}
 
+		bool m_Valid;
 		int m_Group;
 		int m_Layer;
 		int m_X;
 		int m_Y;
-		const CTile m_Tile;
+		CTile m_Tile;
 	};
-	std::vector<CHoverTile> m_vHoverTiles;
-	const std::vector<CHoverTile> &HoverTiles() const { return m_vHoverTiles; }
+	enum {
+		MAX_HOVER_TILES = 64
+	};
+	CHoverTile m_aHoverTiles[MAX_HOVER_TILES];
 
 	void Init() override;
 	void OnUpdate() override;
