@@ -48,6 +48,15 @@ jobs:
       run: scripts/check_standard_headers.sh
     - name: Check config variables
       run: scripts/check_config_variables.py
+    - name: Check camel case variables
+      run: |
+        scripts/camel_case.sh
+        if ! git diff-index --quiet HEAD --
+        then
+          echo "Found variables that should be camel case:"
+          git --no-pager diff
+          exit 1
+        fi
     # TODO: Enable on release branches
     #- name: Out-of-date translations
     #  run: |
