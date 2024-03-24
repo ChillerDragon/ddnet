@@ -70,6 +70,9 @@ Checks: >
   modernize-use-override,
   modernize-use-transparent-functors,
   modernize-use-uncaught-exceptions,
+  performance-*,
+  -performance-no-int-to-ptr,
+  portability-*,
   readability-*,
   -readability-braces-around-statements,
   -readability-convert-member-functions-to-static,
@@ -77,7 +80,6 @@ Checks: >
   -readability-function-cognitive-complexity,
   -readability-function-size,
   -readability-identifier-length,
-  -readability-identifier-naming,
   -readability-implicit-bool-conversion,
   -readability-isolate-declaration,
   -readability-magic-numbers,
@@ -86,6 +88,13 @@ Checks: >
   -readability-simplify-boolean-expr,
   -readability-suspicious-call-argument,
   -readability-uppercase-literal-suffix,
-  performance-*,
-  -performance-no-int-to-ptr,
-  portability-*,
+  -readability-redundant-casting,
+  -readability-use-std-min-max,
+  -readability-avoid-nested-conditional-operator,
+
+CheckOptions:
+  - key:             readability-identifier-naming.LocalVariableCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.LocalVariableIgnoredRegexp
+    value:           '^(p|a|s_|FT_|TB_|s_|v|[ijklxyhmrgbacwestnd]$|dy$|dx$|mx$|my$|wx$|px$|wy$|sx$|sy$|it$|func$|res$|len$|bg$|sp$|url$|[rgbatxy][0-2]$).*'
+
