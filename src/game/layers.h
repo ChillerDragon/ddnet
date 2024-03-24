@@ -48,6 +48,9 @@ private:
 	CMapItemLayerTilemap *m_pFrontLayer;
 	CMapItemLayerTilemap *m_pSwitchLayer;
 	CMapItemLayerTilemap *m_pTuneLayer;
+	void foo() {
+		int foo = 2;
+	}
 };
 
 #endif

@@ -1,0 +1,12 @@
+# Only used to enforce camel case naming convention for variables
+
+Checks: >
+  -*,
+  readability-identifier-naming,
+
+CheckOptions:
+  - key:             readability-identifier-naming.LocalVariableCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.LocalVariableIgnoredRegexp
+    value:           '^(p|a|s_|FT_|TB_|s_|ul_|v|[xy]i$|[zijklxyhmrgbacwestnduv]$|[dmpwsi][xy]$|(ch|skel)[0-2]?$|it$|func$|res$|len$|length$|offset$|offpos$|result$|bg$|sp$|url$|Tickdelta_legacy$|index$|ctxt$|key$|null$|logger$|LAST_MODIFIED$|teleNr$|target$|id$|hit$|hsl[0-2]?$|rgb[0-2]?$|dir$|tmp$|cData$|[rgbatxy][0-2]$).*'
+
