@@ -3,6 +3,7 @@
 #ifndef ENGINE_CLIENT_INPUT_H
 #define ENGINE_CLIENT_INPUT_H
 
+#include <engine/console.h>
 #include <SDL_events.h>
 #include <SDL_joystick.h>
 

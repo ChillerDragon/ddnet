@@ -22,6 +22,7 @@
 #include <engine/shared/http.h>
 #include <engine/shared/network.h>
 #include <engine/warning.h>
+#include <engine/textrender.h>
 
 #include "graph.h"
 #include "smooth_time.h"

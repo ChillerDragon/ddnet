@@ -2,6 +2,10 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_HUD_H
 #define GAME_CLIENT_COMPONENTS_HUD_H
+#include <engine/client.h>
+#include <game/generated/protocol.h>
+#include <engine/shared/protocol.h>
+#include <engine/textrender.h>
 #include <game/client/component.h>
 
 struct SScoreInfo

@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_MOTD_H
 #define GAME_CLIENT_COMPONENTS_MOTD_H
 
+#include <engine/textrender.h>
 #include <engine/shared/config.h>
 
 #include <game/client/component.h>
