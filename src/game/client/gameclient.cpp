@@ -1003,6 +1003,19 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		CNetMsg_Sv_ChangeInfoCooldown *pMsg = (CNetMsg_Sv_ChangeInfoCooldown *)pRawMsg;
 		m_NextChangeInfo = pMsg->m_WaitUntil;
 	}
+	// ddnet ex sixup name changes
+	else if(Client()->IsSixup() && MsgId == NETMSGTYPE_SV_NAMECHANGE)
+	{
+		CNetMsg_Sv_NameChange *pMsg = (CNetMsg_Sv_NameChange *)pRawMsg;
+
+		CClientData *pClient = &m_aClients[pMsg->m_ClientId];
+		str_copy(pClient->m_aName, pMsg->m_pName);
+		str_copy(pClient->m_aClan, pMsg->m_pClan);
+
+		CTranslationContext::CClientData &ClientData = Client()->m_TranslationContext.m_aClients[pMsg->m_ClientId];
+		str_copy(ClientData.m_aName, pMsg->m_pName);
+		str_copy(ClientData.m_aClan, pMsg->m_pClan);
+	}
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -2422,7 +2435,17 @@ void CGameClient::SendInfo(bool Start)
 		if(Start)
 			SendStartInfo7(false);
 		else
+		{
 			SendSkinChange7(false);
+
+			CNetMsg_Cl_NameChange NameChangeMsg;
+			NameChangeMsg.m_pName = Client()->PlayerName();
+			NameChangeMsg.m_pClan = g_Config.m_PlayerClan;
+			NameChangeMsg.m_Country = g_Config.m_PlayerCountry;
+			CMsgPacker Packer(&NameChangeMsg);
+			NameChangeMsg.Pack(&Packer);
+			Client()->SendMsg(IClient::CONN_MAIN, &Packer, MSGFLAG_VITAL);
+		}
 		return;
 	}
 	if(Start)
