@@ -1982,7 +1982,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 							Conn,
 							Dummy,
 							GameClient()->GetNetObjHandler7(),
-							GameClient()->GetNetObjHandler());
+							GameClient()->GetNetObjHandler(),
+							GameClient());
 					}
 					else
 					{
@@ -2510,7 +2511,7 @@ void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 	if(IsSixup())
 	{
 		pTmpTranslateBuffer = (CSnapshot *)aTmpTranslateBuffer;
-		TranslatedSize = ((CSnapshot *)pData)->TranslateSevenToSix(pTmpTranslateBuffer, m_TranslationContext, LocalTime(), GameTick(g_Config.m_ClDummy), CONN_MAIN, false, GameClient()->GetNetObjHandler7(), GameClient()->GetNetObjHandler());
+		TranslatedSize = ((CSnapshot *)pData)->TranslateSevenToSix(pTmpTranslateBuffer, m_TranslationContext, LocalTime(), GameTick(g_Config.m_ClDummy), CONN_MAIN, false, GameClient()->GetNetObjHandler7(), GameClient()->GetNetObjHandler(), GameClient());
 		if(TranslatedSize < 0)
 		{
 			dbg_msg("sixup", "failed to translate snapshot. error=%d", TranslatedSize);

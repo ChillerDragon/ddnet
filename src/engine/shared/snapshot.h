@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <engine/client.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/protocol7.h>
@@ -71,7 +72,8 @@ public:
 		int Conn,
 		bool Dummy,
 		protocol7::CNetObjHandler *pNetObjHandler,
-		CNetObjHandler *pNetObjHandler6);
+		CNetObjHandler *pNetObjHandler6,
+		IGameClient *pGameClient);
 	bool IsValid(size_t ActualSize) const;
 
 	static const CSnapshot *EmptySnapshot() { return &ms_EmptySnapshot; }

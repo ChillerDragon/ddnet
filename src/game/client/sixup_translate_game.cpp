@@ -1,3 +1,7 @@
+#include <base/system.h>
+#include <engine/shared/protocol7.h>
+#include <game/gamecore.h>
+#include <game/generated/protocol7.h>
 #include <game/localization.h>
 
 #include <game/client/gameclient.h>
@@ -118,6 +122,21 @@ void CGameClient::ApplySkin7InfoFromGameMsg(const T *pMsg, int ClientId)
 				pClient->m_SkinInfo.m_Sixup.m_HatSpriteIndex = CSkins7::HAT_OFFSET_SIDE + (ClientId % CSkins7::HAT_NUM);
 		}
 	}
+}
+
+void CGameClient::ApplySkin7InfoFromSnapObj(const protocol7::CNetObj_De_ClientInfo *pObj, int ClientId)
+{
+	char aSkinPartNames[protocol7::NUM_SKINPARTS][protocol7::MAX_SKIN_ARRAY_SIZE];
+	protocol7::CNetMsg_Sv_SkinChange Msg;
+	Msg.m_ClientId = ClientId;
+	for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+	{
+		IntsToStr(pObj->m_aaSkinPartNames[Part], 6, aSkinPartNames[Part], std::size(aSkinPartNames[Part]));
+		Msg.m_apSkinPartNames[Part] = aSkinPartNames[Part];
+		Msg.m_aUseCustomColors[Part] = pObj->m_aUseCustomColors[Part];
+		Msg.m_aSkinPartColors[Part] = pObj->m_aSkinPartColors[Part];
+	}
+	ApplySkin7InfoFromGameMsg(&Msg, ClientId);
 }
 
 void *CGameClient::TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn)
