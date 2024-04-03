@@ -179,6 +179,7 @@ public:
 	CSnapshotBuilder();
 
 	void Init(bool Sixup = false);
+	void Init7(const CSnapshot *pSnapshot);
 
 	void *NewItem(int Type, int Id, int Size);
 
