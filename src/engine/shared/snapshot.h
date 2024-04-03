@@ -3,6 +3,7 @@
 #ifndef ENGINE_SHARED_SNAPSHOT_H
 #define ENGINE_SHARED_SNAPSHOT_H
 
+#include <engine/client.h>
 #include <cstddef>
 #include <cstdint>
 
@@ -71,7 +72,8 @@ public:
 		int Conn,
 		bool Dummy,
 		protocol7::CNetObjHandler *pNetObjHandler,
-		CNetObjHandler *pNetObjHandler6);
+		CNetObjHandler *pNetObjHandler6,
+		IGameClient *pGameClient);
 	bool IsValid(size_t ActualSize) const;
 
 	static const CSnapshot *EmptySnapshot() { return &ms_EmptySnapshot; }
