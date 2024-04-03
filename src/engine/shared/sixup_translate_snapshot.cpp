@@ -1,8 +1,10 @@
 #include <base/math.h>
 #include <base/system.h>
 #include <engine/client.h>
+#include <engine/shared/protocol.h>
 #include <engine/shared/protocolglue.h>
 #include <engine/shared/translation_context.h>
+#include <game/client/gameclient.h>
 #include <game/gamecore.h>
 #include <game/generated/protocol.h>
 #include <game/generated/protocol7.h>
@@ -507,4 +509,90 @@ int CSnapshot::TranslateSevenToSix(
 	}
 
 	return Builder.Finish(pSixSnapDest);
+}
+
+void CSnapshotBuilder::Init7(const CSnapshot *pSnapshot)
+{
+	if(pSnapshot->m_DataSize + sizeof(CSnapshot) + pSnapshot->m_NumItems * sizeof(int) * 2 > CSnapshot::MAX_SIZE || pSnapshot->m_NumItems > CSnapshot::MAX_ITEMS)
+	{
+		// key and offset per item
+		dbg_assert(m_DataSize + sizeof(CSnapshot) + m_NumItems * sizeof(int) * 2 < CSnapshot::MAX_SIZE, "too much data");
+		dbg_assert(m_NumItems < CSnapshot::MAX_ITEMS, "too many items");
+		dbg_msg("sixup", "demo recording failed on invalid snapshot");
+		m_DataSize = 0;
+		m_NumItems = 0;
+		return;
+	}
+
+	m_DataSize = pSnapshot->m_DataSize;
+	m_NumItems = pSnapshot->m_NumItems;
+	mem_copy(m_aOffsets, pSnapshot->Offsets(), sizeof(int) * m_NumItems);
+	mem_copy(m_aData, pSnapshot->DataStart(), m_DataSize);
+}
+
+int CGameClient::OnDemoRecSnap7(CSnapshot *pFrom, CSnapshot *pTo)
+{
+	// TODO: I think that has to be current connection and has to be passed in as argument
+	const int Conn = IClient::CONN_MAIN;
+
+	CSnapshotBuilder Builder;
+	Builder.Init7(pFrom);
+
+	// add client info
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(!m_aClients[i].m_Active)
+			continue;
+
+		void *pItem = Builder.NewItem(protocol7::NETOBJTYPE_DE_CLIENTINFO, i, sizeof(protocol7::CNetObj_De_ClientInfo));
+		if(!pItem)
+			return -1;
+
+		CTranslationContext::CClientData &ClientData = Client()->m_TranslationContext.m_aClients[i];
+
+		protocol7::CNetObj_De_ClientInfo ClientInfoObj;
+		ClientInfoObj.m_Local = i == Client()->m_TranslationContext.m_aLocalClientId[Conn];
+		ClientInfoObj.m_Team = ClientData.m_Team;
+		StrToInts(ClientInfoObj.m_aName, 4, m_aClients[i].m_aName);
+		StrToInts(ClientInfoObj.m_aClan, 3, m_aClients[i].m_aClan);
+		ClientInfoObj.m_Country = ClientData.m_Country;
+
+		for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+		{
+			StrToInts(ClientInfoObj.m_aaSkinPartNames[Part], 6, m_aClients[i].m_Sixup.m_aaSkinPartNames[Part]);
+			ClientInfoObj.m_aUseCustomColors[Part] = m_aClients[i].m_Sixup.m_aUseCustomColors[Part];
+			ClientInfoObj.m_aSkinPartColors[Part] = m_aClients[i].m_Sixup.m_aSkinPartColors[Part];
+		}
+
+		mem_copy(pItem, &ClientInfoObj, sizeof(protocol7::CNetObj_De_ClientInfo));
+	}
+
+	// TODO:
+	// // add tuning
+	// CTuningParams StandardTuning;
+	// if(mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
+	// {
+	// 	CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Client()->SnapNewItem(NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
+	// 	if(!pTuneParams)
+	// 		return -2;
+
+	// 	mem_copy(pTuneParams->m_aTuneParams, &m_Tuning, sizeof(pTuneParams->m_aTuneParams));
+	// }
+
+	// add game info
+	void *pItem = Builder.NewItem(protocol7::NETOBJTYPE_DE_GAMEINFO, 0, sizeof(protocol7::CNetObj_De_GameInfo));
+	if(!pItem)
+		return -3;
+
+	protocol7::CNetObj_De_GameInfo GameInfo;
+
+	GameInfo.m_GameFlags = Client()->m_TranslationContext.m_GameFlags;
+	GameInfo.m_ScoreLimit = Client()->m_TranslationContext.m_ScoreLimit;
+	GameInfo.m_TimeLimit = Client()->m_TranslationContext.m_TimeLimit;
+	GameInfo.m_MatchNum = Client()->m_TranslationContext.m_MatchNum;
+	GameInfo.m_MatchCurrent = Client()->m_TranslationContext.m_MatchCurrent;
+
+	mem_copy(pItem, &GameInfo, sizeof(protocol7::CNetObj_De_GameInfo));
+
+	return Builder.Finish(pTo);
 }

@@ -98,6 +98,9 @@ public:
 
 	bool m_ShouldSendGameInfo;
 	int m_GameStateFlags7;
+	// 0.7 game flags
+	// use in combination with protocol7::GAMEFLAG_*
+	// for example protocol7::GAMEFLAG_TEAMS
 	int m_GameFlags;
 	int m_ScoreLimit;
 	int m_TimeLimit;

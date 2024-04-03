@@ -368,11 +368,6 @@ public:
 		char m_aSkinName[24];
 		int m_SkinColor;
 
-		// 0.7 Skin
-		char m_aaSkinPartNames[protocol7::NUM_SKINPARTS][MAX_SKIN_LENGTH];
-		int m_aUseCustomColors[protocol7::NUM_SKINPARTS];
-		int m_aSkinPartColors[protocol7::NUM_SKINPARTS];
-
 		int m_Team;
 		int m_Emoticon;
 		float m_EmoticonStartFraction;
@@ -434,6 +429,17 @@ public:
 		int m_aPredTick[200];
 		bool m_SpecCharPresent;
 		vec2 m_SpecChar;
+
+		class CSixup
+		{
+		public:
+			char m_aaSkinPartNames[protocol7::NUM_SKINPARTS][MAX_SKIN_LENGTH];
+			int m_aUseCustomColors[protocol7::NUM_SKINPARTS];
+			int m_aSkinPartColors[protocol7::NUM_SKINPARTS];
+		};
+
+		// 0.7 Skin
+		CSixup m_Sixup;
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
@@ -495,6 +501,7 @@ public:
 	template<typename T>
 	void ApplySkin7InfoFromGameMsg(const T *pMsg, int ClientId);
 	void ApplySkin7InfoFromSnapObj(const protocol7::CNetObj_De_ClientInfo *pObj, int ClientId) override;
+	int OnDemoRecSnap7(class CSnapshot *pFrom, class CSnapshot *pTo) override;
 	void *TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn);
 	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy) override;
 	void InvalidateSnapshot() override;
@@ -524,6 +531,7 @@ public:
 	const char *GetItemName(int Type) const override;
 	const char *Version() const override;
 	const char *NetVersion() const override;
+	const char *NetVersion7() const override;
 	int DDNetVersion() const override;
 	const char *DDNetVersionStr() const override;
 	virtual int ClientVersion7() const override;
