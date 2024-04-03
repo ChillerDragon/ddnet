@@ -493,6 +493,7 @@ public:
 	void OnStateChange(int NewState, int OldState) override;
 	template<typename T>
 	void ApplySkin7InfoFromGameMsg(const T *pMsg, int ClientId);
+	void ApplySkin7InfoFromSnapObj(const protocol7::CNetObj_De_ClientInfo *pObj, int ClientId) override;
 	void *TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn);
 	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy) override;
 	void InvalidateSnapshot() override;

@@ -14,7 +14,6 @@
 #include <game/generated/protocol7.h>
 
 #include <engine/friends.h>
-#include <engine/shared/snapshot.h>
 #include <functional>
 
 #include <engine/client/enums.h>
@@ -356,9 +355,11 @@ public:
 	virtual protocol7::CNetObjHandler *GetNetObjHandler7() = 0;
 
 	virtual int ClientVersion7() const = 0;
+
+	virtual void ApplySkin7InfoFromSnapObj(const protocol7::CNetObj_De_ClientInfo *pObj, int ClientId) = 0;
 };
 
-void SnapshotRemoveExtraProjectileInfo(CSnapshot *pSnap);
+void SnapshotRemoveExtraProjectileInfo(class CSnapshot *pSnap);
 
 extern IGameClient *CreateGameClient();
 #endif
