@@ -1,21 +1,15 @@
-#include "compression.h"
-#include "snapshot.h"
-#include "uuid_manager.h"
-
-#include <climits>
-#include <cstdlib>
-
 #include <base/math.h>
 #include <base/system.h>
-
+#include <engine/client.h>
 #include <engine/shared/protocolglue.h>
 #include <engine/shared/translation_context.h>
-
+#include <game/gamecore.h>
 #include <game/generated/protocol.h>
 #include <game/generated/protocol7.h>
 #include <game/generated/protocolglue.h>
 
-#include <game/gamecore.h>
+#include "snapshot.h"
+#include "uuid_manager.h"
 
 int CSnapshot::TranslateSevenToSix(
 	CSnapshot *pSixSnapDest,
@@ -25,7 +19,8 @@ int CSnapshot::TranslateSevenToSix(
 	int Conn,
 	bool Dummy,
 	protocol7::CNetObjHandler *pNetObjHandler,
-	CNetObjHandler *pNetObjHandler6)
+	CNetObjHandler *pNetObjHandler6,
+	IGameClient *pGameClient)
 {
 	CSnapshotBuilder Builder;
 	Builder.Init();
@@ -482,8 +477,7 @@ int CSnapshot::TranslateSevenToSix(
 			IntsToStr(pInfo->m_aClan, 3, Client.m_aClan, std::size(Client.m_aClan));
 			Client.m_Country = pInfo->m_Country;
 
-			// TODO: get this method into scope
-			// ApplySkin7InfoFromGameMsg(pInfo, ClientId);
+			pGameClient->ApplySkin7InfoFromSnapObj(pInfo, ClientId);
 		}
 		else if(pItem7->Type() == protocol7::NETOBJTYPE_DE_GAMEINFO)
 		{
