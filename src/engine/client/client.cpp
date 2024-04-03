@@ -2000,13 +2000,27 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 						// for antiping: if the projectile netobjects from the server contains extra data, this is removed and the original content restored before recording demo
 						SnapshotRemoveExtraProjectileInfo(pTmpBuffer3);
 
+						// TODO: rename aExtraInfoRemoved and fix src and dst being the same in recsnap7 mem copy
+						unsigned char aExtraInfoRemoved[CSnapshot::MAX_SIZE];
+						mem_copy(aExtraInfoRemoved, pTmpBuffer3, SnapSize);
+						int DemoSnapSize = SnapSize;
+						if(IsSixup())
+						{
+							DemoSnapSize = GameClient()->OnDemoRecSnap7((CSnapshot *)aExtraInfoRemoved, (CSnapshot *)aExtraInfoRemoved);
+							if(DemoSnapSize < 0)
+							{
+								dbg_msg("sixup", "demo snapshot failed. error=%d", DemoSnapSize);
+								return;
+							}
+						}
+
 						// add snapshot to demo
 						for(auto &DemoRecorder : m_aDemoRecorder)
 						{
 							if(DemoRecorder.IsRecording())
 							{
 								// write snapshot
-								DemoRecorder.RecordSnapshot(GameTick, pTmpBuffer3, SnapSize);
+								DemoRecorder.RecordSnapshot(GameTick, aExtraInfoRemoved, DemoSnapSize);
 							}
 						}
 					}
@@ -3892,7 +3906,20 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp, int 
 			str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
 		}
 
-		m_aDemoRecorder[Recorder].Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_pMap->Sha256(), m_pMap->Crc(), "client", m_pMap->MapSize(), 0, m_pMap->File());
+		m_aDemoRecorder[Recorder].Start(
+			Storage(),
+			m_pConsole,
+			aFilename,
+			IsSixup() ? GameClient()->NetVersion7() : GameClient()->NetVersion(),
+			m_aCurrentMap,
+			m_pMap->Sha256(),
+			m_pMap->Crc(),
+			"client",
+			m_pMap->MapSize(),
+			0,
+			m_pMap->File(),
+			nullptr,
+			nullptr);
 	}
 }
 
@@ -4803,7 +4830,20 @@ void CClient::RaceRecord_Start(const char *pFilename)
 	if(State() != IClient::STATE_ONLINE)
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
 	else
-		m_aDemoRecorder[RECORDER_RACE].Start(Storage(), m_pConsole, pFilename, GameClient()->NetVersion(), m_aCurrentMap, m_pMap->Sha256(), m_pMap->Crc(), "client", m_pMap->MapSize(), 0, m_pMap->File());
+		m_aDemoRecorder[RECORDER_RACE].Start(
+			Storage(),
+			m_pConsole,
+			pFilename,
+			IsSixup() ? GameClient()->NetVersion7() : GameClient()->NetVersion(),
+			m_aCurrentMap,
+			m_pMap->Sha256(),
+			m_pMap->Crc(),
+			"client",
+			m_pMap->MapSize(),
+			0,
+			m_pMap->File(),
+			nullptr,
+			nullptr);
 }
 
 void CClient::RaceRecord_Stop()
