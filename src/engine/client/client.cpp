@@ -2012,6 +2012,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 								dbg_msg("sixup", "demo snapshot failed. error=%d", DemoSnapSize);
 								return;
 							}
+
+							((CSnapshot *)aExtraInfoRemoved)->DebugDumpFiltered(IsSixup());
 						}
 
 						// add snapshot to demo
