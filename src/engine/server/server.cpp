@@ -937,6 +937,8 @@ void CServer::DoSnapshot()
 			// save the snapshot
 			m_aClients[i].m_Snapshots.Add(m_CurrentGameTick, time_get(), SnapshotSize, pData, 0, nullptr);
 
+			pData->DebugDumpFiltered(m_aClients[i].m_Sixup);
+
 			// find snapshot that we can perform delta against
 			int DeltaTick = -1;
 			const CSnapshot *pDeltashot = CSnapshot::EmptySnapshot();

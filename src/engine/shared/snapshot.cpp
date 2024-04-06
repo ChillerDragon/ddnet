@@ -2,8 +2,11 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "snapshot.h"
 #include "compression.h"
+#include "game/generated/protocol.h"
 #include "uuid_manager.h"
 
+#include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 
@@ -119,16 +122,104 @@ unsigned CSnapshot::Crc() const
 	return Crc;
 }
 
-void CSnapshot::DebugDump() const
+void CSnapshot::RawDump() const
+{
+	char aHex[2048];
+	str_hex(aHex, sizeof(aHex), DataStart(), TotalSize());
+	dbg_msg("snapshot", "totalsize=%zu datastart=%p data=%s", TotalSize(), DataStart(), aHex);
+
+	const int OffLen = sizeof(int32_t) * 5;
+	str_hex(aHex, sizeof(aHex), Offsets(), OffLen); 
+	dbg_msg("snapshot", "offsets=%p data(len%d)=%s", Offsets(), OffLen, aHex);
+
+	for(int i = 0; i < 5; i++)
+		dbg_msg("snapshot", "&Offsets()[%d]=%p  Offets()[%d]=%d", i, &Offsets()[i], i, Offsets()[i]);
+
+	GetItemSizeVerbose(0);
+	GetItemSizeVerbose(1);
+	GetItemSizeVerbose(2);
+	GetItemSizeVerbose(3);
+
+	// for(int i = 0; i < m_NumItems; i++)
+	// 	GetItemSizeVerbose(i);
+}
+
+int CSnapshot::GetItemSizeVerbose(int Index) const
+{
+	dbg_msg("item_size", "index=%d m_NumItems=%d m_DataSize=%d Offsets=%p", Index, m_NumItems, m_DataSize, Offsets());
+	if(Index == m_NumItems - 1)
+	{
+		dbg_msg("item_size", "  LAST ITEM!");
+		return (m_DataSize - Offsets()[Index]) - sizeof(CSnapshotItem);
+	}
+	dbg_msg("item_size", "  Offsets()[Index + 1]=%d Offsets[Index]=%d", Offsets()[Index + 1], Offsets()[Index]);
+	dbg_msg("item_size", "  vvvvvvvvvvvvvvvvvvvv    vvvvvvvvvvvvvvvvv");
+	dbg_msg("item_size", "  Offsets()[Index + 1] -  Offsets()[Index]  => %d", Offsets()[Index + 1] - Offsets()[Index]);
+	dbg_msg("item_size", "  (Offsets()[Index + 1] -  Offsets()[Index]) - sizeof(CSnapshotItem)  => %lu", (Offsets()[Index + 1] - Offsets()[Index]) - sizeof(CSnapshotItem));
+	return (Offsets()[Index + 1] - Offsets()[Index]) - sizeof(CSnapshotItem);
+}
+
+void CSnapshot::DebugDump(bool Sixup) const
 {
 	dbg_msg("snapshot", "data_size=%d num_items=%d", m_DataSize, m_NumItems);
 	for(int i = 0; i < m_NumItems; i++)
 	{
 		const CSnapshotItem *pItem = GetItem(i);
 		int Size = GetItemSize(i);
-		dbg_msg("snapshot", "\ttype=%d id=%d", pItem->Type(), pItem->Id());
+
+		dbg_msg(
+			"snapshot",
+			"\ttype=%d id=%d size=%d six=%s seven=%s",
+			pItem->Type(),
+			pItem->Id(),
+			Size,
+			m_NetObjHandler6.GetObjName(pItem->Type()),
+			m_NetObjHandler7.GetObjName(pItem->Type()));
 		for(size_t b = 0; b < Size / sizeof(int32_t); b++)
 			dbg_msg("snapshot", "\t\t%3d %12d\t%08x", (int)b, pItem->Data()[b], pItem->Data()[b]);
+	}
+}
+
+void CSnapshot::DebugDumpFiltered(bool Sixup) const
+{
+	static bool FirstSnap = true;
+	if(FirstSnap)
+	{
+		dbg_msg("filter", "*** first snap:");
+		FirstSnap = false;
+		DebugDump(Sixup);
+		RawDump();
+	}
+
+	bool Found = false;
+	bool HeaderPrinted = false;
+	for(int i = 0; i < m_NumItems; i++)
+	{
+		const CSnapshotItem *pItem = GetItem(i);
+		if(pItem->Type() != NETEVENTTYPE_SOUNDWORLD && pItem->Type() != protocol7::NETEVENTTYPE_SOUNDWORLD)
+			continue;
+
+		if(!HeaderPrinted)
+		{
+			dbg_msg("filter", "*** matches data_size=%d num_items=%d", m_DataSize, m_NumItems);
+			HeaderPrinted = true;
+		}
+
+		int Size = GetItemSize(i);
+		dbg_msg("filter", "\ttype=%d id=%d", pItem->Type(), pItem->Id());
+		for(size_t b = 0; b < Size / sizeof(int32_t); b++)
+			dbg_msg("filter", "\t\t%3d %12d\t%08x", (int)b, pItem->Data()[b], pItem->Data()[b]);
+
+		const protocol7::CNetEvent_SoundWorld *pSound = (protocol7::CNetEvent_SoundWorld *)pItem->Data();
+		dbg_msg("filter", "\t\tpSound->m_X=%d", pSound->m_X);
+		dbg_msg("filter", "\t\tpSound->m_Y=%d", pSound->m_Y);
+		dbg_msg("filter", "\t\tpSound->m_SoundId=%d", pSound->m_SoundId);
+		Found = true;
+	}
+	if(Found)
+	{
+		dbg_msg("filter", "*** full dump:");
+		DebugDump(Sixup);
 	}
 }
 
@@ -582,11 +673,12 @@ CSnapshotBuilder::CSnapshotBuilder()
 	m_NumExtendedItemTypes = 0;
 }
 
-void CSnapshotBuilder::Init(bool Sixup)
+void CSnapshotBuilder::Init(bool Sixup, bool Debug)
 {
 	m_DataSize = 0;
 	m_NumItems = 0;
 	m_Sixup = Sixup;
+	m_Debug = Debug;
 
 	for(int i = 0; i < m_NumExtendedItemTypes; i++)
 	{
@@ -693,6 +785,10 @@ void *CSnapshotBuilder::NewItem(int Type, int Id, int Size)
 
 	mem_zero(pObj, sizeof(CSnapshotItem) + Size);
 	pObj->m_TypeAndId = (Type << 16) | Id;
+	
+	if(m_Debug)
+		dbg_msg("snap_builder", "new item offset=%d size=%lu", m_DataSize, (m_aOffsets[std::max(0, m_NumItems - 1)] - m_DataSize) - sizeof(CSnapshotItem));
+
 	m_aOffsets[m_NumItems] = m_DataSize;
 	m_DataSize += sizeof(CSnapshotItem) + Size;
 	m_NumItems++;

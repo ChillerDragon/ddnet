@@ -25,7 +25,9 @@ int CSnapshot::TranslateSevenToSix(
 	IGameClient *pGameClient)
 {
 	CSnapshotBuilder Builder;
-	Builder.Init();
+	static bool FirstSnap = true;
+	Builder.Init(FirstSnap);
+	FirstSnap = false;
 
 	for(auto &PlayerInfosRace : TranslationContext.m_apPlayerInfosRace)
 		PlayerInfosRace = nullptr;
@@ -73,7 +75,9 @@ int CSnapshot::TranslateSevenToSix(
 					pNetObjHandler->GetObjName(pItem7->Type()),
 					Size,
 					pItem7->Id());
+				DebugDumpFiltered(true);
 			}
+
 			InvalidateItem(i);
 		}
 
@@ -511,8 +515,9 @@ int CSnapshot::TranslateSevenToSix(
 	return Builder.Finish(pSixSnapDest);
 }
 
-void CSnapshotBuilder::Init7(const CSnapshot *pSnapshot)
+void CSnapshotBuilder::Init7(const CSnapshot *pSnapshot, bool Debug)
 {
+	m_Debug = Debug;
 	if(pSnapshot->m_DataSize + sizeof(CSnapshot) + pSnapshot->m_NumItems * sizeof(int) * 2 > CSnapshot::MAX_SIZE || pSnapshot->m_NumItems > CSnapshot::MAX_ITEMS)
 	{
 		// key and offset per item
@@ -528,6 +533,15 @@ void CSnapshotBuilder::Init7(const CSnapshot *pSnapshot)
 	m_NumItems = pSnapshot->m_NumItems;
 	mem_copy(m_aOffsets, pSnapshot->Offsets(), sizeof(int) * m_NumItems);
 	mem_copy(m_aData, pSnapshot->DataStart(), m_DataSize);
+
+	char aHex[2048];
+	str_hex(aHex, sizeof(aHex), m_aOffsets, sizeof(int) * m_NumItems);
+	dbg_msg("sixup", "copy offsets %s", aHex);
+
+	for(int i = 0; i < m_NumItems; i++)
+	{
+		dbg_msg("sixup", "  m_aOffsets[%d]=%d", i, m_aOffsets[i]);
+	}
 }
 
 int CGameClient::OnDemoRecSnap7(CSnapshot *pFrom, CSnapshot *pTo)
@@ -536,7 +550,12 @@ int CGameClient::OnDemoRecSnap7(CSnapshot *pFrom, CSnapshot *pTo)
 	const int Conn = IClient::CONN_MAIN;
 
 	CSnapshotBuilder Builder;
-	Builder.Init7(pFrom);
+	static bool FirstSnap = true;
+	Builder.Init7(pFrom, FirstSnap);
+	FirstSnap = false;
+
+	// dbg_msg("demo_rec_snap", "recording following snap");
+	pFrom->DebugDumpFiltered(Client()->IsSixup());
 
 	// add client info
 	for(int i = 0; i < MAX_CLIENTS; i++)

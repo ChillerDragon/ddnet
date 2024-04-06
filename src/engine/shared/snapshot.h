@@ -56,6 +56,7 @@ public:
 	int NumItems() const { return m_NumItems; }
 	const CSnapshotItem *GetItem(int Index) const;
 	int GetItemSize(int Index) const;
+	int GetItemSizeVerbose(int Index) const;
 	int GetItemIndex(int Key) const;
 	void InvalidateItem(int Index);
 	int GetItemType(int Index) const;
@@ -63,7 +64,9 @@ public:
 	const void *FindItem(int Type, int Id) const;
 
 	unsigned Crc() const;
-	void DebugDump() const;
+	void RawDump() const;
+	void DebugDump(bool Sixup) const;
+	void DebugDumpFiltered(bool Sixup) const;
 	int TranslateSevenToSix(
 		CSnapshot *pSixSnapDest,
 		class CTranslationContext &TranslationContext,
@@ -75,6 +78,9 @@ public:
 		CNetObjHandler *pNetObjHandler6,
 		IGameClient *pGameClient);
 	bool IsValid(size_t ActualSize) const;
+
+	CNetObjHandler m_NetObjHandler6;
+	protocol7::CNetObjHandler m_NetObjHandler7;
 
 	static const CSnapshot *EmptySnapshot() { return &ms_EmptySnapshot; }
 };
@@ -174,12 +180,13 @@ class CSnapshotBuilder
 	int GetTypeFromIndex(int Index) const;
 
 	bool m_Sixup;
+	bool m_Debug = false;
 
 public:
 	CSnapshotBuilder();
 
-	void Init(bool Sixup = false);
-	void Init7(const CSnapshot *pSnapshot);
+	void Init(bool Sixup = false, bool Debug = false);
+	void Init7(const CSnapshot *pSnapshot, bool Debug = false);
 
 	void *NewItem(int Type, int Id, int Size);
 
