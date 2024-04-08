@@ -44,6 +44,9 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
     - name: Prepare Linux
       if: contains(matrix.os, 'ubuntu')
@@ -137,8 +140,13 @@ jobs:
     - name: Check variable casing
       if: contains(matrix.os, 'ubuntu-latest')
       run: |
+        echo RUNNER_TOOL_CACHE=$RUNNER_TOOL_CACHE
         clang-tidy --version
-        ./scripts/camel_case.sh -j$(nproc) todo-reuse-release
+        python --version
+        python3 --version
+        type -a python
+        type -a python3
+        python ./scripts/camel_case.py -j$(nproc) todo-reuse-release
 
     - name: Build headless client
       if: contains(matrix.os, 'ubuntu-latest')
