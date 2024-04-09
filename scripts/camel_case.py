@@ -183,7 +183,9 @@ def main() -> int:
 		check_file_prefilled = functools.partial(check_file, skip=args.skip, total=total, clang_tidy_bin='clang-tidy', build_dir=args.build_dir, dry_run=args.dry_run)
 		results = pool.starmap(check_file_prefilled, zip(files, range(len(files))))
 
-	return all(results)
+	if all(results):
+		return 0
+	return 1
 
 if __name__ == "__main__":
 	sys.exit(main())
