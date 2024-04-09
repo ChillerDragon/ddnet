@@ -9,6 +9,8 @@ import glob
 import subprocess
 import contextlib
 import shutil
+import multiprocessing
+import functools
 
 if sys.version_info[1] < 11:
 	print('you need python 3.11 or newer to run this script')
@@ -16,7 +18,6 @@ if sys.version_info[1] < 11:
 
 class CamelCaseNamespace(argparse.Namespace):
 	skip: int
-	fail_fast: bool
 	jobs: int
 	dry_run: bool
 	build_dir: str
@@ -96,7 +97,11 @@ def command_failed(args: list[str]) -> None:
 	print(f"{color.bold()}  {' '.join(args)}{color.end()}", file=sys.stderr)
 	print('', file=sys.stderr)
 
-def check_file(file_path: str, clang_tidy_bin: str, build_dir: str, dry_run: bool) -> bool:
+def check_file(file_path: str, current: int, total: int, skip: int, clang_tidy_bin: str, build_dir: str, dry_run: bool) -> bool:
+	if current < skip:
+		return True
+
+	print(f"[{current}/{total}] {color.green()}{file_path}{color.end()}")
 	clang_config: str = os.path.join(
 			os.path.dirname(os.path.realpath(__file__)),
 			'clang-tidy-camel-case.yml')
@@ -163,31 +168,22 @@ def generated_code_hack(build_dir: str) -> None:
 def main() -> int:
 	p = argparse.ArgumentParser(description="")
 	p.add_argument('--skip', help="", default=0, type=int)
-	p.add_argument('--fail-fast', help="", action='store_true', default=True) # TODO: default=False when done with testing
 	p.add_argument('-j', '--jobs', help="", default=1, type=int)
-	p.add_argument('-n', '--dry-run', action='store_true', help="Don't fix, only warn", default=False) # TODO: default=False when done with testing
+	p.add_argument('-n', '--dry-run', action='store_true', help="Don't fix, only warn", default=True) # TODO: default=False when done with testing
 	p.add_argument('build_dir', help="", default='build-camel', nargs='?', type=str)
 	args = p.parse_args(namespace=CamelCaseNamespace())
 
 	compile_ddnet(args.build_dir, args.jobs)
 	generated_code_hack(args.build_dir)
 
-	total: int = len(get_code_files())
-	current = 0
+	files: list[str] = get_code_files()
+	total: int = len(files)
 
-	for file in get_code_files():
-		current += 1
-		if current < args.skip:
-			continue
+	with multiprocessing.Pool(args.jobs) as pool:
+		check_file_prefilled = functools.partial(check_file, skip=args.skip, total=total, clang_tidy_bin='clang-tidy', build_dir=args.build_dir, dry_run=args.dry_run)
+		results = pool.starmap(check_file_prefilled, zip(files, range(len(files))))
 
-		print(f"[{current}/{total}] {color.green()}{file}{color.end()}")
-		if not check_file(file_path=file, clang_tidy_bin='clang-tidy', build_dir=args.build_dir, dry_run=args.dry_run):
-			error = True
-			if args.fail_fast:
-				sys.exit(1)
-
-	error = False
-	return int(error)
+	return all(results)
 
 if __name__ == "__main__":
 	sys.exit(main())
