@@ -95,6 +95,9 @@ int CMapBugs::Update(const char *pBug)
 
 void CMapBugs::Dump() const
 {
+	int foo = 2;
+	dbg_msg("foo", "foo=%d", foo);
+
 	CMapBugsInternal *pInternal = (CMapBugsInternal *)m_pData;
 	unsigned int Flags;
 	if(pInternal)
