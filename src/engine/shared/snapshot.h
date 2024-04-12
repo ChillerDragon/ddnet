@@ -169,6 +169,7 @@ public:
 
 	void Init(bool Sixup = false);
 	void Init7(const CSnapshot *pSnapshot);
+	bool m_Debug = false;
 
 	void *NewItem(int Type, int Id, int Size);
 

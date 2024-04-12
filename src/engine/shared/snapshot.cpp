@@ -126,10 +126,32 @@ void CSnapshot::DebugDump() const
 	{
 		const CSnapshotItem *pItem = GetItem(i);
 		int Size = GetItemSize(i);
-		dbg_msg("snapshot", "\ttype=%d id=%d", pItem->Type(), pItem->Id());
+		int Type = GetItemType(i);
+		dbg_msg("snapshot", "\ttype=%d id=%d ddtype=%d", pItem->Type(), pItem->Id(), Type);
 		for(size_t b = 0; b < Size / sizeof(int32_t); b++)
 			dbg_msg("snapshot", "\t\t%3d %12d\t%08x", (int)b, pItem->Data()[b], pItem->Data()[b]);
+
+		if(Type > OFFSET_UUID)
+		{
+			const char *pName = g_UuidManager.GetName(Type);
+			dbg_msg("snapshot", "item name=%s", pName);
+		}
 	}
+
+	// g_UuidManager.DebugDump();
+
+
+#ifdef CONF_ARCH_ENDIAN_LITTLE
+	// match endianness of the %08x item data print
+	unsigned char aEndian[CSnapshot::MAX_SIZE];
+	mem_copy(aEndian, DataStart(), m_DataSize);
+	swap_endian(aEndian, sizeof(int32_t), sizeof(aEndian) / sizeof(int32_t));
+
+	char aHex[2048];
+	str_hex(aHex, sizeof(aHex), aEndian, m_DataSize);
+
+	dbg_msg("snapshot", "\t\tdata=%s", aHex);
+#endif
 }
 
 bool CSnapshot::IsValid(size_t ActualSize) const
@@ -677,6 +699,15 @@ void *CSnapshotBuilder::NewItem(int Type, int Id, int Size)
 	}
 
 	CSnapshotItem *pObj = (CSnapshotItem *)(m_aData + m_DataSize);
+
+	// TODO: understand this code
+	//	 on demo rec do we need to be in sixup mode or not?
+	//	 could this mess up sound world?
+
+	if(m_Debug && !Extended)
+	{
+		dbg_msg("builder", "type=%d m_Sixup=%d", Type, m_Sixup);
+	}
 
 	if(m_Sixup && !Extended)
 	{

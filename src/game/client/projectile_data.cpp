@@ -2,6 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include "projectile_data.h"
+#include "base/system.h"
+#include "game/generated/protocol7.h"
 
 #include <engine/shared/snapshot.h>
 #include <game/client/prediction/gameworld.h>
@@ -109,9 +111,13 @@ void SnapshotRemoveExtraProjectileInfo(CSnapshot *pSnap)
 	for(int Index = 0; Index < pSnap->NumItems(); Index++)
 	{
 		const CSnapshotItem *pItem = pSnap->GetItem(Index);
-		if(pItem->Type() == NETOBJTYPE_PROJECTILE)
+		if(pItem->Type() == NETOBJTYPE_PROJECTILE || pItem->Type() == protocol7::NETOBJTYPE_PROJECTILE)
 		{
 			CNetObj_Projectile *pProj = (CNetObj_Projectile *)((void *)pItem->Data());
+
+			dbg_msg("proj", "got projectile x=%d y=%d", pProj->m_X, pProj->m_Y);
+			dbg_msg("proj", "extra=%d", UseProjectileExtraInfo(pProj));
+
 			if(UseProjectileExtraInfo(pProj))
 			{
 				CProjectileData Data = ExtractProjectileInfo(NETOBJTYPE_PROJECTILE, pProj, nullptr, nullptr);

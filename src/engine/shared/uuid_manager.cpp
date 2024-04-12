@@ -185,10 +185,12 @@ void CUuidManager::PackUuid(int Id, CPacker *pPacker) const
 
 void CUuidManager::DebugDump() const
 {
+	int Index = 0;
 	for(const auto &Name : m_vNames)
 	{
 		char aBuf[UUID_MAXSTRSIZE];
 		FormatUuid(Name.m_Uuid, aBuf, sizeof(aBuf));
-		dbg_msg("uuid", "%s %s", aBuf, Name.m_pName);
+		dbg_msg("uuid", "%s %s index=%d id=%d", aBuf, Name.m_pName, Index, GetId(Index));
+		Index++;
 	}
 }
