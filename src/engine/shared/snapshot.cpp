@@ -2,8 +2,11 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "snapshot.h"
 #include "compression.h"
+#include "engine/shared/network.h"
+#include "game/generated/protocol.h"
 #include "uuid_manager.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <limits>
 
@@ -119,14 +122,43 @@ unsigned CSnapshot::Crc() const
 	return Crc;
 }
 
-bool CSnapshot::CheckSnapOk()
+bool CSnapshot::CheckSnapOk() const
 {
 	// TODO: check if soundworld has a valid sound id on the current snap
 	//	 and then call this method on all buffers and see where it becomes invalid
 	//	 call it during networking
 	//	 and before write to demo file
 	//	 and on load of demo file
+	
+	for(int i = 0; i < m_NumItems; i++)
+	{
+		const CSnapshotItem *pItem = GetItem(i);
+		if(pItem->Type() != protocol7::NETEVENTTYPE_SOUNDWORLD)
+			continue;
+	
+		CNetEvent_SoundWorld *pSound = (CNetEvent_SoundWorld *)pItem->Data();
+
+
+		dbg_msg("dbg", "sound %d", pSound->m_SoundId);
+
+		if(pSound->m_SoundId > protocol7::NUM_SOUNDS)
+		{
+			return false;
+		}
+	}
+
 	return true;
+}
+
+void CSnapshot::OkOrDump(const char *pComment) const
+{
+	if(CheckSnapOk())
+		return;
+
+	DebugDump();
+
+	if(pComment)
+		dbg_msg("snapshot", "snap not ok comment=%s", pComment);
 }
 
 void CSnapshot::DebugDump() const

@@ -63,7 +63,8 @@ public:
 
 	unsigned Crc() const;
 	void DebugDump() const;
-	bool CheckSnapOk();
+	bool CheckSnapOk() const;
+	void OkOrDump(const char *pComment = 0) const;
 	bool IsValid(size_t ActualSize) const;
 
 	static const CSnapshot *EmptySnapshot() { return &ms_EmptySnapshot; }
