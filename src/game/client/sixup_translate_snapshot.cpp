@@ -69,11 +69,11 @@ int CGameClient::TranslateSnap(CSnapshot *pSnapSix, CSnapshot *pSnapSeven, int C
 					GetNetObjHandler7()->GetObjName(pItem7->Type()),
 					Size,
 					pItem7->Id());
-			}
-			pSnapSix->InvalidateItem(i);
+				pSnapSix->InvalidateItem(i);
 
-			pSnapSeven->DebugDump();
-			exit(69);
+				pSnapSeven->DebugDump();
+				exit(69);
+			}
 		}
 
 		if(pItem7->Type() == protocol7::NETOBJTYPE_PLAYERINFORACE)

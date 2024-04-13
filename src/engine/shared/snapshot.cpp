@@ -159,6 +159,8 @@ void CSnapshot::OkOrDump(const char *pComment) const
 
 	if(pComment)
 		dbg_msg("snapshot", "snap not ok comment=%s", pComment);
+
+	exit(66);
 }
 
 void CSnapshot::DebugDump() const
@@ -182,6 +184,8 @@ void CSnapshot::DebugDump() const
 
 
 #ifdef CONF_ARCH_ENDIAN_LITTLE
+	dbg_msg("snapshot", "datasize=%d datastarz=%p", m_DataSize, DataStart());
+
 	// match endianness of the %08x item data print
 	unsigned char aEndian[CSnapshot::MAX_SIZE];
 	mem_copy(aEndian, DataStart(), m_DataSize);
@@ -285,6 +289,8 @@ int CSnapshotDelta::DiffItem(const int *pPast, const int *pCurrent, int *pOut, i
 	return Needed;
 }
 
+// Size is number of intenegers
+// so 4 bytes
 void CSnapshotDelta::UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, int *pDataRate)
 {
 	while(Size)
@@ -456,6 +462,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		{
 			if(pDeleted[d] == pFromItem->Key())
 			{
+				dbg_msg("unpackdelata", "deleted item type=%d", pFromItem->Type());
 				Keep = false;
 				break;
 			}
@@ -463,6 +470,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 		if(Keep)
 		{
+			dbg_msg("unpackdelata", "keep item type=%d", pFromItem->Type());
 			void *pObj = Builder.NewItem(pFromItem->Type(), pFromItem->Id(), ItemSize);
 			if(!pObj)
 				return -301;
@@ -515,6 +523,14 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		const int FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
+			dbg_msg("unpackdelata", "updated diff item type=%d size_in_bytes=%d", Type, ItemSize);
+			char aHex[1024];
+			str_hex(aHex, sizeof(aHex), pData, ItemSize);
+			dbg_msg("unpackdelta", " old data %s", aHex);
+			str_hex(aHex, sizeof(aHex), pNewData, ItemSize);
+			dbg_msg("unpackdelta", " new data %s", aHex);
+
+
 			// we got an update so we need to apply the diff
 			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize / sizeof(int32_t), &m_aSnapshotDataRate[Type]);
 		}
@@ -744,10 +760,10 @@ void *CSnapshotBuilder::NewItem(int Type, int Id, int Size)
 	//	 on demo rec do we need to be in sixup mode or not?
 	//	 could this mess up sound world?
 
-	if(m_Debug && !Extended)
-	{
-		dbg_msg("builder", "type=%d m_Sixup=%d", Type, m_Sixup);
-	}
+	// if(m_Debug && !Extended)
+	// {
+	// 	dbg_msg("builder", "type=%d m_Sixup=%d", Type, m_Sixup);
+	// }
 
 	if(m_Sixup && !Extended)
 	{
