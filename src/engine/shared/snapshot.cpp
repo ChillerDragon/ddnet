@@ -119,6 +119,16 @@ unsigned CSnapshot::Crc() const
 	return Crc;
 }
 
+bool CSnapshot::CheckSnapOk()
+{
+	// TODO: check if soundworld has a valid sound id on the current snap
+	//	 and then call this method on all buffers and see where it becomes invalid
+	//	 call it during networking
+	//	 and before write to demo file
+	//	 and on load of demo file
+	return true;
+}
+
 void CSnapshot::DebugDump() const
 {
 	dbg_msg("snapshot", "data_size=%d num_items=%d", m_DataSize, m_NumItems);
@@ -127,15 +137,13 @@ void CSnapshot::DebugDump() const
 		const CSnapshotItem *pItem = GetItem(i);
 		int Size = GetItemSize(i);
 		int Type = GetItemType(i);
-		dbg_msg("snapshot", "\ttype=%d id=%d ddtype=%d", pItem->Type(), pItem->Id(), Type);
+		const char *pName = "";
+		if(Type > OFFSET_UUID)
+			pName = g_UuidManager.GetName(Type);
+		dbg_msg("snapshot", "\t%s type=%d id=%d ddtype=%d size=%d", pName, pItem->Type(), pItem->Id(), Type, Size);
 		for(size_t b = 0; b < Size / sizeof(int32_t); b++)
 			dbg_msg("snapshot", "\t\t%3d %12d\t%08x", (int)b, pItem->Data()[b], pItem->Data()[b]);
 
-		if(Type > OFFSET_UUID)
-		{
-			const char *pName = g_UuidManager.GetName(Type);
-			dbg_msg("snapshot", "item name=%s", pName);
-		}
 	}
 
 	// g_UuidManager.DebugDump();
