@@ -71,6 +71,9 @@ int CGameClient::TranslateSnap(CSnapshot *pSnapDstSix, CSnapshot *pSnapSrcSeven,
 					pItem7->Id());
 			}
 			pSnapSrcSeven->InvalidateItem(i);
+
+			pSnapSrcSeven->DebugDump();
+			exit(69);
 		}
 
 		if(pItem7->Type() == protocol7::NETOBJTYPE_PLAYERINFORACE)
@@ -513,6 +516,7 @@ int CGameClient::OnDemoRecSnap7(CSnapshot *pFrom, CSnapshot *pTo)
 	const int Conn = IClient::CONN_MAIN;
 
 	CSnapshotBuilder Builder;
+	Builder.m_Debug = true;
 	Builder.Init7(pFrom);
 
 	// add client info

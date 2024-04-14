@@ -63,6 +63,8 @@ public:
 
 	unsigned Crc() const;
 	void DebugDump() const;
+	bool CheckSnapOk() const;
+	void OkOrDump(const char *pComment = 0) const;
 	bool IsValid(size_t ActualSize) const;
 
 	static const CSnapshot *EmptySnapshot() { return &ms_EmptySnapshot; }
@@ -169,6 +171,7 @@ public:
 
 	void Init(bool Sixup = false);
 	void Init7(const CSnapshot *pSnapshot);
+	bool m_Debug = false;
 
 	void *NewItem(int Type, int Id, int Size);
 

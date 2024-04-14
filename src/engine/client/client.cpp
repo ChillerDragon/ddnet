@@ -1982,6 +1982,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 						return;
 					}
 
+					pTmpBuffer3->OkOrDump();
+
 					// add new
 					m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, AltSnapSize, pAltSnapBuffer);
 
@@ -2010,6 +2012,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 							{
 								// write snapshot
 								DemoRecorder.RecordSnapshot(GameTick, IsSixup() ? pSnapSeven : pTmpBuffer3, DemoSnapSize);
+
+								if(IsSixup())
+									pSnapSeven->OkOrDump();
 							}
 						}
 					}
@@ -2493,10 +2498,16 @@ void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 	m_aCurGameTick[g_Config.m_ClDummy] = pInfo->m_Info.m_CurrentTick;
 	m_aPrevGameTick[g_Config.m_ClDummy] = pInfo->m_PreviousTick;
 
+
+	CSnapshot *pCrackshot = (CSnapshot *)pData;
+	pCrackshot->OkOrDump("p1");
+
 	// create a verified and unpacked snapshot
 	unsigned char aAltSnapBuffer[CSnapshot::MAX_SIZE];
 	CSnapshot *pAltSnapBuffer = (CSnapshot *)aAltSnapBuffer;
 	int AltSnapSize;
+
+	pAltSnapBuffer->OkOrDump("p2");
 
 	unsigned char aTmpTranslateBuffer[CSnapshot::MAX_SIZE];
 	CSnapshot *pTmpTranslateBuffer = nullptr;
@@ -2510,6 +2521,8 @@ void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 			pTmpTranslateBuffer = nullptr;
 			AltSnapSize = 0;
 		}
+		else
+			pTmpTranslateBuffer->OkOrDump("play trans");
 	}
 	else
 	{

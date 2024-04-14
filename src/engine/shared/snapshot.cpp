@@ -2,8 +2,11 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "snapshot.h"
 #include "compression.h"
+#include "engine/shared/network.h"
+#include "game/generated/protocol.h"
 #include "uuid_manager.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <limits>
 
@@ -119,6 +122,47 @@ unsigned CSnapshot::Crc() const
 	return Crc;
 }
 
+bool CSnapshot::CheckSnapOk() const
+{
+	// TODO: check if soundworld has a valid sound id on the current snap
+	//	 and then call this method on all buffers and see where it becomes invalid
+	//	 call it during networking
+	//	 and before write to demo file
+	//	 and on load of demo file
+	
+	for(int i = 0; i < m_NumItems; i++)
+	{
+		const CSnapshotItem *pItem = GetItem(i);
+		if(pItem->Type() != protocol7::NETEVENTTYPE_SOUNDWORLD)
+			continue;
+	
+		CNetEvent_SoundWorld *pSound = (CNetEvent_SoundWorld *)pItem->Data();
+
+
+		dbg_msg("dbg", "sound %d", pSound->m_SoundId);
+
+		if(pSound->m_SoundId > protocol7::NUM_SOUNDS)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void CSnapshot::OkOrDump(const char *pComment) const
+{
+	if(CheckSnapOk())
+		return;
+
+	DebugDump();
+
+	if(pComment)
+		dbg_msg("snapshot", "snap not ok comment=%s", pComment);
+
+	exit(66);
+}
+
 void CSnapshot::DebugDump() const
 {
 	dbg_msg("snapshot", "data_size=%d num_items=%d", m_DataSize, m_NumItems);
@@ -126,10 +170,32 @@ void CSnapshot::DebugDump() const
 	{
 		const CSnapshotItem *pItem = GetItem(i);
 		int Size = GetItemSize(i);
-		dbg_msg("snapshot", "\ttype=%d id=%d", pItem->Type(), pItem->Id());
+		int Type = GetItemType(i);
+		const char *pName = "";
+		if(Type > OFFSET_UUID)
+			pName = g_UuidManager.GetName(Type);
+		dbg_msg("snapshot", "\tindex=%d %s type=%d id=%d ddtype=%d size=%d", i, pName, pItem->Type(), pItem->Id(), Type, Size);
 		for(size_t b = 0; b < Size / sizeof(int32_t); b++)
 			dbg_msg("snapshot", "\t\t%3d %12d\t%08x", (int)b, pItem->Data()[b], pItem->Data()[b]);
+
 	}
+
+	// g_UuidManager.DebugDump();
+
+
+#ifdef CONF_ARCH_ENDIAN_LITTLE
+	dbg_msg("snapshot", "datasize=%d datastarz=%p", m_DataSize, DataStart());
+
+	// match endianness of the %08x item data print
+	unsigned char aEndian[CSnapshot::MAX_SIZE];
+	mem_copy(aEndian, DataStart(), m_DataSize);
+	swap_endian(aEndian, sizeof(int32_t), sizeof(aEndian) / sizeof(int32_t));
+
+	char aHex[2048];
+	str_hex(aHex, sizeof(aHex), aEndian, m_DataSize);
+
+	dbg_msg("snapshot", "\t\tdata=%s", aHex);
+#endif
 }
 
 bool CSnapshot::IsValid(size_t ActualSize) const
@@ -223,6 +289,8 @@ int CSnapshotDelta::DiffItem(const int *pPast, const int *pCurrent, int *pOut, i
 	return Needed;
 }
 
+// Size is number of intenegers
+// so 4 bytes
 void CSnapshotDelta::UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, int *pDataRate)
 {
 	while(Size)
@@ -394,6 +462,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		{
 			if(pDeleted[d] == pFromItem->Key())
 			{
+				dbg_msg("unpackdelata", "deleted item type=%d", pFromItem->Type());
 				Keep = false;
 				break;
 			}
@@ -401,6 +470,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 		if(Keep)
 		{
+			dbg_msg("unpackdelata", "keep item type=%d", pFromItem->Type());
 			void *pObj = Builder.NewItem(pFromItem->Type(), pFromItem->Id(), ItemSize);
 			if(!pObj)
 				return -301;
@@ -445,7 +515,10 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		// create the item if needed
 		int *pNewData = Builder.GetItemData(Key);
 		if(!pNewData)
+		{
 			pNewData = (int *)Builder.NewItem(Type, Id, ItemSize);
+			dbg_msg("unpackdelata", "create new item type=%d id=%d itemsize=%d", Type, Id, ItemSize);
+		}
 
 		if(!pNewData)
 			return -302;
@@ -453,6 +526,14 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		const int FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
+			dbg_msg("unpackdelata", "updated diff item type=%d size_in_bytes=%d", Type, ItemSize);
+			char aHex[1024];
+			str_hex(aHex, sizeof(aHex), pData, ItemSize);
+			dbg_msg("unpackdelta", " old data %s", aHex);
+			str_hex(aHex, sizeof(aHex), pNewData, ItemSize);
+			dbg_msg("unpackdelta", " new data %s", aHex);
+
+
 			// we got an update so we need to apply the diff
 			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize / sizeof(int32_t), &m_aSnapshotDataRate[Type]);
 		}
@@ -677,6 +758,15 @@ void *CSnapshotBuilder::NewItem(int Type, int Id, int Size)
 	}
 
 	CSnapshotItem *pObj = (CSnapshotItem *)(m_aData + m_DataSize);
+
+	// TODO: understand this code
+	//	 on demo rec do we need to be in sixup mode or not?
+	//	 could this mess up sound world?
+
+	// if(m_Debug && !Extended)
+	// {
+	// 	dbg_msg("builder", "type=%d m_Sixup=%d", Type, m_Sixup);
+	// }
 
 	if(m_Sixup && !Extended)
 	{
