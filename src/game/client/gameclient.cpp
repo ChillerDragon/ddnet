@@ -28,6 +28,7 @@
 #include <base/vmath.h>
 
 #include "gameclient.h"
+#include "engine/shared/uuid_manager.h"
 #include "lineinput.h"
 #include "race.h"
 #include "render.h"
@@ -389,6 +390,8 @@ void CGameClient::OnInit()
 		int Size = m_vpAll[i]->Sizeof();
 		pChecksum->m_aComponentsChecksum[i] = Size;
 	}
+
+	g_UuidManager.DebugDump();
 }
 
 void CGameClient::OnUpdate()

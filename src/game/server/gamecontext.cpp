@@ -4,6 +4,7 @@
 
 #include <vector>
 
+#include "engine/shared/uuid_manager.h"
 #include "teeinfo.h"
 #include <antibot/antibot_data.h>
 #include <base/logger.h>

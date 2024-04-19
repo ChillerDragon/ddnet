@@ -677,8 +677,24 @@ void CDemoPlayer::DoTick()
 		{
 			// process delta snapshot
 			CSnapshot *pNewsnap = (CSnapshot *)m_aDeltaSnapshotData;
-dbg_msg("fuckmesideways", "chicksup=%d", IsSixup());
+			dbg_msg("demo_play", "fuckmesideways sixup=%d delta:", IsSixup());
+			dbg_msg("demo_play", " ****************************************************************************************************");
+			dbg_msg("demo_play", " ** diff log");
 			DataSize = m_pSnapshotDelta->UnpackDelta((CSnapshot *)m_aLastSnapshotData, pNewsnap, m_aCurrentSnapshotData, DataSize, false);
+			CSnapshot *pOld = (CSnapshot *)m_aLastSnapshotData;
+			dbg_msg("demo_play", " ****************************************************************************************************");
+			dbg_msg("demo_play", " ** old");
+			pOld->DebugDump();
+			dbg_msg("demo_play", " ****************************************************************************************************");
+			dbg_msg("demo_play", " ** new");
+			pNewsnap->DebugDump();
+			dbg_msg("demo_play", " ****************************************************************************************************");
+			dbg_msg("demo_play", " ** current");
+			char aHex[2048];
+			str_hex(aHex, sizeof(aHex), m_aCurrentSnapshotData, DataSize);
+			dbg_msg("demo_play", "%s", aHex);
+
+
 
 			if(DataSize < 0)
 			{

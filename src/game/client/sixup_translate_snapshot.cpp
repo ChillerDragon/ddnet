@@ -69,11 +69,11 @@ int CGameClient::TranslateSnap(CSnapshot *pSnapDstSix, CSnapshot *pSnapSrcSeven,
 					GetNetObjHandler7()->GetObjName(pItem7->Type()),
 					Size,
 					pItem7->Id());
-			}
-			pSnapSrcSeven->InvalidateItem(i);
 
-			pSnapSrcSeven->DebugDump();
-			exit(69);
+				pSnapSrcSeven->InvalidateItem(i);
+				pSnapSrcSeven->DebugDump();
+				exit(69);
+			}
 		}
 
 		if(pItem7->Type() == protocol7::NETOBJTYPE_PLAYERINFORACE)
@@ -519,61 +519,61 @@ int CGameClient::OnDemoRecSnap7(CSnapshot *pFrom, CSnapshot *pTo)
 	Builder.m_Debug = true;
 	Builder.Init7(pFrom);
 
-	// add client info
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(!m_aClients[i].m_Active)
-			continue;
-
-		void *pItem = Builder.NewItem(protocol7::NETOBJTYPE_DE_CLIENTINFO, i, sizeof(protocol7::CNetObj_De_ClientInfo));
-		if(!pItem)
-			return -1;
-
-		CTranslationContext::CClientData &ClientData = Client()->m_TranslationContext.m_aClients[i];
-
-		protocol7::CNetObj_De_ClientInfo ClientInfoObj;
-		ClientInfoObj.m_Local = i == Client()->m_TranslationContext.m_aLocalClientId[Conn];
-		ClientInfoObj.m_Team = ClientData.m_Team;
-		StrToInts(ClientInfoObj.m_aName, 4, m_aClients[i].m_aName);
-		StrToInts(ClientInfoObj.m_aClan, 3, m_aClients[i].m_aClan);
-		ClientInfoObj.m_Country = ClientData.m_Country;
-
-		for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
-		{
-			StrToInts(ClientInfoObj.m_aaSkinPartNames[Part], 6, m_aClients[i].m_Sixup.m_aaSkinPartNames[Part]);
-			ClientInfoObj.m_aUseCustomColors[Part] = m_aClients[i].m_Sixup.m_aUseCustomColors[Part];
-			ClientInfoObj.m_aSkinPartColors[Part] = m_aClients[i].m_Sixup.m_aSkinPartColors[Part];
-		}
-
-		mem_copy(pItem, &ClientInfoObj, sizeof(protocol7::CNetObj_De_ClientInfo));
-	}
-
-	// TODO:
-	// // add tuning
-	// CTuningParams StandardTuning;
-	// if(mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
+	// // add client info
+	// for(int i = 0; i < MAX_CLIENTS; i++)
 	// {
-	// 	CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Client()->SnapNewItem(NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
-	// 	if(!pTuneParams)
-	// 		return -2;
+	// 	if(!m_aClients[i].m_Active)
+	// 		continue;
 
-	// 	mem_copy(pTuneParams->m_aTuneParams, &m_Tuning, sizeof(pTuneParams->m_aTuneParams));
+	// 	void *pItem = Builder.NewItem(protocol7::NETOBJTYPE_DE_CLIENTINFO, i, sizeof(protocol7::CNetObj_De_ClientInfo));
+	// 	if(!pItem)
+	// 		return -1;
+
+	// 	CTranslationContext::CClientData &ClientData = Client()->m_TranslationContext.m_aClients[i];
+
+	// 	protocol7::CNetObj_De_ClientInfo ClientInfoObj;
+	// 	ClientInfoObj.m_Local = i == Client()->m_TranslationContext.m_aLocalClientId[Conn];
+	// 	ClientInfoObj.m_Team = ClientData.m_Team;
+	// 	StrToInts(ClientInfoObj.m_aName, 4, m_aClients[i].m_aName);
+	// 	StrToInts(ClientInfoObj.m_aClan, 3, m_aClients[i].m_aClan);
+	// 	ClientInfoObj.m_Country = ClientData.m_Country;
+
+	// 	for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+	// 	{
+	// 		StrToInts(ClientInfoObj.m_aaSkinPartNames[Part], 6, m_aClients[i].m_Sixup.m_aaSkinPartNames[Part]);
+	// 		ClientInfoObj.m_aUseCustomColors[Part] = m_aClients[i].m_Sixup.m_aUseCustomColors[Part];
+	// 		ClientInfoObj.m_aSkinPartColors[Part] = m_aClients[i].m_Sixup.m_aSkinPartColors[Part];
+	// 	}
+
+	// 	mem_copy(pItem, &ClientInfoObj, sizeof(protocol7::CNetObj_De_ClientInfo));
 	// }
 
-	// add game info
-	void *pItem = Builder.NewItem(protocol7::NETOBJTYPE_DE_GAMEINFO, 0, sizeof(protocol7::CNetObj_De_GameInfo));
-	if(!pItem)
-		return -3;
+	// // TODO:
+	// // // add tuning
+	// // CTuningParams StandardTuning;
+	// // if(mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
+	// // {
+	// // 	CNetObj_De_TuneParams *pTuneParams = static_cast<CNetObj_De_TuneParams *>(Client()->SnapNewItem(NETOBJTYPE_DE_TUNEPARAMS, 0, sizeof(CNetObj_De_TuneParams)));
+	// // 	if(!pTuneParams)
+	// // 		return -2;
 
-	protocol7::CNetObj_De_GameInfo GameInfo;
+	// // 	mem_copy(pTuneParams->m_aTuneParams, &m_Tuning, sizeof(pTuneParams->m_aTuneParams));
+	// // }
 
-	GameInfo.m_GameFlags = Client()->m_TranslationContext.m_GameFlags;
-	GameInfo.m_ScoreLimit = Client()->m_TranslationContext.m_ScoreLimit;
-	GameInfo.m_TimeLimit = Client()->m_TranslationContext.m_TimeLimit;
-	GameInfo.m_MatchNum = Client()->m_TranslationContext.m_MatchNum;
-	GameInfo.m_MatchCurrent = Client()->m_TranslationContext.m_MatchCurrent;
+	// // add game info
+	// void *pItem = Builder.NewItem(protocol7::NETOBJTYPE_DE_GAMEINFO, 0, sizeof(protocol7::CNetObj_De_GameInfo));
+	// if(!pItem)
+	// 	return -3;
 
-	mem_copy(pItem, &GameInfo, sizeof(protocol7::CNetObj_De_GameInfo));
+	// protocol7::CNetObj_De_GameInfo GameInfo;
+
+	// GameInfo.m_GameFlags = Client()->m_TranslationContext.m_GameFlags;
+	// GameInfo.m_ScoreLimit = Client()->m_TranslationContext.m_ScoreLimit;
+	// GameInfo.m_TimeLimit = Client()->m_TranslationContext.m_TimeLimit;
+	// GameInfo.m_MatchNum = Client()->m_TranslationContext.m_MatchNum;
+	// GameInfo.m_MatchCurrent = Client()->m_TranslationContext.m_MatchCurrent;
+
+	// mem_copy(pItem, &GameInfo, sizeof(protocol7::CNetObj_De_GameInfo));
 
 	return Builder.Finish(pTo);
 }

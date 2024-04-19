@@ -414,6 +414,17 @@ int CSnapshotDelta::CreateDelta(const CSnapshot *pFrom, const CSnapshot *pTo, vo
 					*pData++ = ItemSize / sizeof(int32_t);
 				pData += ItemSize / sizeof(int32_t);
 				pDelta->m_NumUpdateItems++;
+
+				const char *pName = "unknown-item";
+				int Type = pFrom->GetItemType(i);
+				dbg_msg("createdelta", "updated item type=%d max=%d", Type, g_UuidManager.NumUuids());
+
+				if(Type > OFFSET_UUID && Type < g_UuidManager.NumUuids() + OFFSET_UUID)
+					pName = g_UuidManager.GetName(Type);
+
+				dbg_msg("createdelta", "updated item type=%d ex_type=%d %s", pCurItem->Type(), Type, pName);
+
+				dbg_msg("createdelta", "updated item type=%d", pCurItem->Type());
 			}
 		}
 		else
@@ -444,6 +455,10 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 	CSnapshotBuilder Builder;
 	Builder.Init();
 
+	dbg_msg("unpackdelta", "** pFrom->NumItems()=%d", pFrom->NumItems());
+	dbg_msg("unpackdelta", " pDelta->m_NumUpdateItems=%d", pDelta->m_NumUpdateItems);
+	dbg_msg("unpackdelta", " pDelta->m_NumDeletedItems=%d", pDelta->m_NumDeletedItems);
+
 	// unpack deleted stuff
 	int *pDeleted = pData;
 	if(pDelta->m_NumDeletedItems < 0)
@@ -462,7 +477,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		{
 			if(pDeleted[d] == pFromItem->Key())
 			{
-				dbg_msg("unpackdelata", "deleted item type=%d", pFromItem->Type());
+				dbg_msg("unpackdelta", "deleted item type=%d", pFromItem->Type());
 				Keep = false;
 				break;
 			}
@@ -470,7 +485,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 		if(Keep)
 		{
-			dbg_msg("unpackdelata", "keep item type=%d", pFromItem->Type());
+			dbg_msg("unpackdelta", "keep item type=%d", pFromItem->Type());
 			void *pObj = Builder.NewItem(pFromItem->Type(), pFromItem->Id(), ItemSize);
 			if(!pObj)
 				return -301;
@@ -517,7 +532,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		if(!pNewData)
 		{
 			pNewData = (int *)Builder.NewItem(Type, Id, ItemSize);
-			dbg_msg("unpackdelata", "create new item type=%d id=%d itemsize=%d", Type, Id, ItemSize);
+			dbg_msg("unpackdelta", "create new item type=%d id=%d itemsize=%d", Type, Id, ItemSize);
 		}
 
 		if(!pNewData)
@@ -526,7 +541,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		const int FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
-			dbg_msg("unpackdelata", "updated diff item type=%d size_in_bytes=%d", Type, ItemSize);
+			dbg_msg("unpackdelta", "updated diff item type=%d size_in_bytes=%d", Type, ItemSize);
 			char aHex[1024];
 			str_hex(aHex, sizeof(aHex), pData, ItemSize);
 			dbg_msg("unpackdelta", " old data %s", aHex);

@@ -2014,7 +2014,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 								DemoRecorder.RecordSnapshot(GameTick, IsSixup() ? pSnapSeven : pTmpBuffer3, DemoSnapSize);
 
 								if(IsSixup())
+								{
+									dbg_msg("sixup", "rec demo snap with num_items=%d", pSnapSeven->NumItems());
 									pSnapSeven->OkOrDump();
+								}
 							}
 						}
 					}
@@ -2507,7 +2510,7 @@ void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 	CSnapshot *pAltSnapBuffer = (CSnapshot *)aAltSnapBuffer;
 	int AltSnapSize;
 
-	pAltSnapBuffer->OkOrDump("p2");
+	dbg_msg("demo", "playback snap with num_items=%d", pCrackshot->NumItems());
 
 	unsigned char aTmpTranslateBuffer[CSnapshot::MAX_SIZE];
 	CSnapshot *pTmpTranslateBuffer = nullptr;
