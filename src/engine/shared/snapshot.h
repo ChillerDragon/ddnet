@@ -27,6 +27,16 @@ public:
 	void Invalidate() { m_TypeAndId = -1; }
 };
 
+// TypeAndId
+// 00 01 00 00
+// tt tt ii ii
+// tt tt
+// 
+//
+// 00 01
+//
+// 00 00 00 01
+
 class CSnapshot
 {
 	friend class CSnapshotBuilder;

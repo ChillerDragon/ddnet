@@ -528,6 +528,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 			if(*pData < 0 || (size_t)*pData > std::numeric_limits<int32_t>::max() / sizeof(int32_t))
 				return -204;
 			ItemSize = (*pData++) * sizeof(int32_t);
+			dbg_msg("unpackdelta", "item type=%d is not known red size=%d", Type, ItemSize);
 		}
 
 		if(ItemSize < 0 || (const char *)pEnd - (const char *)pData < ItemSize)
@@ -728,6 +729,14 @@ int CSnapshotBuilder::GetTypeFromIndex(int Index) const
 {
 	return CSnapshot::MAX_TYPE - Index;
 }
+
+// 1 playerinput
+// 2 projecttile
+// 3 laser
+// ...
+//
+// 32766 might be ddnet ex projectile ..
+// 32767 might be gameinfo ex
 
 void CSnapshotBuilder::AddExtendedItemType(int Index)
 {
