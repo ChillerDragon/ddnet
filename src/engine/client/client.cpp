@@ -1912,6 +1912,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 						DeltaSize = IntSize;
 					}
 
+
+					m_SnapshotDelta.DebugDumpDelta(pDeltaData, DeltaSize, IsSixup());
+
 					// unpack delta
 					const int SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize, IsSixup());
 					if(SnapSize < 0)

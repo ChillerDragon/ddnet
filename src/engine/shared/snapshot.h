@@ -123,6 +123,7 @@ public:
 	int UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const void *pSrcData, int DataSize, bool Sixup);
 
 
+	int DebugDumpDelta(const void *pSrcData, int DataSize, bool Sixup);
 };
 
 // CSnapshotStorage
