@@ -296,7 +296,7 @@ void CDemoRecorder::Write(int Type, const void *pData, int Size)
 	io_write(m_File, aBuffer2, Size);
 }
 
-void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size)
+void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size, bool Sixup)
 {
 	if(m_LastKeyFrame == -1 || (Tick - m_LastKeyFrame) > SERVER_TICK_SPEED * 5)
 	{
@@ -325,10 +325,11 @@ void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size)
 			Write(CHUNKTYPE_DELTA, aDeltaData, DeltaSize);
 			mem_copy(m_aLastSnapshotData, pData, Size);
 
+			dbg_msg("demo_recorder", "::: delta:");
+			m_pSnapshotDelta->DebugDumpDelta(aDeltaData, DeltaSize, Sixup);
+
 			dbg_msg("demo_recorder", "::: m_aLastSnapshotData:");
 			((CSnapshot *)m_aLastSnapshotData)->DebugDump();
-
-			// TODO: debug dump delta
 		}
 		else
 		{
@@ -1224,14 +1225,14 @@ public:
 	int m_StartTick;
 	int m_EndTick;
 
-	void OnDemoPlayerSnapshot(void *pData, int Size) override
+	void OnDemoPlayerSnapshot(void *pData, int Size, bool Sixup) override
 	{
 		const CDemoPlayer::CPlaybackInfo *pInfo = m_pDemoPlayer->Info();
 
 		if(m_EndTick != -1 && pInfo->m_Info.m_CurrentTick > m_EndTick)
 			m_Stop = true;
 		else if(m_StartTick == -1 || pInfo->m_Info.m_CurrentTick >= m_StartTick)
-			m_pDemoRecorder->RecordSnapshot(pInfo->m_Info.m_CurrentTick, pData, Size);
+			m_pDemoRecorder->RecordSnapshot(pInfo->m_Info.m_CurrentTick, pData, Size, Sixup);
 	}
 
 	void OnDemoPlayerMessage(void *pData, int Size) override

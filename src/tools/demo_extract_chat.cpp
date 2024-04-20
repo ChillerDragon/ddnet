@@ -110,7 +110,7 @@ public:
 		}
 	}
 
-	void OnDemoPlayerSnapshot(void *pData, int Size)
+	void OnDemoPlayerSnapshot(void *pData, int Size, bool Sixup)
 	{
 		unsigned char aAltSnapBuffer[CSnapshot::MAX_SIZE];
 		CSnapshot *pAltSnapBuffer = (CSnapshot *)aAltSnapBuffer;
@@ -132,9 +132,9 @@ public:
 	CDemoPlayer *m_pDemoPlayer;
 	CClientSnapshotHandler *m_pClientSnapshotHandler;
 
-	void OnDemoPlayerSnapshot(void *pData, int Size) override
+	void OnDemoPlayerSnapshot(void *pData, int Size, bool Sixup) override
 	{
-		m_pClientSnapshotHandler->OnDemoPlayerSnapshot(pData, Size);
+		m_pClientSnapshotHandler->OnDemoPlayerSnapshot(pData, Size, Sixup);
 	}
 
 	void OnDemoPlayerMessage(void *pData, int Size) override

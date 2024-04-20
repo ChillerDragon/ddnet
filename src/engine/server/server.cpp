@@ -892,9 +892,9 @@ void CServer::DoSnapshot()
 
 		// write snapshot
 		if(m_aDemoRecorder[RECORDER_MANUAL].IsRecording())
-			m_aDemoRecorder[RECORDER_MANUAL].RecordSnapshot(Tick(), aData, SnapshotSize);
+			m_aDemoRecorder[RECORDER_MANUAL].RecordSnapshot(Tick(), aData, SnapshotSize, false);
 		if(m_aDemoRecorder[RECORDER_AUTO].IsRecording())
-			m_aDemoRecorder[RECORDER_AUTO].RecordSnapshot(Tick(), aData, SnapshotSize);
+			m_aDemoRecorder[RECORDER_AUTO].RecordSnapshot(Tick(), aData, SnapshotSize, false);
 	}
 
 	// create snapshots for all clients
@@ -925,7 +925,7 @@ void CServer::DoSnapshot()
 			if(m_aDemoRecorder[i].IsRecording())
 			{
 				// write snapshot
-				m_aDemoRecorder[i].RecordSnapshot(Tick(), aData, SnapshotSize);
+				m_aDemoRecorder[i].RecordSnapshot(Tick(), aData, SnapshotSize, m_aClients[i].m_Sixup);
 			}
 
 			int Crc = pData->Crc();

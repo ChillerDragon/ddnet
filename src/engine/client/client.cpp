@@ -2014,7 +2014,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 							if(DemoRecorder.IsRecording())
 							{
 								// write snapshot
-								DemoRecorder.RecordSnapshot(GameTick, IsSixup() ? pSnapSeven : pTmpBuffer3, DemoSnapSize);
+								DemoRecorder.RecordSnapshot(GameTick, IsSixup() ? pSnapSeven : pTmpBuffer3, DemoSnapSize, IsSixup());
 
 								if(IsSixup())
 								{
@@ -2497,7 +2497,7 @@ void CClient::PumpNetwork()
 	}
 }
 
-void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
+void CClient::OnDemoPlayerSnapshot(void *pData, int Size, bool Sixup)
 {
 	// update ticks, they could have changed
 	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();

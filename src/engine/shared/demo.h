@@ -51,7 +51,7 @@ public:
 	void AddDemoMarker();
 	void AddDemoMarker(int Tick);
 
-	void RecordSnapshot(int Tick, const void *pData, int Size);
+	void RecordSnapshot(int Tick, const void *pData, int Size, bool Sixup);
 	void RecordMessage(const void *pData, int Size);
 
 	bool IsRecording() const override { return m_File != nullptr; }
@@ -67,7 +67,7 @@ public:
 	{
 	public:
 		virtual ~IListener() {}
-		virtual void OnDemoPlayerSnapshot(void *pData, int Size) = 0;
+		virtual void OnDemoPlayerSnapshot(void *pData, int Size, bool Sixup = false) = 0;
 		virtual void OnDemoPlayerMessage(void *pData, int Size) = 0;
 	};
 

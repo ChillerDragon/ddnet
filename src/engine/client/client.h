@@ -372,7 +372,7 @@ public:
 
 	void PumpNetwork();
 
-	void OnDemoPlayerSnapshot(void *pData, int Size) override;
+	void OnDemoPlayerSnapshot(void *pData, int Size, bool Sixup) override;
 	void OnDemoPlayerMessage(void *pData, int Size) override;
 
 	void Update();
