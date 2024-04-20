@@ -82,6 +82,9 @@ public:
 		int m_NumUpdateItems;
 		int m_NumTempItems; // needed?
 		int m_aData[1];
+
+		// [type_id | id | payload]..
+		// int m_TypeAndId 4 bytes 
 	};
 
 private:
@@ -108,6 +111,8 @@ public:
 	const CData *EmptyDelta() const;
 	int CreateDelta(const CSnapshot *pFrom, const CSnapshot *pTo, void *pDstData);
 	int UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const void *pSrcData, int DataSize, bool Sixup);
+
+
 };
 
 // CSnapshotStorage

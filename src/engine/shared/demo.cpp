@@ -316,12 +316,23 @@ void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size)
 
 		// create delta
 		char aDeltaData[CSnapshot::MAX_SIZE + sizeof(int)];
+		dbg_msg("demo_recorder", "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
+		dbg_msg("demo_recorder", "::: creating delta for the demo file ...");
 		const int DeltaSize = m_pSnapshotDelta->CreateDelta((CSnapshot *)m_aLastSnapshotData, (CSnapshot *)pData, &aDeltaData);
 		if(DeltaSize)
 		{
 			// record delta
 			Write(CHUNKTYPE_DELTA, aDeltaData, DeltaSize);
 			mem_copy(m_aLastSnapshotData, pData, Size);
+
+			dbg_msg("demo_recorder", "::: m_aLastSnapshotData:");
+			((CSnapshot *)m_aLastSnapshotData)->DebugDump();
+
+			// TODO: debug dump delta
+		}
+		else
+		{
+			dbg_msg("demo_recorder", "::: no delta created");
 		}
 	}
 }

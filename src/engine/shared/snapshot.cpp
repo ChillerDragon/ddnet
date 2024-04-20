@@ -32,6 +32,14 @@ int CSnapshot::GetItemSize(int Index) const
 	return (Offsets()[Index + 1] - Offsets()[Index]) - sizeof(CSnapshotItem);
 }
 
+// snapshot:
+//     [ 4] data_size
+//     [ 4] num_items
+//     [*4] item_offsets
+//     [  ] items
+
+// 
+
 int CSnapshot::GetItemType(int Index) const
 {
 	int InternalType = GetItem(Index)->Type();
