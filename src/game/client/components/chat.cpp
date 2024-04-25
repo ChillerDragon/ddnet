@@ -9,6 +9,7 @@
 #include <engine/textrender.h>
 
 #include <game/generated/protocol.h>
+#include <game/generated/protocol7.h>
 
 #include <game/client/animstate.h>
 #include <game/client/components/scoreboard.h>
@@ -851,6 +852,46 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 
 					pCurrentLine->m_RenderSkinMetrics = LineAuthor.m_RenderInfo.m_SkinMetrics;
 					pCurrentLine->m_HasRenderTee = true;
+
+					// 0.7
+					if(Client()->IsSixup())
+					{
+						for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+						{
+							const char *pPartName = LineAuthor.m_Sixup.m_aaSkinPartNames[Part];
+							pCurrentLine->m_Sixup.m_aUseCustomColors[Part] = LineAuthor.m_Sixup.m_aUseCustomColors[Part];
+							pCurrentLine->m_Sixup.m_aSkinPartColors[Part] = LineAuthor.m_Sixup.m_aSkinPartColors[Part];
+							str_utf8_copy_num(
+								pCurrentLine->m_Sixup.m_aaSkinPartNames[Part],
+								pPartName,
+								sizeof(pCurrentLine->m_Sixup.m_aaSkinPartNames[Part]),
+								MAX_SKIN_LENGTH);
+
+							int Id = m_pClient->m_Skins7.FindSkinPart(Part, pPartName, false);
+							const CSkins7::CSkinPart *pSkinPart = m_pClient->m_Skins7.GetSkinPart(Part, Id);
+							if(pCurrentLine->m_Sixup.m_aUseCustomColors[Part])
+							{
+								pCurrentLine->m_Sixup.m_aTextures[Part] = pSkinPart->m_ColorTexture;
+								pCurrentLine->m_Sixup.m_aColors[Part] = m_pClient->m_Skins7.GetColorV4(
+									pCurrentLine->m_Sixup.m_aSkinPartColors[Part],
+									Part == protocol7::SKINPART_MARKING);
+							}
+							else
+							{
+								pCurrentLine->m_Sixup.m_aTextures[Part] = pSkinPart->m_OrgTexture;
+								pCurrentLine->m_Sixup.m_aColors[Part] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+							}
+
+							if(LineAuthor.m_SkinInfo.m_Sixup.m_HatTexture.IsValid())
+							{
+								if(Part == protocol7::SKINPART_BODY && str_comp(pPartName, "standard"))
+									pCurrentLine->m_Sixup.m_HatSpriteIndex = CSkins7::HAT_OFFSET_SIDE + (ClientId % CSkins7::HAT_NUM);
+								if(Part == protocol7::SKINPART_DECORATION && str_comp(pPartName, "twinbopp"))
+									pCurrentLine->m_Sixup.m_HatSpriteIndex = CSkins7::HAT_OFFSET_SIDE + (ClientId % CSkins7::HAT_NUM);
+								pCurrentLine->m_Sixup.m_HatTexture = LineAuthor.m_SkinInfo.m_Sixup.m_HatTexture;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -1305,6 +1346,14 @@ void CChat::OnRender()
 				RenderInfo.m_ColorBody = Line.m_ColorBody;
 				RenderInfo.m_ColorFeet = Line.m_ColorFeet;
 				RenderInfo.m_Size = TeeSize;
+
+				for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+				{
+					RenderInfo.m_Sixup.m_aColors[Part] = Line.m_Sixup.m_aColors[Part];
+					RenderInfo.m_Sixup.m_aTextures[Part] = Line.m_Sixup.m_aTextures[Part];
+					RenderInfo.m_Sixup.m_HatSpriteIndex = Line.m_Sixup.m_HatSpriteIndex;
+					RenderInfo.m_Sixup.m_HatTexture = Line.m_Sixup.m_HatTexture;
+				}
 
 				float RowHeight = FontSize() + RealMsgPaddingY;
 				float OffsetTeeY = TeeSize / 2.0f;
