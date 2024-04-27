@@ -1225,10 +1225,11 @@ void CGameClient::ProcessEvents(bool HasSound)
 	}
 
 
-	if(HasSound)
-	{
-		dbg_break();
-	}
+	// if(HasSound)
+	// {
+	// 	dbg_msg("gameclient", "got sound");
+	// 	dbg_break();
+	// }
 }
 
 static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, CServerInfo *pFallbackServerInfo)

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <engine/shared/protocolglue.h>
 #include <engine/shared/snapshot.h>
 #include <engine/shared/translation_context.h>
@@ -60,8 +61,24 @@ int CGameClient::TranslateSnap(CSnapshot *pSnapDstSix, CSnapshot *pSnapSrcSeven,
 					Size,
 					pItem7->Id());
 			}
-			pSnapSrcSeven->InvalidateItem(i);
+
+			pSnapSrcSeven->DebugDump();
+
+
+
+				dbg_msg(
+					"sixup",
+					"invalidated index=%d type=%d (%s) size=%d id=%d",
+					i,
+					pItem7->Type(),
+					GetNetObjHandler7()->GetObjName(pItem7->Type()),
+					Size,
+					pItem7->Id());
 			exit(82);
+
+
+
+			pSnapSrcSeven->InvalidateItem(i);
 		}
 
 		if(pItem7->Type() == protocol7::NETOBJTYPE_PLAYERINFORACE)

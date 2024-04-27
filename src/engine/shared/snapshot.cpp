@@ -684,7 +684,6 @@ void CSnapshotStorage::Add(int Tick, int64_t Tagtime, size_t DataSize, const voi
 	{
 		pHolder->m_pAltSnap = nullptr;
 		pHolder->m_AltSnapSize = 0;
-		exit(72);
 	}
 
 	// link

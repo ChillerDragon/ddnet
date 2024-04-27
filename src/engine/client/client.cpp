@@ -2016,8 +2016,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					bool HasSound = false;
 					if(pAltSnapBuffer->HasType(NETEVENTTYPE_SOUNDWORLD))
 					{
+						CSnapshotStorage::CHolder *pH = m_aSnapshotStorage[Conn].m_pLast;
+
 						int SnapTick = m_aSnapshotStorage[Conn].m_pLast->m_Tick;
-						dbg_msg("client", "***** translated snap to 0.6 which contains sound world tick=%d", SnapTick);
+						dbg_msg("client", "***** translated snap to 0.6 which contains sound world tick=%d memory=%p", SnapTick, pH);
 						pAltSnapBuffer->DebugDump();
 						HasSound = true;
 						g_Config.m_SnapSound = SnapTick;
@@ -2637,6 +2639,13 @@ void CClient::Update()
 				m_aapSnapshots[g_Config.m_ClDummy][SNAP_PREV] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT];
 				m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_pNext;
 
+
+				CSnapshotStorage::CHolder *pH = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT];
+
+				if(g_Config.m_SnapSound == pH->m_Tick)
+				{
+					dbg_msg("client", "update got snap holder = %p", pH);
+				}
 
 				// check if tick matches dbgSoundSnap
 				// then compare the pointers of m_aapSnapshots and m_aStornageSnapshots
