@@ -159,7 +159,7 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg) override;
 	virtual void OnMapLoad() override;
 	virtual void OnShutdown() override;
-	virtual void OnNewSnapshot() override;
+	virtual void OnNewSnapshot(bool HasSound, void *pSnap) override;
 
 	void OnNewPredictedSnapshot();
 

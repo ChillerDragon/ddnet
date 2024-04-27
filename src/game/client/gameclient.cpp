@@ -1158,17 +1158,30 @@ void CGameClient::OnRconLine(const char *pLine)
 	m_GameConsole.PrintLine(CGameConsole::CONSOLETYPE_REMOTE, pLine);
 }
 
-void CGameClient::ProcessEvents()
+void CGameClient::ProcessEvents(bool HasSound)
 {
-	if(m_SuppressEvents)
-		return;
-
 	int SnapType = IClient::SNAP_CURRENT;
+	int SnapTick = Client()->SnapGetTick(SnapType);
+	dbg_msg("gameclient", "process events tick=%d", SnapTick);
+	if(SnapTick == g_Config.m_SnapSound)
+		HasSound = true;
+
 	int Num = Client()->SnapNumItems(SnapType);
+
+	if(HasSound)
+	{
+		dbg_msg("gameclient", "processevents expeexpect soundss!!!!!");
+		dbg_msg("gameclient", "   num_items=%d", Num);
+	}
+
 	for(int Index = 0; Index < Num; Index++)
 	{
 		IClient::CSnapItem Item;
 		const void *pData = Client()->SnapGetItem(SnapType, Index, &Item);
+		if(HasSound)
+		{
+			dbg_msg("gameclient", "  type=%d", Item.m_Type);
+		}
 
 		// We don't have enough info about us, others, to know a correct alpha value.
 		float Alpha = 1.0f;
@@ -1209,6 +1222,12 @@ void CGameClient::ProcessEvents()
 
 			m_Sounds.PlayAt(CSounds::CHN_WORLD, pEvent->m_SoundId, 1.0f, vec2(pEvent->m_X, pEvent->m_Y));
 		}
+	}
+
+
+	if(HasSound)
+	{
+		dbg_break();
 	}
 }
 
@@ -1383,8 +1402,11 @@ void CGameClient::InvalidateSnapshot()
 	SnapCollectEntities();
 }
 
-void CGameClient::OnNewSnapshot()
+void CGameClient::OnNewSnapshot(bool HasSound, void *pSnap)
 {
+	// CSnapshotStorage::CHolder aA;
+
+
 	auto &&Evolve = [this](CNetObj_Character *pCharacter, int Tick) {
 		CWorldCore TempWorld;
 		CCharacterCore TempCore = CCharacterCore();
@@ -1408,7 +1430,7 @@ void CGameClient::OnNewSnapshot()
 
 	m_NewTick = true;
 
-	ProcessEvents();
+	ProcessEvents(HasSound);
 
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgStress)

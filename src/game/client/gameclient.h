@@ -189,7 +189,7 @@ private:
 	CCollision m_Collision;
 	CUi m_UI;
 
-	void ProcessEvents();
+	void ProcessEvents(bool HasSound);
 	void UpdatePositions();
 
 	int m_EditorMovementDelay = 5;
@@ -505,7 +505,7 @@ public:
 	int TranslateSnap(CSnapshot *pSnapDstSix, CSnapshot *pSnapSrcSeven, int Conn, bool Dummy) override;
 	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy) override;
 	void InvalidateSnapshot() override;
-	void OnNewSnapshot() override;
+	void OnNewSnapshot(bool HasSound = false, void *pSnap = nullptr) override;
 	void OnPredict() override;
 	void OnActivateEditor() override;
 	void OnDummySwap() override;

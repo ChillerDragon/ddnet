@@ -195,7 +195,7 @@ public:
 	/**
 	 * Called when a new snapshot is received.
 	 */
-	virtual void OnNewSnapshot(){};
+	virtual void OnNewSnapshot(bool HasSound = false, void *pStorage = nullptr){};
 	/**
 	 * Called when the input gets released, for example when a text box loses focus.
 	 */

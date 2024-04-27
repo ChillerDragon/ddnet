@@ -230,6 +230,7 @@ public:
 	virtual int SnapNumItems(int SnapId) const = 0;
 	virtual const void *SnapFindItem(int SnapId, int Type, int Id) const = 0;
 	virtual void *SnapGetItem(int SnapId, int Index, CSnapItem *pItem) const = 0;
+	virtual int SnapGetTick(int SnapId, int Dummy = -1) const = 0;
 	virtual int SnapItemSize(int SnapId, int Index) const = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
@@ -321,7 +322,7 @@ public:
 	virtual void OnRconLine(const char *pLine) = 0;
 	virtual void OnInit() = 0;
 	virtual void InvalidateSnapshot() = 0;
-	virtual void OnNewSnapshot() = 0;
+	virtual void OnNewSnapshot(bool HasSound = false, void *pSnap = nullptr) = 0;
 	virtual void OnEnterGame() = 0;
 	virtual void OnShutdown() = 0;
 	virtual void OnRender() = 0;

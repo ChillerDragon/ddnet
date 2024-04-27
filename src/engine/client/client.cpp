@@ -53,6 +53,7 @@
 
 #include "client.h"
 #include "demoedit.h"
+#include "engine/client.h"
 #include "friends.h"
 #include "notifications.h"
 #include "serverbrowser.h"
@@ -794,11 +795,26 @@ void *CClient::SnapGetItem(int SnapId, int Index, CSnapItem *pItem) const
 {
 	dbg_assert(SnapId >= 0 && SnapId < NUM_SNAPSHOT_TYPES, "invalid SnapId");
 	const CSnapshot *pSnapshot = m_aapSnapshots[g_Config.m_ClDummy][SnapId]->m_pAltSnap;
+
+	if(pSnapshot->HasType(NETEVENTTYPE_SOUNDWORLD))
+	{
+		dbg_msg("client", "***** SnapGetItem got sound world");
+		pSnapshot->DebugDump();
+	}
+
 	const CSnapshotItem *pSnapshotItem = pSnapshot->GetItem(Index);
 	pItem->m_DataSize = pSnapshot->GetItemSize(Index);
 	pItem->m_Type = pSnapshot->GetItemType(Index);
 	pItem->m_Id = pSnapshotItem->Id();
 	return (void *)pSnapshotItem->Data();
+}
+
+int CClient::SnapGetTick(int SnapId, int Dummy) const
+{
+	if(Dummy == -1)
+		Dummy = g_Config.m_ClDummy;
+
+	return m_aapSnapshots[g_Config.m_ClDummy][SnapId]->m_Tick;
 }
 
 int CClient::SnapItemSize(int SnapId, int Index) const
@@ -1997,6 +2013,30 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					// add new
 					m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, AltSnapSize, pAltSnapBuffer);
 
+					bool HasSound = false;
+					if(pAltSnapBuffer->HasType(NETEVENTTYPE_SOUNDWORLD))
+					{
+						int SnapTick = m_aSnapshotStorage[Conn].m_pLast->m_Tick;
+						dbg_msg("client", "***** translated snap to 0.6 which contains sound world tick=%d", SnapTick);
+						pAltSnapBuffer->DebugDump();
+						HasSound = true;
+						g_Config.m_SnapSound = SnapTick;
+
+						// this makes no sense because the snap storage might be ahead of the
+						// m_aapSnapshots which is used by the getter methods
+
+						// int SnapType = SNAP_CURRENT;
+						// int Num = SnapNumItems(SnapType);
+						// dbg_msg("client", "   num_items=%d", Num);
+
+						// for(int Index = 0; Index < Num; Index++)
+						// {
+						// 	CSnapItem Item;
+						// 	const void *pItemData = SnapGetItem(SnapType, Index, &Item);
+						// 	dbg_msg("client", "  type=%d data=%p", Item.m_Type, pItemData);
+						// }
+					}
+
 					if(!Dummy)
 					{
 						// for antiping: if the projectile netobjects from the server contains extra data, this is removed and the original content restored before recording demo
@@ -2032,6 +2072,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					// we got two snapshots until we see us self as connected
 					if(m_aReceivedSnapshots[Conn] == 2)
 					{
+						dbg_msg("client", "GOT 2 SNAPS xxxxx");
 						// start at 200ms and work from there
 						if(!Dummy)
 						{
@@ -2050,7 +2091,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 #if defined(CONF_VIDEORECORDER)
 							IVideo::SetLocalStartTime(m_LocalStartTime);
 #endif
-							GameClient()->OnNewSnapshot();
+							GameClient()->OnNewSnapshot(HasSound);
 						}
 						SetState(IClient::STATE_ONLINE);
 						if(!Dummy)
@@ -2191,6 +2232,7 @@ int CClient::UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshot *pTo)
 		void *pRawObj = pNetObjHandler->SecureUnpackObj(ItemType, &Unpacker);
 		if(!pRawObj)
 		{
+			exit(27);
 			if(g_Config.m_Debug && ItemType != UUID_UNKNOWN)
 			{
 				char aBuf[256];
@@ -2501,49 +2543,6 @@ void CClient::PumpNetwork()
 
 void CClient::OnDemoPlayerSnapshot(void *pData, int Size)
 {
-	// update ticks, they could have changed
-	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
-	m_aCurGameTick[0] = pInfo->m_Info.m_CurrentTick;
-	m_aPrevGameTick[0] = pInfo->m_PreviousTick;
-
-	// create a verified and unpacked snapshot
-	unsigned char aAltSnapBuffer[CSnapshot::MAX_SIZE];
-	CSnapshot *pAltSnapBuffer = (CSnapshot *)aAltSnapBuffer;
-	int AltSnapSize;
-
-	unsigned char aTmpTranslateBuffer[CSnapshot::MAX_SIZE];
-	CSnapshot *pTmpTranslateBuffer = nullptr;
-	if(IsSixup())
-	{
-		pTmpTranslateBuffer = (CSnapshot *)aTmpTranslateBuffer;
-		AltSnapSize = GameClient()->TranslateSnap(pTmpTranslateBuffer, (CSnapshot *)pData, CONN_MAIN, false);
-		if(AltSnapSize < 0)
-		{
-			dbg_msg("sixup", "failed to translate snapshot. error=%d", AltSnapSize);
-			pTmpTranslateBuffer = nullptr;
-			AltSnapSize = 0;
-		}
-	}
-	else
-	{
-		AltSnapSize = UnpackAndValidateSnapshot((CSnapshot *)pData, pAltSnapBuffer);
-		if(AltSnapSize < 0)
-		{
-			dbg_msg("client", "unpack snapshot and validate failed. error=%d", AltSnapSize);
-			return;
-		}
-	}
-
-	// handle snapshots after validation
-	std::swap(m_aapSnapshots[0][SNAP_PREV], m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]);
-	mem_copy(m_aapSnapshots[0][SNAP_CURRENT]->m_pSnap, pData, Size);
-
-	if(pTmpTranslateBuffer)
-		mem_copy(m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_pAltSnap, pTmpTranslateBuffer, AltSnapSize);
-	else
-		mem_copy(m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_pAltSnap, pAltSnapBuffer, AltSnapSize);
-
-	GameClient()->OnNewSnapshot();
 }
 
 void CClient::OnDemoPlayerMessage(void *pData, int Size)
@@ -2582,43 +2581,7 @@ void CClient::Update()
 {
 	PumpNetwork();
 
-	if(State() == IClient::STATE_DEMOPLAYBACK)
-	{
-		if(m_DemoPlayer.IsPlaying())
-		{
-#if defined(CONF_VIDEORECORDER)
-			if(IVideo::Current())
-			{
-				IVideo::Current()->NextVideoFrame();
-				IVideo::Current()->NextAudioFrameTimeline([this](short *pFinalOut, unsigned Frames) {
-					Sound()->Mix(pFinalOut, Frames);
-				});
-			}
-#endif
-
-			m_DemoPlayer.Update();
-
-			// update timers
-			const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
-			m_aCurGameTick[0] = pInfo->m_Info.m_CurrentTick;
-			m_aPrevGameTick[0] = pInfo->m_PreviousTick;
-			m_aGameIntraTick[0] = pInfo->m_IntraTick;
-			m_aGameTickTime[0] = pInfo->m_TickTime;
-		}
-		else
-		{
-			// Disconnect when demo playback stopped, either due to playback error
-			// or because the end of the demo was reached when rendering it.
-			DisconnectWithReason(m_DemoPlayer.ErrorMessage());
-			if(m_DemoPlayer.ErrorMessage()[0] != '\0')
-			{
-				SWarning Warning(Localize("Error playing demo"), m_DemoPlayer.ErrorMessage());
-				Warning.m_AutoHide = false;
-				m_vWarnings.emplace_back(Warning);
-			}
-		}
-	}
-	else if(State() == IClient::STATE_ONLINE)
+	if(State() == IClient::STATE_ONLINE)
 	{
 		if(m_LastDummy != (bool)g_Config.m_ClDummy)
 		{
@@ -2657,6 +2620,7 @@ void CClient::Update()
 
 			if(m_LastDummy != (bool)g_Config.m_ClDummy && m_aapSnapshots[g_Config.m_ClDummy][SNAP_PREV])
 			{
+				dbg_msg("client", "load snap for dummy");
 				// Load snapshot for m_ClDummy
 				GameClient()->OnNewSnapshot();
 				Repredict = true;
@@ -2673,11 +2637,20 @@ void CClient::Update()
 				m_aapSnapshots[g_Config.m_ClDummy][SNAP_PREV] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT];
 				m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_pNext;
 
+
+				// check if tick matches dbgSoundSnap
+				// then compare the pointers of m_aapSnapshots and m_aStornageSnapshots
+				// and dump both
+				// they should point to the same memory
+				// they should contain different items
+				// gdb backtrace should reveal where sound world was removed
+
+
 				// set ticks
 				m_aCurGameTick[g_Config.m_ClDummy] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_Tick;
 				m_aPrevGameTick[g_Config.m_ClDummy] = m_aapSnapshots[g_Config.m_ClDummy][SNAP_PREV]->m_Tick;
 
-				GameClient()->OnNewSnapshot();
+				GameClient()->OnNewSnapshot(false, m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]);
 				Repredict = true;
 			}
 
@@ -2757,33 +2730,6 @@ void CClient::Update()
 		m_LastDummy = (bool)g_Config.m_ClDummy;
 	}
 
-	// STRESS TEST: join the server again
-#ifdef CONF_DEBUG
-	if(g_Config.m_DbgStress)
-	{
-		static int64_t s_ActionTaken = 0;
-		int64_t Now = time_get();
-		if(State() == IClient::STATE_OFFLINE)
-		{
-			if(Now > s_ActionTaken + time_freq() * 2)
-			{
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "stress", "reconnecting!");
-				Connect(g_Config.m_DbgStressServer);
-				s_ActionTaken = Now;
-			}
-		}
-		else
-		{
-			if(Now > s_ActionTaken + time_freq() * (10 + g_Config.m_DbgStress))
-			{
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "stress", "disconnecting!");
-				Disconnect();
-				s_ActionTaken = Now;
-			}
-		}
-	}
-#endif
-
 	if(m_pMapdownloadTask)
 	{
 		if(m_pMapdownloadTask->State() == EHttpState::DONE)
@@ -2809,33 +2755,6 @@ void CClient::Update()
 		}
 	}
 
-	if(State() == IClient::STATE_ONLINE)
-	{
-		if(!m_EditJobs.empty())
-		{
-			std::shared_ptr<CDemoEdit> pJob = m_EditJobs.front();
-			if(pJob->State() == IJob::STATE_DONE)
-			{
-				char aBuf[IO_MAX_PATH_LENGTH + 64];
-				if(pJob->Success())
-				{
-					str_format(aBuf, sizeof(aBuf), "Successfully saved the replay to '%s'!", pJob->Destination());
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "replay", aBuf);
-
-					GameClient()->Echo(Localize("Successfully saved the replay!"));
-				}
-				else
-				{
-					str_format(aBuf, sizeof(aBuf), "Failed saving the replay to '%s'...", pJob->Destination());
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "replay", aBuf);
-
-					GameClient()->Echo(Localize("Failed saving the replay!"));
-				}
-				m_EditJobs.pop_front();
-			}
-		}
-	}
-
 	// update the server browser
 	m_ServerBrowser.Update();
 
@@ -2845,14 +2764,6 @@ void CClient::Update()
 	else
 		GameClient()->OnUpdate();
 
-	Discord()->Update();
-	Steam()->Update();
-	if(Steam()->GetConnectAddress())
-	{
-		HandleConnectAddress(Steam()->GetConnectAddress());
-		Steam()->ClearConnectAddress();
-	}
-
 	if(m_ReconnectTime > 0 && time_get() > m_ReconnectTime)
 	{
 		if(State() != STATE_ONLINE)
@@ -2861,6 +2772,18 @@ void CClient::Update()
 	}
 
 	m_PredictedTime.UpdateMargin(PredictionMargin() * time_freq() / 1000);
+
+	if(m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT])
+	{
+		int SnapTick = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_Tick;
+		CSnapshot *pAltSnapBuffer = m_aapSnapshots[g_Config.m_ClDummy][SNAP_CURRENT]->m_pAltSnap;
+
+		if(pAltSnapBuffer && pAltSnapBuffer->HasType(NETEVENTTYPE_SOUNDWORLD))
+		{
+			dbg_msg("client", "update found sound at tick=%d", SnapTick);
+			pAltSnapBuffer->DebugDump();
+		}
+	}
 }
 
 void CClient::RegisterInterfaces()

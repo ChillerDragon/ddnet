@@ -64,6 +64,7 @@ public:
 	unsigned Crc() const;
 	void DebugDump() const;
 	bool IsValid(size_t ActualSize) const;
+	bool HasType(int Type) const;
 
 	static const CSnapshot *EmptySnapshot() { return &ms_EmptySnapshot; }
 };

@@ -132,6 +132,17 @@ void CSnapshot::DebugDump() const
 	}
 }
 
+bool CSnapshot::HasType(int Type) const
+{
+	for(int i = 0; i < m_NumItems; i++)
+	{
+		const CSnapshotItem *pItem = GetItem(i);
+		if(pItem->Type() == Type)
+			return true;
+	}
+	return false;
+}
+
 bool CSnapshot::IsValid(size_t ActualSize) const
 {
 	// validate total size
@@ -673,6 +684,7 @@ void CSnapshotStorage::Add(int Tick, int64_t Tagtime, size_t DataSize, const voi
 	{
 		pHolder->m_pAltSnap = nullptr;
 		pHolder->m_AltSnapSize = 0;
+		exit(72);
 	}
 
 	// link

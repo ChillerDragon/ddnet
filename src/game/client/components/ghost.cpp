@@ -269,7 +269,7 @@ void CGhost::TryRenderStart(int Tick, bool ServerControl)
 	m_NewRenderTick = Tick;
 }
 
-void CGhost::OnNewSnapshot()
+void CGhost::OnNewSnapshot(bool HasSound, void *pSnap)
 {
 	if(!GameClient()->m_GameInfo.m_Race || Client()->State() != IClient::STATE_ONLINE)
 		return;

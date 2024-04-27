@@ -57,7 +57,7 @@ void CRaceDemo::OnStateChange(int NewState, int OldState)
 		StopRecord();
 }
 
-void CRaceDemo::OnNewSnapshot()
+void CRaceDemo::OnNewSnapshot(bool HasSound, void *pSnap)
 {
 	if(!GameClient()->m_GameInfo.m_Race || !g_Config.m_ClAutoRaceRecord || Client()->State() != IClient::STATE_ONLINE)
 		return;
