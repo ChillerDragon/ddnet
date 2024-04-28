@@ -1,3 +1,5 @@
+#include "base/system.h"
+#include "game/generated/protocol.h"
 #include <cstdio>
 #include <engine/shared/protocolglue.h>
 #include <engine/shared/snapshot.h>
@@ -260,6 +262,34 @@ int CGameClient::TranslateSnap(CSnapshot *pSnapDstSix, CSnapshot *pSnapSrcSeven,
 			Char6.m_Weapon = pChar7->m_Weapon;
 			Char6.m_Emote = pChar7->m_Emote;
 			Char6.m_AttackTick = pChar7->m_AttackTick;
+
+			if(pChar7->m_TriggeredEvents & protocol7::COREEVENTFLAG_HOOK_ATTACH_PLAYER)
+			{
+				// dbg_msg(
+				// 	"sixup",
+				// 	"Conn=%d TranslationContext.m_aLocalClientId[Conn]=%d pItem7->Id()=%d",
+				// 	Conn,
+				// 	TranslationContext.m_aLocalClientId[Conn],
+				// 	pItem7->Id());
+
+				// if(!Config()->m_SndGame)
+				// 	continue;
+
+				// m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, vec2(pChar7->m_X, pChar7->m_Y));
+
+				if(pChar7->m_TriggeredEvents & protocol7::COREEVENTFLAG_HOOK_ATTACH_PLAYER)
+				{
+					void *pEvent = Builder.NewItem(NETEVENTTYPE_SOUNDWORLD, pItem7->Id(), sizeof(CNetEvent_SoundWorld));
+					if(!pEvent)
+						return -7;
+
+					CNetEvent_SoundWorld Sound = {};
+					Sound.m_X = pChar7->m_X;
+					Sound.m_Y = pChar7->m_Y;
+					Sound.m_SoundId = SOUND_HOOK_ATTACH_PLAYER;
+					mem_copy(pEvent, &Sound, sizeof(CNetEvent_SoundWorld));
+				}
+			}
 
 			if(TranslationContext.m_aLocalClientId[Conn] != pItem7->Id())
 			{

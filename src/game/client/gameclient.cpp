@@ -1162,9 +1162,10 @@ void CGameClient::ProcessEvents(bool HasSound)
 {
 	int SnapType = IClient::SNAP_CURRENT;
 	int SnapTick = Client()->SnapGetTick(SnapType);
-	dbg_msg("gameclient", "process events tick=%d", SnapTick);
+	// dbg_msg("gameclient", "process events tick=%d", SnapTick);
 	if(SnapTick == g_Config.m_SnapSound)
 		HasSound = true;
+	HasSound = false;
 
 	int Num = Client()->SnapNumItems(SnapType);
 

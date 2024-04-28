@@ -2013,14 +2013,21 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					// add new
 					m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, AltSnapSize, pAltSnapBuffer);
 
+					if(Conn == g_Config.m_ClDummy)
+					{
+						// CSnapshotStorage::CHolder *pStorage = m_aSnapshotStorage[Conn].m_pLast;
+						// CSnapshotStorage::CHolder *pH = m_aapSnapshots[Conn][SNAP_CURRENT];
+						// dbg_msg("client", "storage=%p aap=%p", pStorage, pH);
+					}
+
 					bool HasSound = false;
 					if(pAltSnapBuffer->HasType(NETEVENTTYPE_SOUNDWORLD))
 					{
-						CSnapshotStorage::CHolder *pH = m_aSnapshotStorage[Conn].m_pLast;
+						// CSnapshotStorage::CHolder *pH = m_aSnapshotStorage[Conn].m_pLast;
 
 						int SnapTick = m_aSnapshotStorage[Conn].m_pLast->m_Tick;
-						dbg_msg("client", "***** translated snap to 0.6 which contains sound world tick=%d memory=%p", SnapTick, pH);
-						pAltSnapBuffer->DebugDump();
+						// dbg_msg("client", "***** translated snap to 0.6 which contains sound world tick=%d memory=%p", SnapTick, pH);
+						// pAltSnapBuffer->DebugDump();
 						HasSound = true;
 						g_Config.m_SnapSound = SnapTick;
 
@@ -2644,7 +2651,7 @@ void CClient::Update()
 
 				if(g_Config.m_SnapSound == pH->m_Tick)
 				{
-					dbg_msg("client", "update got snap holder = %p", pH);
+					// dbg_msg("client", "update got snap holder = %p", pH);
 				}
 
 				// check if tick matches dbgSoundSnap
