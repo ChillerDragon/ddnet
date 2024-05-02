@@ -36,6 +36,8 @@ void CBroadcast::OnRender()
 
 void CBroadcast::RenderServerBroadcast()
 {
+	int foo = 0;
+	dbg_msg("foo", "foo %d", foo);
 	if(m_pClient->m_Scoreboard.Active() || m_pClient->m_Motd.IsActive() || !g_Config.m_ClShowBroadcasts)
 		return;
 	const float SecondsRemaining = (m_BroadcastTick - Client()->GameTick(g_Config.m_ClDummy)) / (float)Client()->GameTickSpeed();
