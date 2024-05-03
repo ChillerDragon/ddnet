@@ -465,7 +465,7 @@ ColorRGBA CSkins7::GetColor(int Value, bool UseAlpha) const
 	return Color;
 }
 
-int CSkins7::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const
+ColorRGBA CSkins7::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const
 {
 	static const int s_aTeamColors[3] = {0xC4C34E, 0x00FF6B, 0x9BFF6B};
 
@@ -489,10 +489,8 @@ int CSkins7::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part
 	int l = clamp(mix(TeamLgt, PartLgt, 0.2), (int)DARKEST_COLOR_LGT, 200);
 
 	int ColorVal = (h << 16) + (s << 8) + l;
-	if(Part == protocol7::SKINPART_MARKING) // keep alpha
-		ColorVal += PartColor & 0xff000000;
 
-	return ColorVal;
+	return GetColor(ColorVal, Part == protocol7::SKINPART_MARKING);
 }
 
 bool CSkins7::ValidateSkinParts(char *apPartNames[protocol7::NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const

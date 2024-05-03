@@ -26,6 +26,7 @@
 #include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
 
+#include "base/color.h"
 #include "menus.h"
 #include "skins7.h"
 
@@ -192,8 +193,8 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 
 		for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_Skins7.GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_RED, p);
-			TeamSkinInfo.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColor(TeamColor, p == protocol7::SKINPART_MARKING);
+			ColorRGBA TeamColor = m_pClient->m_Skins7.GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_RED, p);
+			TeamSkinInfo.m_Sixup.m_aColors[p] = TeamColor;
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(1, 0), vec2(TeeLeft.x + TeeLeft.w / 2.0f, TeeLeft.y + TeeLeft.h / 2.0f + 6.0f));
 
@@ -201,8 +202,8 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 
 		for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_Skins7.GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_BLUE, p);
-			TeamSkinInfo.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColor(TeamColor, p == protocol7::SKINPART_MARKING);
+			ColorRGBA TeamColor = m_pClient->m_Skins7.GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_BLUE, p);
+			TeamSkinInfo.m_Sixup.m_aColors[p] = TeamColor;
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(-1, 0), vec2(TeeRight.x + TeeRight.w / 2.0f, TeeRight.y + TeeRight.h / 2.0f + 6.0f));
 	}

@@ -75,7 +75,7 @@ public:
 	void RandomizeSkin(int Dummy);
 
 	ColorRGBA GetColor(int Value, bool UseAlpha) const;
-	int GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
+	ColorRGBA GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
 
 	// returns true if everything was valid and nothing changed
 	bool ValidateSkinParts(char *apPartNames[protocol7::NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const;
