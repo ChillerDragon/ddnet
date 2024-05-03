@@ -74,8 +74,7 @@ public:
 	int FindSkinPart(int Part, const char *pName, bool AllowSpecialPart);
 	void RandomizeSkin(int Dummy);
 
-	vec3 GetColorV3(int v) const;
-	vec4 GetColorV4(int v, bool UseAlpha) const;
+	ColorRGBA GetColor(int Value, bool UseAlpha) const;
 	int GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
 
 	// returns true if everything was valid and nothing changed

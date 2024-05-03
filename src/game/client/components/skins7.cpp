@@ -456,18 +456,13 @@ void CSkins7::RandomizeSkin(int Dummy)
 	}
 }
 
-vec3 CSkins7::GetColorV3(int Value) const
+ColorRGBA CSkins7::GetColor(int Value, bool UseAlpha) const
 {
 	float Dark = DARKEST_COLOR_LGT / 255.0f;
 	ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(Value).UnclampLighting(Dark));
-	return vec3(Color.r, Color.g, Color.b);
-}
-
-vec4 CSkins7::GetColorV4(int v, bool UseAlpha) const
-{
-	vec3 r = GetColorV3(v);
-	float Alpha = UseAlpha ? ((v >> 24) & 0xff) / 255.0f : 1.0f;
-	return vec4(r.r, r.g, r.b, Alpha);
+	float Alpha = UseAlpha ? ((Value >> 24) & 0xff) / 255.0f : 1.0f;
+	Color.a = Alpha;
+	return Color;
 }
 
 int CSkins7::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const
