@@ -107,7 +107,7 @@ void CGameClient::ApplySkin7InfoFromGameMsg(const T *pMsg, int ClientId)
 		if(pClient->m_Sixup.m_aUseCustomColors[p])
 		{
 			pClient->m_SkinInfo.m_Sixup.m_aTextures[p] = pSkinPart->m_ColorTexture;
-			pClient->m_SkinInfo.m_Sixup.m_aColors[p] = m_Skins7.GetColorV4(pClient->m_Sixup.m_aSkinPartColors[p], p == protocol7::SKINPART_MARKING);
+			pClient->m_SkinInfo.m_Sixup.m_aColors[p] = m_Skins7.GetColor(pClient->m_Sixup.m_aSkinPartColors[p], p == protocol7::SKINPART_MARKING);
 		}
 		else
 		{

@@ -452,7 +452,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
 			{
 				ColorRGBA Color = m_pClient->m_Skins7.GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientId].m_Team, protocol7::SKINPART_BODY);
-				Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+				Graphics()->SetColor(Color);
 			}
 			CTeeRenderInfo TeeInfo = m_pClient->m_aClients[pInfo->m_ClientId].m_RenderInfo;
 			TeeInfo.m_Size *= TeeSizeMod;

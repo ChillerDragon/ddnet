@@ -870,7 +870,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 							if(pCurrentLine->m_Sixup.m_aUseCustomColors[Part])
 							{
 								pCurrentLine->m_Sixup.m_aTextures[Part] = pSkinPart->m_ColorTexture;
-								pCurrentLine->m_Sixup.m_aColors[Part] = m_pClient->m_Skins7.GetColorV4(
+								pCurrentLine->m_Sixup.m_aColors[Part] = m_pClient->m_Skins7.GetColor(
 									pCurrentLine->m_Sixup.m_aSkinPartColors[Part],
 									Part == protocol7::SKINPART_MARKING);
 							}

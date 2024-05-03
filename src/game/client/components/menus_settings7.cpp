@@ -118,7 +118,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 			if(aUCCVars[p])
 			{
 				OwnSkinInfo.m_Sixup.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				OwnSkinInfo.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColorV4(aColorVars[p], p == protocol7::SKINPART_MARKING);
+				OwnSkinInfo.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColor(aColorVars[p], p == protocol7::SKINPART_MARKING);
 			}
 			else
 			{
@@ -170,7 +170,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 			if(aUCCVars[p])
 			{
 				TeamSkinInfo.m_Sixup.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				TeamSkinInfo.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColorV4(aColorVars[p], p == protocol7::SKINPART_MARKING);
+				TeamSkinInfo.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColor(aColorVars[p], p == protocol7::SKINPART_MARKING);
 			}
 			else
 			{
@@ -410,7 +410,7 @@ void CMenus::RenderSkinSelection7(CUIRect MainView)
 				if(s->m_aUseCustomColors[p])
 				{
 					Info.m_Sixup.m_aTextures[p] = s->m_apParts[p]->m_ColorTexture;
-					Info.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColorV4(s->m_aPartColors[p], p == protocol7::SKINPART_MARKING);
+					Info.m_Sixup.m_aColors[p] = m_pClient->m_Skins7.GetColor(s->m_aPartColors[p], p == protocol7::SKINPART_MARKING);
 				}
 				else
 				{
@@ -501,7 +501,7 @@ void CMenus::RenderSkinPartSelection7(CUIRect MainView)
 						Info.m_Sixup.m_aTextures[j] = s->m_ColorTexture;
 					else
 						Info.m_Sixup.m_aTextures[j] = pSkinPart->m_ColorTexture;
-					Info.m_Sixup.m_aColors[j] = m_pClient->m_Skins7.GetColorV4(*CSkins7::ms_apColorVariables[(int)m_Dummy][j], j == protocol7::SKINPART_MARKING);
+					Info.m_Sixup.m_aColors[j] = m_pClient->m_Skins7.GetColor(*CSkins7::ms_apColorVariables[(int)m_Dummy][j], j == protocol7::SKINPART_MARKING);
 				}
 				else
 				{
