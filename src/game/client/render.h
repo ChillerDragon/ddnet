@@ -80,6 +80,7 @@ public:
 		{
 			for(auto &Texture : m_aTextures)
 				Texture = IGraphics::CTextureHandle();
+			m_HatTexture = IGraphics::CTextureHandle();
 			m_BotTexture = IGraphics::CTextureHandle();
 			for(ColorRGBA &PartColor : m_aColors)
 			{

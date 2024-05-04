@@ -3643,6 +3643,8 @@ void CGameClient::RefreshSkins()
 
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnRefreshSkins();
+
+	dbg_msg("gameclient", "fresh up da shits !!!");
 }
 
 void CGameClient::ConchainRefreshSkins(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

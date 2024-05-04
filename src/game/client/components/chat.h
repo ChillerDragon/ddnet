@@ -69,6 +69,20 @@ class CChat : public CComponent
 			int m_HatSpriteIndex;
 			ColorRGBA m_BotColor;
 			ColorRGBA m_aColors[protocol7::NUM_SKINPARTS];
+
+			void Reset()
+			{
+				for(auto &Texture : m_aTextures)
+					Texture = IGraphics::CTextureHandle();
+				m_HatTexture = IGraphics::CTextureHandle();
+				m_BotTexture = IGraphics::CTextureHandle();
+				for(ColorRGBA &PartColor : m_aColors)
+				{
+					PartColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+				}
+				m_HatSpriteIndex = 0;
+				m_BotColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+			}
 		};
 
 		// 0.7 Skin

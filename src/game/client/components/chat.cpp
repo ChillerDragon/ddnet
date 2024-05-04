@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <base/color.h>
 #include <engine/editor.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
@@ -966,10 +967,30 @@ void CChat::OnRefreshSkins()
 				Line.m_RenderSkin = pSkin->m_OriginalSkin;
 
 			Line.m_RenderSkinMetrics = pSkin->m_Metrics;
+
+			// sixup
+			// TODO: do we even need to validate?
+			// m_pClient->m_Skins7.ValidateSkinParts(apSkinPartsPtr, aUCCVars, aColorVars, 0);
+
+			// for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+			// {
+			// 	int SkinPart = m_pClient->m_Skins7.FindSkinPart(Part, Line.m_Sixup.m_aaSkinPartNames[Part], false);
+			// 	const CSkins7::CSkinPart *pSkinPart = m_pClient->m_Skins7.GetSkinPart(Part, SkinPart);
+			// 	if(Line.m_Sixup.m_aUseCustomColors[Part])
+			// 	{
+			// 		Line.m_Sixup.m_aTextures[Part] = pSkinPart->m_ColorTexture;
+			// 	}
+			// 	else
+			// 	{
+			// 		Line.m_Sixup.m_aTextures[Part] = pSkinPart->m_OrgTexture;
+			// 	}
+			// }
+
 		}
 		else
 		{
 			Line.m_RenderSkin.Reset();
+			Line.m_Sixup.Reset();
 		}
 	}
 }

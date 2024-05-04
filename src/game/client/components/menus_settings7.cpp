@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/color.h>
 #include <base/math.h>
 #include <base/system.h>
 
@@ -123,7 +124,7 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 			else
 			{
 				OwnSkinInfo.m_Sixup.m_aTextures[p] = pSkinPart->m_OrgTexture;
-				OwnSkinInfo.m_Sixup.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				OwnSkinInfo.m_Sixup.m_aColors[p] = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
 
@@ -270,6 +271,23 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 				m_SkinNameInput.Set(m_pSelectedSkin->m_aName);
 		}
 	}
+
+
+	// TODO: align this to the very right
+	// CUIRect RefreshButton;
+
+	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+	static CButtonContainer s_SkinRefreshButton;
+	if(DoButton_Menu(&s_SkinRefreshButton, FontIcons::FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ButtonLeft) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
+	{
+		// reset render flags for possible loading screen
+		TextRender()->SetRenderFlags(0);
+		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		m_pClient->RefreshSkins();
+	}
+	TextRender()->SetRenderFlags(0);
+	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
 	// Quick search
 	{
