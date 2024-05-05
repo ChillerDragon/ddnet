@@ -372,6 +372,20 @@ do
 	cat "$stderr"
 done
 
+for stderr in ./stdout_*.txt
+do
+	if [ ! -f "$stderr" ]
+	then
+		continue
+	fi
+	if [ "$(cat "$stderr")" == "" ]
+	then
+		continue
+	fi
+	echo "[*] Stdout: $stderr"
+	cat "$stderr"
+done
+
 if test -n "$(find . -maxdepth 1 -name 'fail_*' -print -quit)"
 then
 	for fail in fail_*
