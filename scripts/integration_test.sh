@@ -244,11 +244,7 @@ say "/mc
 ;cmdlist
 ;saytime"
 EOF
-if [ "$arg_valgrind_memcheck" == "1" ]; then
-	sleep 10
-else
-	sleeo 2
-fi
+sleep 10
 
 echo "[*] Test rcon commands"
 tr -d '\n' > client1.fifo << EOF
