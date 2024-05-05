@@ -255,7 +255,11 @@ rcon echo test;
 muteid 1 900 spam;
 unban_all;
 EOF
-sleep 10
+if [ "$arg_valgrind_memcheck" == "1" ]; then
+	sleep 10
+else
+	sleeo 2
+fi
 
 echo "[*] Stop demo recording"
 echo "stoprecord" > server.fifo
