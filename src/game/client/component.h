@@ -205,6 +205,10 @@ public:
 	 */
 	virtual void OnMapLoad(){};
 	/**
+	 * Called after we got 2 snapshots from the server.
+	 */
+	virtual void OnJoined(){};
+	/**
 	 * Called when receiving a network message.
 	 * @param Msg The message type.
 	 * @param pRawMsg The message data.

@@ -1883,6 +1883,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 
 					if(m_aReceivedSnapshots[Conn] > GameTickSpeed() && !m_aCodeRunAfterJoin[Conn])
 					{
+						GameClient()->OnJoined();
+
 						if(m_ServerCapabilities.m_ChatTimeoutCode)
 						{
 							CNetMsg_Cl_Say MsgP;

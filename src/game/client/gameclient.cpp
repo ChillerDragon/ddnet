@@ -519,6 +519,12 @@ void CGameClient::OnConnected()
 		Client()->DemoRecorder_HandleAutoStart();
 }
 
+void CGameClient::OnJoined()
+{
+	for(auto &pComponent : m_vpAll)
+		pComponent->OnJoined();
+}
+
 void CGameClient::OnReset()
 {
 	InvalidateSnapshot();

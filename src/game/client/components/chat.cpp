@@ -515,6 +515,10 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 	return true;
 }
 
+void CChat::OnJoined()
+{
+}
+
 void CChat::EnableMode(int Team)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)

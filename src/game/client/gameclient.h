@@ -471,6 +471,7 @@ public:
 
 	// hooks
 	void OnConnected() override;
+	void OnJoined() override;
 	void OnRender() override;
 	void OnUpdate() override;
 	void OnDummyDisconnect() override;

@@ -170,8 +170,9 @@ public:
 	void Reset();
 	void OnRelease() override;
 	void OnMessage(int MsgType, void *pRawMsg) override;
-	bool OnInput(const IInput::CEvent &Event) override;
 	void OnInit() override;
+	bool OnInput(const IInput::CEvent &Event) override;
+	void OnJoined() override;
 
 	void RebuildChat();
 
