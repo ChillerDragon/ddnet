@@ -3210,6 +3210,8 @@ void CEditor::DoMapEditor(CUIRect View)
 					if(pExplanation)
 						str_copy(m_aTooltip, pExplanation);
 				}
+
+				m_FontTyper.OnShowPicker(wx, wy);
 			}
 			else if(m_pBrush->IsEmpty() && GetSelectedLayerType(0, LAYERTYPE_QUADS) != nullptr)
 				str_copy(m_aTooltip, "Use left mouse button to drag and create a brush. Hold shift to select multiple quads. Press R to rotate selected quads. Use ctrl+right mouse to select layer.");
@@ -7734,6 +7736,8 @@ void CEditor::Render()
 
 	CUIRect MenuBar, ModeBar, ToolBar, StatusBar, ExtraEditor, ToolBox;
 	m_ShowPicker = Input()->KeyIsPressed(KEY_SPACE) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && m_vSelectedLayers.size() == 1;
+	if(m_FontTyper.PickOffsets())
+		m_ShowPicker = true;
 
 	if(m_GuiActive)
 	{
@@ -8324,6 +8328,7 @@ void CEditor::Init()
 	m_vComponents.emplace_back(m_MapView);
 	m_vComponents.emplace_back(m_MapSettingsBackend);
 	m_vComponents.emplace_back(m_LayerSelector);
+	m_vComponents.emplace_back(m_FontTyper);
 	for(CEditorComponent &Component : m_vComponents)
 		Component.Init(this);
 

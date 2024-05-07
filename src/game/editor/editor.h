@@ -36,6 +36,7 @@
 #include "editor_server_settings.h"
 #include "editor_trackers.h"
 #include "editor_ui.h"
+#include "font_typer.h"
 #include "layer_selector.h"
 #include "map_view.h"
 #include "smooth_value.h"
@@ -279,6 +280,7 @@ class CEditor : public IEditor
 	std::vector<std::reference_wrapper<CEditorComponent>> m_vComponents;
 	CMapView m_MapView;
 	CLayerSelector m_LayerSelector;
+	CFontTyper m_FontTyper;
 
 	bool m_EditorWasUsedBefore = false;
 

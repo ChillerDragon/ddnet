@@ -76,6 +76,9 @@ public:
 
 	bool m_Readonly;
 	bool m_Visible;
+
+	int m_LetterOffset = -1;
+	int m_NumberOffset = -1;
 };
 
 #endif
