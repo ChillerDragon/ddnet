@@ -36,6 +36,7 @@
 #include "editor_server_settings.h"
 #include "editor_trackers.h"
 #include "editor_ui.h"
+#include "game/editor/prompt.h"
 #include "layer_selector.h"
 #include "map_view.h"
 #include "smooth_value.h"
@@ -279,6 +280,7 @@ class CEditor : public IEditor
 	std::vector<std::reference_wrapper<CEditorComponent>> m_vComponents;
 	CMapView m_MapView;
 	CLayerSelector m_LayerSelector;
+	CPrompt m_Prompt;
 
 	bool m_EditorWasUsedBefore = false;
 
@@ -393,8 +395,6 @@ public:
 		m_FilePreviewImage.Invalidate();
 		m_FilePreviewSound = -1;
 		m_FilePreviewState = PREVIEW_UNLOADED;
-
-		m_PromptSelectedIndex = -1;
 
 		m_ToolbarPreviewSound = -1;
 
@@ -534,7 +534,6 @@ public:
 	void FreeDynamicPopupMenus();
 	void UpdateColorPipette();
 	void RenderMousePointer();
-	void RenderPrompt(CUIRect View);
 
 	std::vector<CQuad *> GetSelectedQuads();
 	std::shared_ptr<CLayer> GetSelectedLayerType(int Index, int Type) const;
@@ -642,7 +641,6 @@ public:
 	char m_aFileDialogCurrentLink[IO_MAX_PATH_LENGTH];
 	char m_aFilesSelectedName[IO_MAX_PATH_LENGTH];
 	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_FileDialogFilterInput;
-	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_PromptInput;
 	char *m_pFileDialogPath;
 	int m_FileDialogFileType;
 	bool m_FileDialogMultipleStorages = false;
@@ -657,7 +655,6 @@ public:
 	bool m_FileDialogOpening;
 
 	int m_ToolbarPreviewSound;
-	int m_PromptSelectedIndex;
 
 	struct CFilelistItem
 	{
@@ -670,9 +667,6 @@ public:
 	};
 	std::vector<CFilelistItem> m_vCompleteFileList;
 	std::vector<const CFilelistItem *> m_vpFilteredFileList;
-	std::vector<char *> m_vpCompletePrompList;
-	std::vector<const char *> m_vpFilteredPrompList;
-
 
 	static bool CompareFilenameAscending(const CFilelistItem *pLhs, const CFilelistItem *pRhs)
 	{
