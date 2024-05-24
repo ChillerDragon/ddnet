@@ -15,10 +15,13 @@
 #include <game/client/render.h>
 #include <game/localization.h>
 
+#include <stdio.h>
+
 #include "scoreboard.h"
 
 CScoreboard::CScoreboard()
 {
+	puts("foo");
 	OnReset();
 }
 
