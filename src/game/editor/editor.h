@@ -548,6 +548,19 @@ public:
 	char m_aFileSaveName[IO_MAX_PATH_LENGTH];
 	bool m_ValidSaveFilename;
 
+	enum class EButtonColor {
+		INACTIVE = -1,
+		REGULAR = 0,
+		SELECTED,
+		UNUSED_IMAGE_SOUND,
+		SELECTED_UNUSED_IMAGE_SOUND,
+		IMAGE_SOUND_SHOULD_BE_EMBEDDED,
+		SELECTED_IMAGE_SOUND_SHOULD_BE_EMBEDDED,
+		GAME_LAYERS,
+		SELECTED_GAME_LAYERS,
+		INVISIBLE,
+	};
+
 	enum
 	{
 		POPEVENT_EXIT = 0,
@@ -811,7 +824,7 @@ public:
 
 	void UpdateTooltip(const void *pId, const CUIRect *pRect, const char *pToolTip);
 	int DoButton_Editor_Common(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
-	int DoButton_Editor(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	int DoButton_Editor(const void *pId, const char *pText, EButtonColor Color, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_Env(const void *pId, const char *pText, int Checked, const CUIRect *pRect, const char *pToolTip, ColorRGBA Color, int Corners);
 
 	int DoButton_Ex(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners, float FontSize = EditorFontSizes::MENU, int Align = TEXTALIGN_MC);
@@ -929,7 +942,7 @@ public:
 	EAxis GetDragAxis(int OffsetX, int OffsetY) const;
 	void DrawAxis(EAxis Axis, CPoint &OriginalPoint, CPoint &Point) const;
 	void DrawAABB(const SAxisAlignedBoundingBox &AABB, int OffsetX = 0, int OffsetY = 0) const;
-	ColorRGBA GetButtonColor(const void *pId, int Checked);
+	ColorRGBA GetButtonColor(const void *pId, EButtonColor Color);
 
 	// Alignment methods
 	// These methods take `OffsetX` and `OffsetY` because the calculations are made with the original positions

@@ -123,51 +123,54 @@ bool CEditor::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, f
 	return Ui()->DoClearableEditBox(pLineInput, pRect, FontSize, Corners, vColorSplits);
 }
 
-ColorRGBA CEditor::GetButtonColor(const void *pId, int Checked)
+ColorRGBA CEditor::GetButtonColor(const void *pId, EButtonColor Color)
 {
-	if(Checked < 0)
-		return ColorRGBA(0, 0, 0, 0.5f);
-
-	switch(Checked)
+	switch(Color)
 	{
-	case 8: // invisible
+	case EButtonColor::INVISIBLE:
 		return ColorRGBA(0, 0, 0, 0);
-	case 7: // selected + game layers
+
+	case EButtonColor::SELECTED_GAME_LAYERS: // selected + game layers
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(1, 0, 0, 0.4f);
 		return ColorRGBA(1, 0, 0, 0.2f);
 
-	case 6: // game layers
+	case EButtonColor::GAME_LAYERS:
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(1, 1, 1, 0.4f);
 		return ColorRGBA(1, 1, 1, 0.2f);
 
-	case 5: // selected + image/sound should be embedded
+	case EButtonColor::SELECTED_IMAGE_SOUND_SHOULD_BE_EMBEDDED:
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(1, 0, 0, 0.75f);
 		return ColorRGBA(1, 0, 0, 0.5f);
 
-	case 4: // image/sound should be embedded
+	case EButtonColor::IMAGE_SOUND_SHOULD_BE_EMBEDDED:
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(1, 0, 0, 1.0f);
 		return ColorRGBA(1, 0, 0, 0.875f);
 
-	case 3: // selected + unused image/sound
+	case EButtonColor::SELECTED_UNUSED_IMAGE_SOUND:
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(1, 0, 1, 0.75f);
 		return ColorRGBA(1, 0, 1, 0.5f);
 
-	case 2: // unused image/sound
+	case EButtonColor::UNUSED_IMAGE_SOUND:
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(0, 0, 1, 0.75f);
 		return ColorRGBA(0, 0, 1, 0.5f);
 
-	case 1: // selected
+	case EButtonColor::SELECTED:
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(1, 0, 0, 0.75f);
 		return ColorRGBA(1, 0, 0, 0.5f);
 
-	default: // regular
+	case EButtonColor::INACTIVE:
+		return ColorRGBA(0, 0, 0, 0.5f);
+
+	case EButtonColor::REGULAR:
+		[[fallthrough]];
+	default:
 		if(Ui()->HotItem() == pId)
 			return ColorRGBA(1, 1, 1, 0.75f);
 		return ColorRGBA(1, 1, 1, 0.5f);
@@ -194,11 +197,12 @@ int CEditor::DoButton_Editor_Common(const void *pId, const char *pText, int Chec
 	return Ui()->DoButtonLogic(pId, Checked, pRect);
 }
 
-int CEditor::DoButton_Editor(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
+int CEditor::DoButton_Editor(const void *pId, const char *pText, EButtonColor Color, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	pRect->Draw(GetButtonColor(pId, Checked), IGraphics::CORNER_ALL, 3.0f);
+	pRect->Draw(GetButtonColor(pId, Color), IGraphics::CORNER_ALL, 3.0f);
 	CUIRect NewRect = *pRect;
 	Ui()->DoLabel(&NewRect, pText, 10.0f, TEXTALIGN_MC);
+	int Checked = (int)Color;
 	Checked %= 2;
 	return DoButton_Editor_Common(pId, pText, Checked, pRect, Flags, pToolTip);
 }
