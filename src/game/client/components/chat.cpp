@@ -634,6 +634,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 					  (m_pClient->m_Snap.m_LocalClientId != ClientId && m_pClient->m_aClients[ClientId].m_Foe))))
 		return;
 
+	if(ClientId == SERVER_MSG)
+	{
+		SendChat(0, pLine);
+	}
+
 	// trim right and set maximum length to 256 utf8-characters
 	int Length = 0;
 	const char *pStr = pLine;
