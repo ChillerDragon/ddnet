@@ -673,6 +673,7 @@ void CRegister::OnConfigChange()
 
 bool CRegister::OnPacket(const CNetChunk *pPacket)
 {
+	dbg_msg("register", "got packet with flags=%d connless=%d", pPacket->m_Flags, (pPacket->m_Flags&NETSENDFLAG_CONNLESS) != 0);
 	if((pPacket->m_Flags & NETSENDFLAG_CONNLESS) == 0)
 	{
 		return false;
@@ -701,6 +702,7 @@ bool CRegister::OnPacket(const CNetChunk *pPacket)
 		m_aProtocols[Protocol].OnToken(pToken);
 		return true;
 	}
+	dbg_msg("reguster", " drop packet with invalid size");
 	return false;
 }
 

@@ -207,7 +207,10 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 {
 	// check the size
 	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
+	{
+		dbg_msg("network_in", "drop invalid size=%d", Size);
 		return -1;
+	}
 
 	// log the data
 	if(ms_DataLogRecv)
@@ -226,15 +229,22 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	{
 		Sixup = (pBuffer[0] & 0x3) == 1;
 		if(Sixup && (pSecurityToken == nullptr || pResponseToken == nullptr))
+		{
+			dbg_msg("network_in", "sectok or resptok are NULLPTR");
 			return -1;
+		}
 		int Offset = Sixup ? 9 : 6;
 		if(Size < Offset)
+		{
+			dbg_msg("network_in", "drop because offset is wrong!");
 			return -1;
+		}
 
 		if(Sixup)
 		{
 			*pSecurityToken = ToSecurityToken(pBuffer + 1);
 			*pResponseToken = ToSecurityToken(pBuffer + 5);
+			dbg_msg("network_in", "sectok=%x resptok=%p", *pSecurityToken, *pResponseToken);
 		}
 
 		pPacket->m_Flags = NET_PACKETFLAG_CONNLESS;
@@ -254,10 +264,16 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		if(pPacket->m_Flags & NET_PACKETFLAG_UNUSED)
 			Sixup = true;
 		if(Sixup && pSecurityToken == nullptr)
+		{
+			dbg_msg("network_in", "drop because security token is null");
 			return -1;
+		}
 		int DataStart = Sixup ? 7 : NET_PACKETHEADERSIZE;
 		if(Size < DataStart)
+		{
+			dbg_msg("network_in", "drop because size");
 			return -1;
+		}
 
 		pPacket->m_Ack = ((pBuffer[0] & 0x3) << 8) | pBuffer[1];
 		pPacket->m_NumChunks = pBuffer[2];
@@ -293,8 +309,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	// check for errors
 	if(pPacket->m_DataSize < 0)
 	{
-		if(g_Config.m_Debug)
-			dbg_msg("network", "error during packet decoding");
+		dbg_msg("network", "error during packet decoding");
 		return -1;
 	}
 
