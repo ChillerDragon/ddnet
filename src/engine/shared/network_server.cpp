@@ -636,7 +636,7 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 		bool Sixup = false;
 		if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup, &Token, pResponseToken) == 0)
 		{
-			dbg_msg("network_in", "got packet with flags %d", m_RecvUnpacker.m_Data.m_Flags);
+			dbg_msg("network_in", "got packet with flags=%d connless=%d", m_RecvUnpacker.m_Data.m_Flags, (m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)!=0);
 
 			if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
 			{
@@ -648,6 +648,7 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 					dbg_msg("network_in", "  Token=%x GetToken(%s)=%x", Token, aAddr, GetToken(Addr));
 					continue;
 				}
+				dbg_msg("network_in", "got connless packet");
 
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 				pChunk->m_ClientId = -1;
@@ -663,10 +664,14 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 			}
 			else
 			{
+				dbg_msg("network_in", "got connection oriented packet");
 				// drop invalid ctrl packets
 				if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONTROL &&
 					m_RecvUnpacker.m_Data.m_DataSize == 0)
+				{
+					dbg_msg("network_in", "drop invalid ctrl packet");
 					continue;
+				}
 
 				// normal packet, find matching slot
 				int Slot = GetClientSlot(Addr);
