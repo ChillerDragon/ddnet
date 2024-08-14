@@ -1,4 +1,5 @@
 #include "register.h"
+#include "base/system.h"
 
 #include <base/lock.h>
 #include <base/log.h>
@@ -289,6 +290,9 @@ void CRegister::CProtocol::SendRegister()
 	{
 		pRegister = HttpPost(m_pParent->m_pConfig->m_SvRegisterUrl, (unsigned char *)"", 0);
 	}
+
+	dbg_msg("register", "addr=%s connlesstoken=%s secret=%s chalsecret=%s", aAddress, m_pParent->m_aConnlessTokenHex, aSecret, aChallengeSecret);
+
 	pRegister->HeaderString("Address", aAddress);
 	pRegister->HeaderString("Secret", aSecret);
 	if(m_Protocol == PROTOCOL_TW7_IPV6 || m_Protocol == PROTOCOL_TW7_IPV4)
