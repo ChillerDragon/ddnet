@@ -2435,6 +2435,7 @@ void CServer::PumpNetwork(bool PacketWaiting)
 		// process packets
 		while(m_NetServer.Recv(&Packet, &ResponseToken))
 		{
+			dbg_msg("network_in", "got packet with clientid=%d (want -1)", Packet.m_ClientId);
 			if(Packet.m_ClientId == -1)
 			{
 				if(ResponseToken == NET_SECURITY_TOKEN_UNKNOWN && m_pRegister->OnPacket(&Packet))
@@ -2505,21 +2506,6 @@ void CServer::PumpNetwork(bool PacketWaiting)
 
 				ProcessClientPacket(&Packet);
 			}
-		}
-	}
-	{
-		unsigned char aBuffer[NET_MAX_PAYLOAD];
-		int Flags;
-		mem_zero(&Packet, sizeof(Packet));
-		Packet.m_pData = aBuffer;
-		while(Antibot()->OnEngineSimulateClientMessage(&Packet.m_ClientId, aBuffer, sizeof(aBuffer), &Packet.m_DataSize, &Flags))
-		{
-			Packet.m_Flags = 0;
-			if(Flags & MSGFLAG_VITAL)
-			{
-				Packet.m_Flags |= NET_CHUNKFLAG_VITAL;
-			}
-			ProcessClientPacket(&Packet);
 		}
 	}
 
