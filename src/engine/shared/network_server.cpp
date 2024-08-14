@@ -629,6 +629,8 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 		if(Bytes <= 0)
 			break;
 
+		dbg_msg("network_in", "got bytes=%d", Bytes);
+
 		// check if we just should drop the packet
 		SECURITY_TOKEN Token;
 		bool Sixup = false;

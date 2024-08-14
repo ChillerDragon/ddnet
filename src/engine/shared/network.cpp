@@ -62,6 +62,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 
 		if(pData + Header.m_Size > pEnd)
 		{
+			dbg_msg("chunk", "invalid size");
 			Clear();
 			return 0;
 		}
@@ -84,8 +85,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 					continue;
 
 				// out of sequence, request resend
-				if(g_Config.m_Debug)
-					dbg_msg("conn", "asking for resend %d %d", Header.m_Sequence, (m_pConnection->m_Ack + 1) % NET_MAX_SEQUENCE);
+				dbg_msg("conn", "asking for resend %d %d", Header.m_Sequence, (m_pConnection->m_Ack + 1) % NET_MAX_SEQUENCE);
 				m_pConnection->SignalResend();
 				continue; // take the next chunk in the packet
 			}
