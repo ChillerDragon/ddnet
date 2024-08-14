@@ -636,6 +636,8 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 		bool Sixup = false;
 		if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup, &Token, pResponseToken) == 0)
 		{
+			dbg_msg("network_in", "got packet with flags %d", m_RecvUnpacker.m_Data.m_Flags);
+
 			if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
 			{
 				if(Sixup && Token != GetToken(Addr) && Token != GetGlobalToken())
@@ -712,6 +714,10 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 					}
 				}
 			}
+		}
+		else
+		{
+			dbg_msg("network_in", "FAILED TO UNPACK PACKET");
 		}
 	}
 	return 0;
