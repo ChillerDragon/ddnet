@@ -645,7 +645,13 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 			if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
 			{
 				if(Sixup && Token != GetToken(Addr) && Token != GetGlobalToken())
+				{
+					char aAddr[512];
+					net_addr_str(&Addr, aAddr, sizeof(aAddr), true);
+					dbg_msg("network_in", "drop packet because of invalid token");
+					dbg_msg("network_in", "  Token=%x GetToken(%s)=%x", Token, aAddr, GetToken(Addr));
 					continue;
+				}
 
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
 				pChunk->m_ClientId = -1;
