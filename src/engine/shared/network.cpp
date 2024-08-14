@@ -321,6 +321,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 			if(pPacket->m_aChunkData[0] == NET_CTRLMSG_CONNECT || pPacket->m_aChunkData[0] == NET_CTRLMSG_TOKEN)
 			{
 				*pResponseToken = ToSecurityToken(&pPacket->m_aChunkData[1]);
+				dbg_msg("network_in", "chiller troll set response token to %x", *pResponseToken);
 			}
 		}
 	}

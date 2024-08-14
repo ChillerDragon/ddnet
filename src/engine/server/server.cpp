@@ -2428,6 +2428,14 @@ void CServer::PumpNetwork(bool PacketWaiting)
 	CNetChunk Packet;
 	SECURITY_TOKEN ResponseToken;
 
+
+	static bool s_once = true;
+	if(s_once)
+	{
+		dbg_msg("pump", "fresh token = %x", ResponseToken);
+		s_once = false;
+	}
+
 	m_NetServer.Update();
 
 	if(PacketWaiting)
