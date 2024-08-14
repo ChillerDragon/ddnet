@@ -2435,7 +2435,7 @@ void CServer::PumpNetwork(bool PacketWaiting)
 		// process packets
 		while(m_NetServer.Recv(&Packet, &ResponseToken))
 		{
-			dbg_msg("network_in", "got packet with clientid=%d (want -1)", Packet.m_ClientId);
+			dbg_msg("network_in", "got packet with clientid=%d (want -1) ResponseToken=%x Want=%x", Packet.m_ClientId, ResponseToken, NET_SECURITY_TOKEN_UNKNOWN);
 			if(Packet.m_ClientId == -1)
 			{
 				if(ResponseToken == NET_SECURITY_TOKEN_UNKNOWN && m_pRegister->OnPacket(&Packet))
