@@ -35,6 +35,17 @@
 #include "player.h"
 #include "score.h"
 
+int GetSkinColor(int ClientId) {
+	int aColors[] = {
+		15597440, // purrpl
+		3836260, // soft green
+		0, // dark grey
+		10069122 // light blue
+	};
+	int Color = aColors[ClientId % (sizeof(aColors) / sizeof(int))];
+	return Color;
+}
+
 // Not thread-safe!
 class CClientChatLogger : public ILogger
 {
@@ -1578,12 +1589,31 @@ void CGameContext::OnClientEnter(int ClientId)
 	NewClientInfoMsg.m_Country = Server()->ClientCountry(ClientId);
 	NewClientInfoMsg.m_Silent = false;
 
+
+	static const char aaSkinBodies[][32] = {
+		"greensward",
+		"greensward"
+	};
+
+	int Color = GetSkinColor(ClientId);
+
+	const char *pBody = aaSkinBodies[ClientId % (sizeof(aaSkinBodies) / 32)];
+	dbg_msg("info", "sending skin %s got color %d", pBody, Color);
+
 	for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
 	{
 		NewClientInfoMsg.m_apSkinPartNames[p] = pNewPlayer->m_TeeInfos.m_apSkinPartNames[p];
 		NewClientInfoMsg.m_aUseCustomColors[p] = pNewPlayer->m_TeeInfos.m_aUseCustomColors[p];
 		NewClientInfoMsg.m_aSkinPartColors[p] = pNewPlayer->m_TeeInfos.m_aSkinPartColors[p];
+
+
+		NewClientInfoMsg.m_aUseCustomColors[p] = 1;
+		NewClientInfoMsg.m_aSkinPartColors[p] = Color;
 	}
+	NewClientInfoMsg.m_apSkinPartNames[protocol7::SKINPART_BODY] = pBody;
+
+	// int Color = pNewPlayer->m_TeeInfos.m_aSkinPartColors[protocol7::SKINPART_BODY];
+
 
 	// update client infos (others before local)
 	for(int i = 0; i < Server()->MaxClients(); ++i)
@@ -1608,11 +1638,16 @@ void CGameContext::OnClientEnter(int ClientId)
 			ClientInfoMsg.m_Country = Server()->ClientCountry(i);
 			ClientInfoMsg.m_Silent = 0;
 
+
 			for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
 			{
 				ClientInfoMsg.m_apSkinPartNames[p] = pPlayer->m_TeeInfos.m_apSkinPartNames[p];
-				ClientInfoMsg.m_aUseCustomColors[p] = pPlayer->m_TeeInfos.m_aUseCustomColors[p];
-				ClientInfoMsg.m_aSkinPartColors[p] = pPlayer->m_TeeInfos.m_aSkinPartColors[p];
+
+				if(p == protocol7::SKINPART_BODY)
+					ClientInfoMsg.m_apSkinPartNames[p] = pBody;
+
+				ClientInfoMsg.m_aUseCustomColors[p] = 1;
+				ClientInfoMsg.m_aSkinPartColors[p] = Color;
 			}
 
 			Server()->SendPackMsg(&ClientInfoMsg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
@@ -1874,40 +1909,27 @@ void *CGameContext::PreProcessMsg(int *pMsgId, CUnpacker *pUnpacker, int ClientI
 			pMsg->m_pClan = pMsg7->m_pClan;
 			pMsg->m_Country = pMsg7->m_Country;
 
+
 			CTeeInfo Info(pMsg7->m_apSkinPartNames, pMsg7->m_aUseCustomColors, pMsg7->m_aSkinPartColors);
+			// str_copy(Info.m_apSkinPartNames[protocol7::SKINPART_BODY], pBody, sizeof(Info.m_apSkinPartNames[protocol7::SKINPART_BODY]));
 			Info.FromSixup();
-			pPlayer->m_TeeInfos = Info;
+
+			int Color = GetSkinColor(ClientId);
+
+			str_copy(Info.m_apSkinPartNames[protocol7::SKINPART_BODY], "greensward");
+			Info.m_aUseCustomColors[protocol7::SKINPART_BODY] = true;
+			Info.m_aSkinPartColors[protocol7::SKINPART_BODY] = Color;
 
 			str_copy(s_aRawMsg + sizeof(*pMsg), Info.m_aSkinName, sizeof(s_aRawMsg) - sizeof(*pMsg));
 
-			pMsg->m_pSkin = s_aRawMsg + sizeof(*pMsg);
-			pMsg->m_UseCustomColor = pPlayer->m_TeeInfos.m_UseCustomColor;
+
+			pMsg->m_pSkin = "greensward";
+			pMsg->m_UseCustomColor = 1;
 			pMsg->m_ColorBody = pPlayer->m_TeeInfos.m_ColorBody;
 			pMsg->m_ColorFeet = pPlayer->m_TeeInfos.m_ColorFeet;
 		}
 		else if(*pMsgId == protocol7::NETMSGTYPE_CL_SKINCHANGE)
 		{
-			protocol7::CNetMsg_Cl_SkinChange *pMsg = (protocol7::CNetMsg_Cl_SkinChange *)pRawMsg;
-			if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo &&
-				pPlayer->m_LastChangeInfo + Server()->TickSpeed() * g_Config.m_SvInfoChangeDelay > Server()->Tick())
-				return 0;
-
-			pPlayer->m_LastChangeInfo = Server()->Tick();
-
-			CTeeInfo Info(pMsg->m_apSkinPartNames, pMsg->m_aUseCustomColors, pMsg->m_aSkinPartColors);
-			Info.FromSixup();
-			pPlayer->m_TeeInfos = Info;
-
-			protocol7::CNetMsg_Sv_SkinChange Msg;
-			Msg.m_ClientId = ClientId;
-			for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
-			{
-				Msg.m_apSkinPartNames[p] = pMsg->m_apSkinPartNames[p];
-				Msg.m_aSkinPartColors[p] = pMsg->m_aSkinPartColors[p];
-				Msg.m_aUseCustomColors[p] = pMsg->m_aUseCustomColors[p];
-			}
-
-			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NORECORD, -1);
 
 			return 0;
 		}
@@ -2584,108 +2606,6 @@ void CGameContext::OnSetSpectatorModeNetMessage(const CNetMsg_Cl_SetSpectatorMod
 
 void CGameContext::OnChangeInfoNetMessage(const CNetMsg_Cl_ChangeInfo *pMsg, int ClientId)
 {
-	CPlayer *pPlayer = m_apPlayers[ClientId];
-	if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo + Server()->TickSpeed() * g_Config.m_SvInfoChangeDelay > Server()->Tick())
-		return;
-
-	bool SixupNeedsUpdate = false;
-
-	pPlayer->m_LastChangeInfo = Server()->Tick();
-	pPlayer->UpdatePlaytime();
-
-	if(g_Config.m_SvSpamprotection)
-	{
-		CNetMsg_Sv_ChangeInfoCooldown ChangeInfoCooldownMsg;
-		ChangeInfoCooldownMsg.m_WaitUntil = Server()->Tick() + Server()->TickSpeed() * g_Config.m_SvInfoChangeDelay;
-		Server()->SendPackMsg(&ChangeInfoCooldownMsg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
-	}
-
-	// set infos
-	if(Server()->WouldClientNameChange(ClientId, pMsg->m_pName) && !ProcessSpamProtection(ClientId))
-	{
-		char aOldName[MAX_NAME_LENGTH];
-		str_copy(aOldName, Server()->ClientName(ClientId), sizeof(aOldName));
-
-		Server()->SetClientName(ClientId, pMsg->m_pName);
-
-		char aChatText[256];
-		str_format(aChatText, sizeof(aChatText), "'%s' changed name to '%s'", aOldName, Server()->ClientName(ClientId));
-		SendChat(-1, TEAM_ALL, aChatText);
-
-		// reload scores
-		Score()->PlayerData(ClientId)->Reset();
-		m_apPlayers[ClientId]->m_Score.reset();
-		Score()->LoadPlayerData(ClientId);
-
-		SixupNeedsUpdate = true;
-
-		LogEvent("Name change", ClientId);
-	}
-
-	if(Server()->WouldClientClanChange(ClientId, pMsg->m_pClan))
-	{
-		SixupNeedsUpdate = true;
-		Server()->SetClientClan(ClientId, pMsg->m_pClan);
-	}
-
-	if(Server()->ClientCountry(ClientId) != pMsg->m_Country)
-		SixupNeedsUpdate = true;
-	Server()->SetClientCountry(ClientId, pMsg->m_Country);
-
-	str_copy(pPlayer->m_TeeInfos.m_aSkinName, pMsg->m_pSkin, sizeof(pPlayer->m_TeeInfos.m_aSkinName));
-	pPlayer->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
-	pPlayer->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
-	pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
-	if(!Server()->IsSixup(ClientId))
-		pPlayer->m_TeeInfos.ToSixup();
-
-	if(SixupNeedsUpdate)
-	{
-		protocol7::CNetMsg_Sv_ClientDrop Drop;
-		Drop.m_ClientId = ClientId;
-		Drop.m_pReason = "";
-		Drop.m_Silent = true;
-
-		protocol7::CNetMsg_Sv_ClientInfo Info;
-		Info.m_ClientId = ClientId;
-		Info.m_pName = Server()->ClientName(ClientId);
-		Info.m_Country = pMsg->m_Country;
-		Info.m_pClan = pMsg->m_pClan;
-		Info.m_Local = 0;
-		Info.m_Silent = true;
-		Info.m_Team = pPlayer->GetTeam();
-
-		for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
-		{
-			Info.m_apSkinPartNames[p] = pPlayer->m_TeeInfos.m_apSkinPartNames[p];
-			Info.m_aSkinPartColors[p] = pPlayer->m_TeeInfos.m_aSkinPartColors[p];
-			Info.m_aUseCustomColors[p] = pPlayer->m_TeeInfos.m_aUseCustomColors[p];
-		}
-
-		for(int i = 0; i < Server()->MaxClients(); i++)
-		{
-			if(i != ClientId)
-			{
-				Server()->SendPackMsg(&Drop, MSGFLAG_VITAL | MSGFLAG_NORECORD, i);
-				Server()->SendPackMsg(&Info, MSGFLAG_VITAL | MSGFLAG_NORECORD, i);
-			}
-		}
-	}
-	else
-	{
-		protocol7::CNetMsg_Sv_SkinChange Msg;
-		Msg.m_ClientId = ClientId;
-		for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
-		{
-			Msg.m_apSkinPartNames[p] = pPlayer->m_TeeInfos.m_apSkinPartNames[p];
-			Msg.m_aSkinPartColors[p] = pPlayer->m_TeeInfos.m_aSkinPartColors[p];
-			Msg.m_aUseCustomColors[p] = pPlayer->m_TeeInfos.m_aUseCustomColors[p];
-		}
-
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NORECORD, -1);
-	}
-
-	Server()->ExpireServerInfo();
 }
 
 void CGameContext::OnEmoticonNetMessage(const CNetMsg_Cl_Emoticon *pMsg, int ClientId)
