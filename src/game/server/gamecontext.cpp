@@ -1630,7 +1630,14 @@ void CGameContext::OnClientEnter(int ClientId)
 		CPlayer *pPlayer = m_apPlayers[i];
 
 		if(Server()->IsSixup(i))
+		{
+			for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
+			{
+				NewClientInfoMsg.m_aUseCustomColors[p] = 1;
+				NewClientInfoMsg.m_aSkinPartColors[p] = GetSkinColor(i);
+			}
 			Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL | MSGFLAG_NORECORD, i);
+		}
 
 		if(Server()->IsSixup(ClientId))
 		{
@@ -1653,7 +1660,7 @@ void CGameContext::OnClientEnter(int ClientId)
 					ClientInfoMsg.m_apSkinPartNames[p] = pBody;
 
 				ClientInfoMsg.m_aUseCustomColors[p] = 1;
-				ClientInfoMsg.m_aSkinPartColors[p] = Color;
+				ClientInfoMsg.m_aSkinPartColors[p] = GetSkinColor(ClientId);
 			}
 
 			Server()->SendPackMsg(&ClientInfoMsg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
