@@ -286,6 +286,8 @@ public:
 	void OnMapChange(char *pNewMapName, int MapNameSize) override;
 	void OnShutdown(void *pPersistentData) override;
 
+	void FakeChat();
+
 	void OnTick() override;
 	void OnPreSnap() override;
 	void OnSnap(int ClientId) override;

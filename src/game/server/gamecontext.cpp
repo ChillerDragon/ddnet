@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include "engine/shared/protocol.h"
+#include "game/generated/protocol.h"
 #include "teeinfo.h"
 #include <antibot/antibot_data.h>
 #include <base/logger.h>
@@ -1000,8 +1002,20 @@ void CGameContext::OnPreTickTeehistorian()
 	}
 }
 
+void CGameContext::FakeChat()
+{
+	if(Server()->Tick() % 10)
+		return;
+
+	static int s_Chatter = 0;
+	s_Chatter = ++s_Chatter % MAX_CLIENTS;
+	SendChat(s_Chatter, TEAM_ALL, "UwU");
+}
+
 void CGameContext::OnTick()
 {
+	FakeChat();
+
 	// check tuning
 	CheckPureTuning();
 
