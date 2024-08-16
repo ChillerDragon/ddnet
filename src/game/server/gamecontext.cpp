@@ -1595,31 +1595,21 @@ void CGameContext::OnClientEnter(int ClientId)
 	NewClientInfoMsg.m_Country = Server()->ClientCountry(ClientId);
 	NewClientInfoMsg.m_Silent = false;
 
-
 	static const char aaSkinBodies[][32] = {
 		"greensward",
 		"greensward"
 	};
 
-	int Color = GetSkinColor(ClientId);
-
 	const char *pBody = aaSkinBodies[ClientId % (sizeof(aaSkinBodies) / 32)];
-	dbg_msg("info", "sending skin %s got color %d", pBody, Color);
+	dbg_msg("info", "sending skin %s", pBody);
 
 	for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
 	{
 		NewClientInfoMsg.m_apSkinPartNames[p] = pNewPlayer->m_TeeInfos.m_apSkinPartNames[p];
 		NewClientInfoMsg.m_aUseCustomColors[p] = pNewPlayer->m_TeeInfos.m_aUseCustomColors[p];
 		NewClientInfoMsg.m_aSkinPartColors[p] = pNewPlayer->m_TeeInfos.m_aSkinPartColors[p];
-
-
-		NewClientInfoMsg.m_aUseCustomColors[p] = 1;
-		NewClientInfoMsg.m_aSkinPartColors[p] = Color;
 	}
 	NewClientInfoMsg.m_apSkinPartNames[protocol7::SKINPART_BODY] = pBody;
-
-	// int Color = pNewPlayer->m_TeeInfos.m_aSkinPartColors[protocol7::SKINPART_BODY];
-
 
 	// update client infos (others before local)
 	for(int i = 0; i < Server()->MaxClients(); ++i)
@@ -1671,6 +1661,11 @@ void CGameContext::OnClientEnter(int ClientId)
 	if(Server()->IsSixup(ClientId))
 	{
 		NewClientInfoMsg.m_Local = 1;
+		for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
+		{
+			NewClientInfoMsg.m_aUseCustomColors[p] = 1;
+			NewClientInfoMsg.m_aSkinPartColors[p] = GetSkinColor(ClientId);
+		}
 		Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
 	}
 
