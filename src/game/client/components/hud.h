@@ -67,9 +67,9 @@ class CHud : public CComponent
 	void RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter);
 
 	void PreparePlayerStateQuads();
-	void RenderPlayerState(const int ClientId);
+	void RenderPlayerState(int ClientId);
 	void RenderDummyActions();
-	void RenderMovementInformation(const int ClientId);
+	void RenderMovementInformation(int ClientId);
 
 	void UpdateMovementInformationTextContainer(STextContainerIndex &TextContainer, float FontSize, float Value, char *pPrevValue, size_t Size);
 	void RenderMovementInformationTextContainer(STextContainerIndex &TextContainer, float X, float Y);
