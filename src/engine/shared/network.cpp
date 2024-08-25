@@ -207,7 +207,10 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 {
 	// check the size
 	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
+	{
+		dbg_msg("network_in", "drop size=%d", Size);
 		return -1;
+	}
 
 	// log the data
 	if(ms_DataLogRecv)
@@ -224,12 +227,16 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 
 	if(pPacket->m_Flags & NET_PACKETFLAG_CONNLESS)
 	{
+		dbg_msg("network_in", "got connless");
 		Sixup = (pBuffer[0] & 0x3) == 1;
 		if(Sixup && (pSecurityToken == nullptr || pResponseToken == nullptr))
 			return -1;
 		int Offset = Sixup ? 9 : 6;
 		if(Size < Offset)
+		{
+			dbg_msg("network_in", "drop size=%d < offset=%d", Size, Offset);
 			return -1;
+		}
 
 		if(Sixup)
 		{
@@ -251,13 +258,21 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 	else
 	{
+		dbg_msg("network_in", "got connection oriented");
+
 		if(pPacket->m_Flags & NET_PACKETFLAG_UNUSED)
 			Sixup = true;
 		if(Sixup && pSecurityToken == nullptr)
+		{
+			dbg_msg("network_in", "sixup=true and securitytoken=nullptr");
 			return -1;
+		}
 		int DataStart = Sixup ? 7 : NET_PACKETHEADERSIZE;
 		if(Size < DataStart)
+		{
+			dbg_msg("network_in", "drop size=%d < datastart=%d", Size, DataStart);
 			return -1;
+		}
 
 		pPacket->m_Ack = ((pBuffer[0] & 0x3) << 8) | pBuffer[1];
 		pPacket->m_NumChunks = pBuffer[2];
@@ -275,6 +290,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 			pPacket->m_Flags = Flags;
 
 			*pSecurityToken = ToSecurityToken(pBuffer + 3);
+			dbg_msg("network_in", "set sixup token %x", *pSecurityToken);
 		}
 
 		if(pPacket->m_Flags & NET_PACKETFLAG_COMPRESSION)
@@ -282,6 +298,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 			// Don't allow compressed control packets.
 			if(pPacket->m_Flags & NET_PACKETFLAG_CONTROL)
 			{
+				dbg_msg("network_in", "drop compressed control");
 				return -1;
 			}
 			pPacket->m_DataSize = ms_Huffman.Decompress(&pBuffer[DataStart], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
@@ -293,19 +310,20 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	// check for errors
 	if(pPacket->m_DataSize < 0)
 	{
-		if(g_Config.m_Debug)
-			dbg_msg("network", "error during packet decoding");
+		dbg_msg("network_in", "error during packet decoding");
 		return -1;
 	}
 
 	// set the response token (a bit hacky because this function shouldn't know about control packets)
 	if(pPacket->m_Flags & NET_PACKETFLAG_CONTROL)
 	{
+		dbg_msg("network_in", "got control");
 		if(pPacket->m_DataSize >= 5) // control byte + token
 		{
 			if(pPacket->m_aChunkData[0] == NET_CTRLMSG_CONNECT || pPacket->m_aChunkData[0] == NET_CTRLMSG_TOKEN)
 			{
 				*pResponseToken = ToSecurityToken(&pPacket->m_aChunkData[1]);
+				dbg_msg("network_in", "set token %x", *pResponseToken);
 			}
 		}
 	}
@@ -320,6 +338,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		io_flush(ms_DataLogRecv);
 	}
 
+	dbg_msg("network_in", "success");
 	// return success
 	return 0;
 }

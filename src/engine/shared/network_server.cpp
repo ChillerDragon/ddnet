@@ -538,7 +538,11 @@ void CNetServer::OnTokenCtrlMsg(NETADDR &Addr, int ControlMsg, const CNetPacketC
 int CNetServer::OnSixupCtrlMsg(NETADDR &Addr, CNetChunk *pChunk, int ControlMsg, const CNetPacketConstruct &Packet, SECURITY_TOKEN &ResponseToken, SECURITY_TOKEN Token)
 {
 	if(m_RecvUnpacker.m_Data.m_DataSize < 5 || ClientExists(Addr))
+	{
+		dbg_msg("network_in", "silent drop sixup");
 		return 0; // silently ignore
+	}
+	dbg_msg("network_in", "got sixup ctrl msg %d", ControlMsg);
 
 	ResponseToken = ToSecurityToken(Packet.m_aChunkData + 1);
 
@@ -629,19 +633,11 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 		if(Bytes <= 0)
 			break;
 
-		// check if we just should drop the packet
-		char aBuf[128];
-		if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
-		{
-			// banned, reply with a message
-			CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf) + 1, NET_SECURITY_TOKEN_UNSUPPORTED);
-			continue;
-		}
-
 		SECURITY_TOKEN Token;
 		bool Sixup = false;
 		if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup, &Token, pResponseToken) == 0)
 		{
+			dbg_msg("network_in", "unpacked packet with flags=%d", m_RecvUnpacker.m_Data.m_Flags);
 			if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
 			{
 				if(Sixup && Token != GetToken(Addr) && Token != GetGlobalToken())
@@ -673,11 +669,15 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 				{
 					Sixup = true;
 					if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup, &Token))
+					{
+						dbg_msg("network_in", "sixup unpack failed");
 						continue;
+					}
 				}
 
 				if(Slot != -1)
 				{
+					dbg_msg("network_in", "found slot");
 					// found
 
 					// control
@@ -687,18 +687,30 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 					if(m_aSlots[Slot].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr, Token, *pResponseToken))
 					{
 						if(m_RecvUnpacker.m_Data.m_DataSize)
+						{
+							dbg_msg("network_in", "unpacker starting ...");
 							m_RecvUnpacker.Start(&Addr, &m_aSlots[Slot].m_Connection, Slot);
+						}
+					}
+					else
+					{
+						dbg_msg("network_in", "failed to feed");
 					}
 				}
 				else
 				{
 					// not found, client that wants to connect
+					dbg_msg("network_in", "found no slot sixup=%d", Sixup);
 
 					if(Sixup)
 					{
 						// got 0.7 control msg
 						if(OnSixupCtrlMsg(Addr, pChunk, m_RecvUnpacker.m_Data.m_aChunkData[0], m_RecvUnpacker.m_Data, *pResponseToken, Token) == 1)
+						{
+							dbg_msg("network_in", "is a sixup control message");
 							return 1;
+						}
+						dbg_msg("network_in", "not a control message so we do nothing");
 					}
 					else if(IsDDNetControlMsg(&m_RecvUnpacker.m_Data))
 					{
@@ -707,6 +719,7 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 					}
 					else
 					{
+						dbg_msg("network_in", "got game or sys msg");
 						// got connection-less ctrl or sys msg
 						OnPreConnMsg(Addr, m_RecvUnpacker.m_Data);
 					}

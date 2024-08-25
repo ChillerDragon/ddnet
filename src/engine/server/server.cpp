@@ -1442,13 +1442,17 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	int Result = UnpackMessageId(&Msg, &Sys, &Uuid, &Unpacker, &Packer);
 	if(Result == UNPACKMESSAGE_ERROR)
 	{
+		dbg_msg("network_in", "unpack error");
 		return;
 	}
 
 	if(m_aClients[ClientId].m_Sixup && (Msg = MsgFromSixup(Msg, Sys)) < 0)
 	{
+		dbg_msg("network_in", "drop sixup");
 		return;
 	}
+
+	dbg_msg("network_in", "got msg=%d sys=%d", Msg, Sys);
 
 	if(Config()->m_SvNetlimit && Msg != NETMSG_REQUEST_MAP_DATA)
 	{
@@ -1498,6 +1502,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_INFO)
 		{
+			dbg_msg("network_in", "got info");
 			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientId].m_State == CClient::STATE_PREAUTH || m_aClients[ClientId].m_State == CClient::STATE_AUTH))
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
@@ -2436,6 +2441,7 @@ void CServer::PumpNetwork(bool PacketWaiting)
 		ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
 		while(m_NetServer.Recv(&Packet, &ResponseToken))
 		{
+			dbg_msg("network_in", "recv packet");
 			if(Packet.m_ClientId == -1)
 			{
 				if(ResponseToken == NET_SECURITY_TOKEN_UNKNOWN && m_pRegister->OnPacket(&Packet))

@@ -306,6 +306,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr, SECURITY_
 	// Disregard packets from the wrong address, unless we don't know our peer yet.
 	if(State() != NET_CONNSTATE_OFFLINE && State() != NET_CONNSTATE_CONNECT && *pAddr != m_PeerAddr)
 	{
+		dbg_msg("network_in", "feed failed not matching addr");
 		return 0;
 	}
 
@@ -313,29 +314,40 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr, SECURITY_
 	{
 		// supposed to have a valid token in this packet, check it
 		if(pPacket->m_DataSize < (int)sizeof(m_SecurityToken))
+		{
+			dbg_msg("network_in", "feed failed on sec size");
 			return 0;
+		}
 		pPacket->m_DataSize -= sizeof(m_SecurityToken);
 		if(m_SecurityToken != ToSecurityToken(&pPacket->m_aChunkData[pPacket->m_DataSize]))
 		{
-			if(g_Config.m_Debug)
-				dbg_msg("security", "token mismatch, expected %d got %d", m_SecurityToken, ToSecurityToken(&pPacket->m_aChunkData[pPacket->m_DataSize]));
+			dbg_msg("security", "token mismatch, expected %d got %d", m_SecurityToken, ToSecurityToken(&pPacket->m_aChunkData[pPacket->m_DataSize]));
 			return 0;
 		}
 	}
 
 	if(m_Sixup && SecurityToken != m_Token)
+	{
+		dbg_msg("network_in", "feed failed on token missmatch sectok=%x tok=%x", SecurityToken, m_Token);
 		return 0;
+	}
 
 	// check if actual ack value is valid(own sequence..latest peer ack)
 	if(m_Sequence >= m_PeerAck)
 	{
 		if(pPacket->m_Ack < m_PeerAck || pPacket->m_Ack > m_Sequence)
+		{
+			dbg_msg("network_in", "feed failed on ack");
 			return 0;
+		}
 	}
 	else
 	{
 		if(pPacket->m_Ack < m_PeerAck && pPacket->m_Ack > m_Sequence)
+		{
+			dbg_msg("network_in", "feed failed on ack");
 			return 0;
+		}
 	}
 	m_PeerAck = pPacket->m_Ack;
 
