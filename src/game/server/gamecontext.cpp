@@ -1661,6 +1661,8 @@ bool CGameContext::OnClientDataPersist(int ClientId, void *pData)
 
 void CGameContext::OnClientConnected(int ClientId, void *pData)
 {
+	m_apPlayers[10]->GetCharacter()->m_FreezeHammer = true;
+
 	CPersistentClientData *pPersistentData = (CPersistentClientData *)pData;
 	bool Spec = false;
 	bool Afk = true;
