@@ -609,6 +609,9 @@ protected:
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 	void RenderSettingsCustom(CUIRect MainView);
+	void RenderSettingsSearch(CUIRect MainView);
+
+	int m_SettingsAppearanceTab = 0;
 
 	class CMapListItem
 	{

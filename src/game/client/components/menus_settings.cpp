@@ -2039,6 +2039,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 			}
 		}
 	}
+	RenderSettingsSearch(MainView);
 }
 
 bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alpha, float DarkestLight)
