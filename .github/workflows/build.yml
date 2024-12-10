@@ -15,15 +15,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-20.04]
+        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-22.04]
         include:
         - os: ubuntu-latest
           cmake-args: -G Ninja
           cmake-init-env: CXXFLAGS=-Werror
           package-file: "*-linux_x86_64.tar.xz"
           fancy: true
-        - os: ubuntu-20.04
-          cmake-path: /usr/bin/
+        - os: ubuntu-22.04
           cmake-args: -G Ninja -DTEST_MYSQL=ON
           cmake-init-env: CXXFLAGS=-Werror
           gtest-env: GTEST_FILTER=-*SQLite*
@@ -104,13 +103,13 @@ jobs:
       run: |
         mkdir debug
         cd debug
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.cmake-init-env }} ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
-        ${{ matrix.cmake-path }}cmake --build . --config Debug --target everything ${{ matrix.build-args }}
+        cmake -E env ${{ matrix.cmake-init-env }} cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+        cmake --build . --config Debug --target everything ${{ matrix.build-args }}
 
     - name: Test debug
       run: |
         cd debug
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests ${{ matrix.build-args }}
+        cmake -E env ${{ matrix.gtest-env }} cmake --build . --config Debug --target run_tests ${{ matrix.build-args }}
 
     - name: Run debug server
       run: |
@@ -121,13 +120,13 @@ jobs:
       run: |
         mkdir release
         cd release
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.cmake-init-env }} ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
-        ${{ matrix.cmake-path }}cmake --build . --config Release --target everything ${{ matrix.build-args }}
+        cmake -E env ${{ matrix.cmake-init-env }} cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+        cmake --build . --config Release --target everything ${{ matrix.build-args }}
 
     - name: Test release
       run: |
         cd release
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Release --target run_tests ${{ matrix.build-args }}
+        cmake -E env ${{ matrix.gtest-env }} cmake --build . --config Release --target run_tests ${{ matrix.build-args }}
 
     - name: Run release server
       run: |
@@ -139,15 +138,15 @@ jobs:
       run: |
         mkdir headless
         cd headless
-        ${{ matrix.cmake-path }}cmake --version
-        ${{ matrix.cmake-path }}cmake -E env CXXFLAGS="--coverage -Werror" ${{ matrix.cmake-path }}cmake -E env LDFLAGS="--coverage -Werror" ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DHEADLESS_CLIENT=ON -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
-        ${{ matrix.cmake-path }}cmake -E env RUSTFLAGS="-Clink-arg=--coverage" ${{ matrix.cmake-path }}cmake --build . --config Debug  ${{ matrix.build-args }}
+        cmake --version
+        cmake -E env CXXFLAGS="--coverage -Werror" cmake -E env LDFLAGS="--coverage -Werror" cmake ${{ matrix.cmake-args }} -DHEADLESS_CLIENT=ON -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+        cmake -E env RUSTFLAGS="-Clink-arg=--coverage" cmake --build . --config Debug  ${{ matrix.build-args }}
 
     - name: Test headless client (unit tests)
       if: contains(matrix.os, 'ubuntu-latest')
       run: |
         cd headless
-        ${{ matrix.cmake-path }}cmake -E env RUSTFLAGS="-Clink-arg=--coverage" RUSTDOCFLAGS="-Clink-arg=--coverage" ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests ${{ matrix.build-args }}
+        cmake -E env RUSTFLAGS="-Clink-arg=--coverage" RUSTDOCFLAGS="-Clink-arg=--coverage" cmake --build . --config Debug --target run_tests ${{ matrix.build-args }}
 
     - name: Upload Codecov report (unit tests)
       if: contains(matrix.os, 'ubuntu-latest')
@@ -175,14 +174,14 @@ jobs:
       run: |
         mkdir fancy
         cd fancy
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.cmake-init-env }} ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. -DANTIBOT=ON -DWEBSOCKETS=ON ..
-        ${{ matrix.cmake-path }}cmake --build . --config RelWithDebInfo --target everything ${{ matrix.build-args }}
+        cmake -E env ${{ matrix.cmake-init-env }} cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. -DANTIBOT=ON -DWEBSOCKETS=ON ..
+        cmake --build . --config RelWithDebInfo --target everything ${{ matrix.build-args }}
 
     - name: Test fancy
       if: matrix.fancy
       run: |
         cd fancy
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config RelWithDebInfo --target run_tests ${{ matrix.build-args }}
+        cmake -E env ${{ matrix.gtest-env }} cmake --build . --config RelWithDebInfo --target run_tests ${{ matrix.build-args }}
 
     - name: Run fancy server
       if: matrix.fancy
@@ -207,7 +206,7 @@ jobs:
     - name: Package
       run: |
         cd release
-        ${{ matrix.cmake-path }}cmake --build . --config Release --target package_default ${{ matrix.build-args }}
+        cmake --build . --config Release --target package_default ${{ matrix.build-args }}
         mkdir artifacts
         mv ${{ matrix.package-file }} artifacts
 
