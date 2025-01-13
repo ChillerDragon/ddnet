@@ -348,6 +348,7 @@ void CMapLayers::OnMapLoad()
 			bool IsTeleLayer = false;
 			bool IsSpeedupLayer = false;
 			bool IsTuneLayer = false;
+			bool IsRedirectLayer = false;
 			bool IsGameLayer = false;
 			bool IsEntityLayer = false;
 
@@ -372,6 +373,9 @@ void CMapLayers::OnMapLoad()
 
 			if(pLayer == (CMapItemLayer *)m_pLayers->TuneLayer())
 				IsEntityLayer = IsTuneLayer = true;
+
+			if(pLayer == (CMapItemLayer *)m_pLayers->RedirectLayer())
+				IsEntityLayer = IsRedirectLayer = true;
 
 			if(m_Type <= TYPE_BACKGROUND_FORCE)
 			{
@@ -419,6 +423,11 @@ void CMapLayers::OnMapLoad()
 				{
 					DataIndex = pTMap->m_Tune;
 					TileSize = sizeof(CTuneTile);
+				}
+				else if(IsRedirectLayer)
+				{
+					DataIndex = pTMap->m_Redirect;
+					TileSize = sizeof(CRedirectTile);
 				}
 				else
 				{
@@ -539,6 +548,11 @@ void CMapLayers::OnMapLoad()
 									if(IsTuneLayer)
 									{
 										Index = ((CTuneTile *)pTiles)[y * pTMap->m_Width + x].m_Type;
+										Flags = 0;
+									}
+									if(IsRedirectLayer)
+									{
+										Index = ((CRedirectTile *)pTiles)[(y * pTMap->m_Width) + x].m_Type;
 										Flags = 0;
 									}
 								}

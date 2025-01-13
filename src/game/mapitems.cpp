@@ -57,6 +57,12 @@ bool IsValidTeleTile(int Index)
 		Index == TILE_TELECHECKINEVIL);
 }
 
+bool IsValidRedirectTile(int Index)
+{
+	// TODO: add redirect tile index
+	return Index != 0;
+}
+
 bool IsTeleTileCheckpoint(int Index)
 {
 	return Index == TILE_TELECHECK || Index == TILE_TELECHECKOUT;

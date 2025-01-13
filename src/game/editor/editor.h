@@ -18,6 +18,7 @@
 #include <game/editor/mapitems/layer_game.h>
 #include <game/editor/mapitems/layer_group.h>
 #include <game/editor/mapitems/layer_quads.h>
+#include <game/editor/mapitems/layer_redirect.h>
 #include <game/editor/mapitems/layer_sounds.h>
 #include <game/editor/mapitems/layer_speedup.h>
 #include <game/editor/mapitems/layer_switch.h>
@@ -212,11 +213,13 @@ public:
 	std::shared_ptr<class CLayerFront> m_pFrontLayer;
 	std::shared_ptr<class CLayerSwitch> m_pSwitchLayer;
 	std::shared_ptr<class CLayerTune> m_pTuneLayer;
+	std::shared_ptr<class CLayerRedirect> m_pRedirectLayer;
 	void MakeTeleLayer(const std::shared_ptr<CLayer> &pLayer);
 	void MakeSpeedupLayer(const std::shared_ptr<CLayer> &pLayer);
 	void MakeFrontLayer(const std::shared_ptr<CLayer> &pLayer);
 	void MakeSwitchLayer(const std::shared_ptr<CLayer> &pLayer);
 	void MakeTuneLayer(const std::shared_ptr<CLayer> &pLayer);
+	void MakeRedirectLayer(const std::shared_ptr<CLayer> &pLayer);
 };
 
 class CProperty
@@ -347,6 +350,7 @@ public:
 	void AddTuneLayer();
 	void AddSpeedupLayer();
 	void AddTeleLayer();
+	void AddRedirectLayer();
 	void DeleteSelectedLayer();
 	void LayerSelectImage();
 	bool IsNonGameTileLayerSelected() const;
@@ -908,6 +912,7 @@ public:
 	static CUi::EPopupMenuFunctionResult PopupSpeedup(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupSwitch(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupTune(void *pContext, CUIRect View, bool Active);
+	static CUi::EPopupMenuFunctionResult PopupRedirect(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupGoto(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupEntities(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupProofMode(void *pContext, CUIRect View, bool Active);
@@ -1169,6 +1174,8 @@ public:
 	unsigned char m_SwitchNum;
 	unsigned char m_SwitchDelay;
 	unsigned char m_ViewSwitch;
+
+	unsigned short m_RedirectPort = 8303;
 
 	void AdjustBrushSpecialTiles(bool UseNextFree, int Adjust = 0);
 	int FindNextFreeSwitchNumber();
