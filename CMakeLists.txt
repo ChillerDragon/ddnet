@@ -2584,6 +2584,7 @@ if(CLIENT)
       ${CLIENT_MANIFEST}
       ${DEPS_CLIENT}
       $<TARGET_OBJECTS:engine-gfx>
+      $<TARGET_OBJECTS:engine-server>
       $<TARGET_OBJECTS:engine-shared>
       $<TARGET_OBJECTS:game-shared>
       $<TARGET_OBJECTS:rust-bridge-shared>
@@ -2595,6 +2596,7 @@ if(CLIENT)
       ${CLIENT_MANIFEST}
       ${DEPS_CLIENT}
       $<TARGET_OBJECTS:engine-gfx>
+      $<TARGET_OBJECTS:engine-server>
       $<TARGET_OBJECTS:engine-shared>
       $<TARGET_OBJECTS:game-shared>
       $<TARGET_OBJECTS:rust-bridge-shared>
@@ -2765,7 +2767,7 @@ if(SERVER)
     "src/game/generated/server_data.h"
     "src/game/generated/wordlist.h"
   )
-  set(SERVER_SRC ${ENGINE_SERVER} ${GAME_SERVER} ${GAME_GENERATED_SERVER})
+  set(SERVER_SRC ${GAME_SERVER} ${GAME_GENERATED_SERVER})
   if(TARGET_OS STREQUAL "windows")
     set(SERVER_ICON "other/icons/DDNet-Server.rc")
   else()
@@ -2795,6 +2797,7 @@ if(SERVER)
       ${DEPS}
       ${SERVER_SRC}
       ${SERVER_ICON}
+      $<TARGET_OBJECTS:engine-server>
       $<TARGET_OBJECTS:engine-shared>
       $<TARGET_OBJECTS:game-shared>
       $<TARGET_OBJECTS:rust-bridge-shared>
@@ -2804,6 +2807,7 @@ if(SERVER)
       ${DEPS}
       ${SERVER_SRC}
       ${SERVER_ICON}
+      $<TARGET_OBJECTS:engine-server>
       $<TARGET_OBJECTS:engine-shared>
       $<TARGET_OBJECTS:game-shared>
       $<TARGET_OBJECTS:rust-bridge-shared>
