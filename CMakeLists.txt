@@ -2706,6 +2706,7 @@ if(SERVER)
 
   set(ENGINE_SERVER_WITHOUT_MAIN ${ENGINE_SERVER})
   list(REMOVE_ITEM ENGINE_SERVER_WITHOUT_MAIN "${PROJECT_SOURCE_DIR}/src/engine/server/main.cpp")
+  add_library(engine-server EXCLUDE_FROM_ALL OBJECT ${BASE} ${ENGINE_SERVER_WITHOUT_MAIN} ${TARGET_ANTIBOT})
 
   set_src(GAME_SERVER GLOB_RECURSE src/game/server
     ddracechat.cpp
