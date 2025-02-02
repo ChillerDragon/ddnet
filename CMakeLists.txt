@@ -2703,6 +2703,10 @@ if(SERVER)
     upnp.cpp
     upnp.h
   )
+
+  set(ENGINE_SERVER_WITHOUT_MAIN ${ENGINE_SERVER})
+  list(REMOVE_ITEM ENGINE_SERVER_WITHOUT_MAIN "${PROJECT_SOURCE_DIR}/src/engine/server/main.cpp")
+
   set_src(GAME_SERVER GLOB_RECURSE src/game/server
     ddracechat.cpp
     ddracecommands.cpp
@@ -3001,7 +3005,9 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
   add_executable(${TARGET_TESTRUNNER} EXCLUDE_FROM_ALL
     ${TESTS}
     ${TESTS_EXTRA}
-    ${SERVER_SRC}
+    ${ENGINE_SERVER_WITHOUT_MAIN}
+    ${GAME_SERVER}
+    ${GAME_GENERATED_SERVER}
     $<TARGET_OBJECTS:engine-gfx>
     $<TARGET_OBJECTS:engine-shared>
     $<TARGET_OBJECTS:game-shared>
@@ -3010,7 +3016,6 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
   )
   target_link_libraries(${TARGET_TESTRUNNER} ${MYSQL_LIBRARIES} ${PNG_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS} rust_engine_shared ${TARGET_ANTIBOT})
   target_include_directories(${TARGET_TESTRUNNER} SYSTEM PRIVATE ${GTEST_INCLUDE_DIRS})
-  target_compile_definitions(${TARGET_TESTRUNNER} PRIVATE IS_TEST_TODO_FIND_BETTER_NAME)
 
   list(APPEND TARGETS_OWN ${TARGET_TESTRUNNER})
   list(APPEND TARGETS_LINK ${TARGET_TESTRUNNER})

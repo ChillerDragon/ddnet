@@ -4,6 +4,11 @@
 #include <base/system.h>
 #include <game/server/gameworld.h>
 
+bool IsInterrupted()
+{
+	return false;
+}
+
 TEST(GameWorld, basic)
 {
 	CGameWorld *pWorld = new CGameWorld();
