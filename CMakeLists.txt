@@ -2676,7 +2676,7 @@ if(SERVER)
     antibot_null.cpp
   )
 
-  set_src(ENGINE_SERVER GLOB_RECURSE src/engine/server
+  set_src(ENGINE_SERVER_WITHOUT_MAIN GLOB_RECURSE src/engine/server
     antibot.cpp
     antibot.h
     authmanager.cpp
@@ -2704,7 +2704,6 @@ if(SERVER)
     upnp.h
   )
 
-  set(ENGINE_SERVER_WITHOUT_MAIN ${ENGINE_SERVER})
   list(REMOVE_ITEM ENGINE_SERVER_WITHOUT_MAIN "${PROJECT_SOURCE_DIR}/src/engine/server/main.cpp")
 
   set_src(GAME_SERVER GLOB_RECURSE src/game/server
@@ -2764,7 +2763,7 @@ if(SERVER)
     "src/game/generated/server_data.h"
     "src/game/generated/wordlist.h"
   )
-  set(SERVER_SRC ${ENGINE_SERVER} ${GAME_SERVER} ${GAME_GENERATED_SERVER})
+  set(SERVER_SRC ${ENGINE_SERVER_WITHOUT_MAIN} ${GAME_SERVER} ${GAME_GENERATED_SERVER})
   if(TARGET_OS STREQUAL "windows")
     set(SERVER_ICON "other/icons/DDNet-Server.rc")
   else()
@@ -2788,11 +2787,26 @@ if(SERVER)
     ${LIBS}
   )
 
+  add_library(server-without-main
+      ${DEPS}
+      ${SERVER_SRC}
+      $<TARGET_OBJECTS:engine-shared>
+      $<TARGET_OBJECTS:game-shared>
+      $<TARGET_OBJECTS:rust-bridge-shared>
+  )
+  set_property(TARGET server-without-main
+      PROPERTY OUTPUT_NAME ${SERVER_EXECUTABLE}
+  )
+  target_link_libraries(server-without-main ${LIBS_SERVER})
+  list(APPEND TARGETS_OWN server-without-main)
+  list(APPEND TARGETS_LINK server-without-main)
+
   # Target
   if(TARGET_OS STREQUAL "android")
     add_library(game-server SHARED
       ${DEPS}
-      ${SERVER_SRC}
+      $<TARGET_OBJECTS:server-without-main>
+      "${PROJECT_SOURCE_DIR}/src/engine/server/main.cpp"
       ${SERVER_ICON}
       $<TARGET_OBJECTS:engine-shared>
       $<TARGET_OBJECTS:game-shared>
@@ -2801,8 +2815,9 @@ if(SERVER)
   else()
     add_executable(game-server
       ${DEPS}
-      ${SERVER_SRC}
+      "${PROJECT_SOURCE_DIR}/src/engine/server/main.cpp"
       ${SERVER_ICON}
+      $<TARGET_OBJECTS:server-without-main>
       $<TARGET_OBJECTS:engine-shared>
       $<TARGET_OBJECTS:game-shared>
       $<TARGET_OBJECTS:rust-bridge-shared>
@@ -3005,9 +3020,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
   add_executable(${TARGET_TESTRUNNER} EXCLUDE_FROM_ALL
     ${TESTS}
     ${TESTS_EXTRA}
-    ${ENGINE_SERVER_WITHOUT_MAIN}
-    ${GAME_SERVER}
-    ${GAME_GENERATED_SERVER}
+    $<TARGET_OBJECTS:server-without-main>
     $<TARGET_OBJECTS:engine-gfx>
     $<TARGET_OBJECTS:engine-shared>
     $<TARGET_OBJECTS:game-shared>
