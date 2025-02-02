@@ -2951,6 +2951,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
     datafile.cpp
     editor.cpp
     fs.cpp
+    gameworld.cpp
     git_revision.cpp
     hash.cpp
     huffman.cpp
@@ -2994,31 +2995,22 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
     src/engine/client/serverbrowser_ping_cache.cpp
     src/engine/client/serverbrowser_ping_cache.h
     src/engine/client/sqlite.cpp
-    src/engine/server/databases/connection.cpp
-    src/engine/server/databases/connection.h
-    src/engine/server/databases/sqlite.cpp
-    src/engine/server/databases/mysql.cpp
-    src/engine/server/name_ban.cpp
-    src/engine/server/name_ban.h
-    src/engine/server/sql_string_helpers.cpp
-    src/engine/server/sql_string_helpers.h
-    src/game/server/teehistorian.cpp
-    src/game/server/teehistorian.h
-    src/game/server/scoreworker.cpp
-    src/game/server/scoreworker.h
   )
 
   set(TARGET_TESTRUNNER testrunner)
   add_executable(${TARGET_TESTRUNNER} EXCLUDE_FROM_ALL
     ${TESTS}
     ${TESTS_EXTRA}
+    ${SERVER_SRC}
     $<TARGET_OBJECTS:engine-gfx>
     $<TARGET_OBJECTS:engine-shared>
     $<TARGET_OBJECTS:game-shared>
+    $<TARGET_OBJECTS:rust-bridge-shared>
     ${DEPS}
   )
-  target_link_libraries(${TARGET_TESTRUNNER} ${MYSQL_LIBRARIES} ${PNG_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS})
+  target_link_libraries(${TARGET_TESTRUNNER} ${MYSQL_LIBRARIES} ${PNG_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS} rust_engine_shared ${TARGET_ANTIBOT})
   target_include_directories(${TARGET_TESTRUNNER} SYSTEM PRIVATE ${GTEST_INCLUDE_DIRS})
+  target_compile_definitions(${TARGET_TESTRUNNER} PRIVATE IS_TEST_TODO_FIND_BETTER_NAME)
 
   list(APPEND TARGETS_OWN ${TARGET_TESTRUNNER})
   list(APPEND TARGETS_LINK ${TARGET_TESTRUNNER})

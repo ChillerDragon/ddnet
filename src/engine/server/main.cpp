@@ -44,6 +44,7 @@ void HandleSigIntTerm(int Param)
 	signal(SIGTERM, SIG_DFL);
 }
 
+#if !defined(IS_TEST_TODO_FIND_BETTER_NAME)
 int main(int argc, const char **argv)
 {
 	const int64_t MainStart = time_get();
@@ -217,6 +218,7 @@ int main(int argc, const char **argv)
 
 	return Ret;
 }
+#endif
 
 #if defined(CONF_PLATFORM_ANDROID)
 #if !defined(ANDROID_PACKAGE_NAME)
