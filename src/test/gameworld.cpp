@@ -9,6 +9,12 @@ bool IsInterrupted()
 	return false;
 }
 
+std::vector<std::string> FakeQueue;
+std::vector<std::string> FetchAndroidServerCommandQueue()
+{
+	return FakeQueue;
+}
+
 TEST(GameWorld, basic)
 {
 	CGameWorld *pWorld = new CGameWorld();
