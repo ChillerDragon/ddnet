@@ -4,6 +4,9 @@
 #include <base/logger.h>
 #include <base/system.h>
 #include <engine/engine.h>
+#include <engine/server/databases/connection.h>
+#include <engine/server/databases/connection_pool.h>
+#include <engine/server/register.h>
 #include <engine/server/server.h>
 #include <engine/server/server_logger.h>
 #include <engine/shared/assertion_logger.h>
@@ -27,89 +30,119 @@ std::vector<std::string> FetchAndroidServerCommandQueue()
 	return FakeQueue;
 }
 
-TEST(GameWorld, Basic)
+class GameWorld : public ::testing::Test
 {
-	std::vector<std::shared_ptr<ILogger>> vpLoggers;
-	std::shared_ptr<ILogger> pStdoutLogger;
-	if(pStdoutLogger)
+public:
+	IGameServer *m_pGameServer = nullptr;
+	CServer *m_pServer = nullptr;
+	IKernel *m_pKernel;
+	std::shared_ptr<CServerLogger> m_pServerLogger = nullptr;
+
+	CGameContext *GameServer()
 	{
-		vpLoggers.push_back(pStdoutLogger);
+		return (CGameContext *)m_pGameServer;
 	}
-	std::shared_ptr<CFutureLogger> pFutureFileLogger = std::make_shared<CFutureLogger>();
-	vpLoggers.push_back(pFutureFileLogger);
-	std::shared_ptr<CFutureLogger> pFutureConsoleLogger = std::make_shared<CFutureLogger>();
-	vpLoggers.push_back(pFutureConsoleLogger);
-	std::shared_ptr<CFutureLogger> pFutureAssertionLogger = std::make_shared<CFutureLogger>();
-	vpLoggers.push_back(pFutureAssertionLogger);
 
-	CServer *pServer = CreateServer();
-	pServer->SetLoggers(pFutureFileLogger, std::move(pStdoutLogger));
+	GameWorld()
+	{
+		std::shared_ptr<CFutureLogger> pFutureConsoleLogger = std::make_shared<CFutureLogger>();
 
-	IKernel *pKernel = IKernel::Create();
-	pKernel->RegisterInterface(pServer);
+		CServer *pServer = CreateServer();
+		m_pServer = pServer;
 
-	IEngine *pEngine = CreateEngine(GAME_NAME, pFutureConsoleLogger, (2 * std::thread::hardware_concurrency()) + 2);
-	pKernel->RegisterInterface(pEngine);
+		m_pKernel = IKernel::Create();
+		m_pKernel->RegisterInterface(m_pServer);
 
-	const char *apArgs[] = {"DDNet"};
-	IStorage *pStorage = CreateStorage(IStorage::EInitializationType::SERVER, 1, apArgs);
-	EXPECT_NE(pStorage, nullptr);
-	pKernel->RegisterInterface(pStorage);
+		IEngine *pEngine = CreateEngine(GAME_NAME, pFutureConsoleLogger, (2 * std::thread::hardware_concurrency()) + 2);
+		m_pKernel->RegisterInterface(pEngine);
 
-	pFutureAssertionLogger->Set(CreateAssertionLogger(pStorage, GAME_NAME));
+		const char *apArgs[] = {"DDNet"};
+		IStorage *pStorage = CreateStorage(IStorage::EInitializationType::SERVER, 1, apArgs);
+		EXPECT_NE(pStorage, nullptr);
+		m_pKernel->RegisterInterface(pStorage);
 
-	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER | CFGFLAG_ECON).release();
-	pKernel->RegisterInterface(pConsole);
+		IConsole *pConsole = CreateConsole(CFGFLAG_SERVER | CFGFLAG_ECON).release();
+		m_pKernel->RegisterInterface(pConsole);
 
-	IConfigManager *pConfigManager = CreateConfigManager();
-	pKernel->RegisterInterface(pConfigManager);
+		IConfigManager *pConfigManager = CreateConfigManager();
+		m_pKernel->RegisterInterface(pConfigManager);
 
-	IEngineMap *pEngineMap = CreateEngineMap();
-	pKernel->RegisterInterface(pEngineMap);
-	pKernel->RegisterInterface(static_cast<IMap *>(pEngineMap), false);
+		IEngineMap *pEngineMap = CreateEngineMap();
+		m_pKernel->RegisterInterface(pEngineMap);
+		m_pKernel->RegisterInterface(static_cast<IMap *>(pEngineMap), false);
 
-	IEngineAntibot *pEngineAntibot = CreateEngineAntibot();
-	pKernel->RegisterInterface(pEngineAntibot);
-	pKernel->RegisterInterface(static_cast<IAntibot *>(pEngineAntibot), false);
+		IEngineAntibot *pEngineAntibot = CreateEngineAntibot();
+		m_pKernel->RegisterInterface(pEngineAntibot);
+		m_pKernel->RegisterInterface(static_cast<IAntibot *>(pEngineAntibot), false);
 
-	IGameServer *pGameServer = CreateGameServer();
-	pKernel->RegisterInterface(pGameServer);
+		m_pGameServer = CreateGameServer();
+		m_pKernel->RegisterInterface(m_pGameServer);
 
-	pEngine->Init();
-	pConsole->Init();
-	pConfigManager->Init();
+		pEngine->Init();
+		pConsole->Init();
+		pConfigManager->Init();
 
-	pServer->RegisterCommands();
-	pConfigManager->SetReadOnly("sv_max_clients", true);
-	pConfigManager->SetReadOnly("sv_test_cmds", true);
-	pConfigManager->SetReadOnly("sv_rescue", true);
+		m_pServer->RegisterCommands();
 
-	pFutureFileLogger->Set(log_logger_noop());
+		m_pServerLogger = std::make_shared<CServerLogger>(m_pServer);
+		pEngine->SetAdditionalLogger(m_pServerLogger);
 
-	auto pServerLogger = std::make_shared<CServerLogger>(pServer);
-	pEngine->SetAdditionalLogger(pServerLogger);
+		EXPECT_NE(m_pServer->LoadMap("coverage"), 0);
 
-	EXPECT_NE(pServer->LoadMap("coverage"), 0);
-	pServer->Antibot()->Init();
-	pGameServer->OnInit(nullptr);
-	CGameContext *pGame = (CGameContext *)pGameServer;
+		m_pServer->m_RunServer = m_pServer->RUNNING;
 
-	// test
+		m_pServer->m_AuthManager.Init();
+
+		{
+			int Size = GameServer()->PersistentClientDataSize();
+			for(auto &Client : m_pServer->m_aClients)
+			{
+				Client.m_HasPersistentData = false;
+				Client.m_pPersistentData = malloc(Size);
+			}
+		}
+		m_pServer->m_pPersistentData = malloc(GameServer()->PersistentDataSize());
+		EXPECT_NE(m_pServer->LoadMap("coverage"), 0);
+
+		if(!pServer->m_Http.Init(std::chrono::seconds{2}))
+		{
+			log_error("server", "Failed to initialize the HTTP client.");
+		}
+
+		pServer->m_NetServer.SetCallbacks(pServer->NewClientCallback, pServer->NewClientNoAuthCallback, pServer->ClientRejoinCallback, pServer->DelClientCallback, pServer);
+
+		pServer->m_Econ.Init(pServer->Config(), pServer->Console(), &pServer->m_ServerBan);
+
+		pServer->m_Fifo.Init(pServer->Console(), pServer->Config()->m_SvInputFifo, CFGFLAG_SERVER);
+		m_pServer->Antibot()->Init();
+		GameServer()->OnInit(nullptr);
+		pServer->ReadAnnouncementsFile();
+		pServer->InitMaplist();
+	};
+
+	~GameWorld()
+	{
+		m_pServer->m_Econ.Shutdown();
+		m_pServer->m_Fifo.Shutdown();
+		m_pGameServer->OnShutdown(nullptr);
+		m_pServer->m_pMap->Unload();
+		m_pServer->DbPool()->OnShutdown();
+		m_pServerLogger->OnServerDeletion();
+		delete m_pKernel;
+	};
+};
+
+TEST_F(GameWorld, ClosestCharacter)
+{
 	CNetObj_PlayerInput Input = {};
-
-	CCharacter *pChr1 = new(0) CCharacter(&pGame->m_World, Input);
+	CCharacter *pChr1 = new(0) CCharacter(&GameServer()->m_World, Input);
 	pChr1->m_Pos = vec2(0, 0);
-	pGame->m_World.InsertEntity(pChr1);
+	GameServer()->m_World.InsertEntity(pChr1);
 
-	CCharacter *pChr2 = new(1) CCharacter(&pGame->m_World, Input);
+	CCharacter *pChr2 = new(1) CCharacter(&GameServer()->m_World, Input);
 	pChr2->m_Pos = vec2(10, 10);
-	pGame->m_World.InsertEntity(pChr2);
+	GameServer()->m_World.InsertEntity(pChr2);
 
-	CCharacter *pClosest = pGame->m_World.ClosestCharacter(vec2(1, 1), 20, nullptr);
+	CCharacter *pClosest = GameServer()->m_World.ClosestCharacter(vec2(1, 1), 20, nullptr);
 	EXPECT_EQ(pClosest, pChr1);
-
-	// cleanup
-	pGameServer->OnShutdown(nullptr);
-	pServerLogger->OnServerDeletion();
-	delete pKernel;
 }
