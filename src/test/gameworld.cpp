@@ -83,7 +83,6 @@ public:
 		pEngine->SetAdditionalLogger(m_pServerLogger);
 
 		EXPECT_NE(pServer->LoadMap("coverage"), 0);
-		pServer->Antibot()->Init();
 		m_pGameServer->OnInit(nullptr);
 	};
 
