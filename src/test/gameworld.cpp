@@ -4,6 +4,7 @@
 #include <base/logger.h>
 #include <base/system.h>
 #include <engine/engine.h>
+#include <engine/server/register.h>
 #include <engine/server/server.h>
 #include <engine/server/server_logger.h>
 #include <engine/shared/assertion_logger.h>
@@ -85,6 +86,40 @@ public:
 		EXPECT_NE(pServer->LoadMap("coverage"), 0);
 		pServer->Antibot()->Init();
 		m_pGameServer->OnInit(nullptr);
+
+		pServer->m_AuthManager.Init();
+
+		{
+			int Size = GameServer()->PersistentClientDataSize();
+			for(auto &Client : pServer->m_aClients)
+			{
+				Client.m_HasPersistentData = false;
+				Client.m_pPersistentData = malloc(Size);
+			}
+		}
+		pServer->m_pPersistentData = malloc(GameServer()->PersistentDataSize());
+		EXPECT_NE(pServer->LoadMap("coverage"), 0);
+
+		if(!pServer->m_Http.Init(std::chrono::seconds{2}))
+		{
+			log_error("server", "Failed to initialize the HTTP client.");
+		}
+
+		pServer->m_pEngine = m_pKernel->RequestInterface<IEngine>();
+		pServer->m_pRegister = CreateRegister(&g_Config, pServer->m_pConsole, pServer->m_pEngine, &pServer->m_Http, 8303, pServer->m_NetServer.GetGlobalToken());
+
+		pServer->m_NetServer.SetCallbacks(pServer->NewClientCallback, pServer->NewClientNoAuthCallback, pServer->ClientRejoinCallback, pServer->DelClientCallback, pServer);
+
+		pServer->m_Econ.Init(pServer->Config(), pServer->Console(), &pServer->m_ServerBan);
+
+		pServer->m_Fifo.Init(pServer->Console(), pServer->Config()->m_SvInputFifo, CFGFLAG_SERVER);
+		pServer->Antibot()->Init();
+		GameServer()->OnInit(nullptr);
+		pServer->ReadAnnouncementsFile();
+		pServer->InitMaplist();
+
+		pServer->m_pConsole->StoreCommands(false);
+		pServer->m_pRegister->OnConfigChange();
 	};
 
 	~GameWorld()
