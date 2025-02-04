@@ -83,17 +83,29 @@ public:
 		pEngine->SetAdditionalLogger(m_pServerLogger);
 
 		EXPECT_NE(pServer->LoadMap("coverage"), 0);
+		pServer->Antibot()->Init();
 		m_pGameServer->OnInit(nullptr);
 	};
 
 	~GameWorld()
 	{
-		// m_pGameServer->OnShutdown(nullptr);
-		// m_pServerLogger->OnServerDeletion();
+		m_pGameServer->OnShutdown(nullptr);
+		m_pServerLogger->OnServerDeletion();
 		delete m_pKernel;
 	};
 };
 
 TEST_F(GameWorld, ClosestCharacter)
 {
+	CNetObj_PlayerInput Input = {};
+	CCharacter *pChr1 = new(0) CCharacter(&GameServer()->m_World, Input);
+	pChr1->m_Pos = vec2(0, 0);
+	GameServer()->m_World.InsertEntity(pChr1);
+
+	CCharacter *pChr2 = new(1) CCharacter(&GameServer()->m_World, Input);
+	pChr2->m_Pos = vec2(10, 10);
+	GameServer()->m_World.InsertEntity(pChr2);
+
+	CCharacter *pClosest = GameServer()->m_World.ClosestCharacter(vec2(1, 1), 20, nullptr);
+	EXPECT_EQ(pClosest, pChr1);
 }
