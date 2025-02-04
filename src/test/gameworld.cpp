@@ -90,7 +90,7 @@ public:
 	~GameWorld()
 	{
 		m_pGameServer->OnShutdown(nullptr);
-		m_pServerLogger->OnServerDeletion();
+		// m_pServerLogger->OnServerDeletion();
 		delete m_pKernel;
 	};
 };
