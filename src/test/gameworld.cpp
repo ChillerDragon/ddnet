@@ -4,6 +4,9 @@
 #include <base/logger.h>
 #include <base/system.h>
 #include <engine/engine.h>
+#include <engine/server/databases/connection.h>
+#include <engine/server/databases/connection_pool.h>
+#include <engine/server/register.h>
 #include <engine/server/server.h>
 #include <engine/server/server_logger.h>
 #include <engine/shared/assertion_logger.h>
@@ -31,6 +34,7 @@ class GameWorld : public ::testing::Test
 {
 public:
 	IGameServer *m_pGameServer = nullptr;
+	CServer *m_pServer = nullptr;
 	IKernel *m_pKernel;
 	std::shared_ptr<CServerLogger> m_pServerLogger = nullptr;
 
@@ -44,6 +48,7 @@ public:
 		std::shared_ptr<CFutureLogger> pFutureConsoleLogger = std::make_shared<CFutureLogger>();
 
 		CServer *pServer = CreateServer();
+		m_pServer = pServer;
 
 		m_pKernel = IKernel::Create();
 		m_pKernel->RegisterInterface(pServer);
@@ -77,19 +82,60 @@ public:
 		pConsole->Init();
 		pConfigManager->Init();
 
-		pServer->RegisterCommands();
+		m_pServer->RegisterCommands();
 
-		m_pServerLogger = std::make_shared<CServerLogger>(pServer);
+		m_pServerLogger = std::make_shared<CServerLogger>(m_pServer);
 		pEngine->SetAdditionalLogger(m_pServerLogger);
 
-		EXPECT_NE(pServer->LoadMap("coverage"), 0);
-		pServer->Antibot()->Init();
-		m_pGameServer->OnInit(nullptr);
+		EXPECT_NE(m_pServer->LoadMap("coverage"), 0);
+
+		m_pServer->m_RunServer = m_pServer->RUNNING;
+
+		m_pServer->m_AuthManager.Init();
+
+		{
+			int Size = GameServer()->PersistentClientDataSize();
+			for(auto &Client : m_pServer->m_aClients)
+			{
+				Client.m_HasPersistentData = false;
+				Client.m_pPersistentData = malloc(Size);
+			}
+		}
+		m_pServer->m_pPersistentData = malloc(GameServer()->PersistentDataSize());
+		EXPECT_NE(m_pServer->LoadMap("coverage"), 0);
+
+		if(!pServer->m_Http.Init(std::chrono::seconds{2}))
+		{
+			log_error("server", "Failed to initialize the HTTP client.");
+		}
+
+		pServer->m_pEngine = m_pKernel->RequestInterface<IEngine>();
+		pServer->m_pRegister = CreateRegister(&g_Config, pServer->m_pConsole, pServer->m_pEngine, &pServer->m_Http, 8303, pServer->m_NetServer.GetGlobalToken());
+
+		pServer->m_NetServer.SetCallbacks(pServer->NewClientCallback, pServer->NewClientNoAuthCallback, pServer->ClientRejoinCallback, pServer->DelClientCallback, pServer);
+
+		pServer->m_Econ.Init(pServer->Config(), pServer->Console(), &pServer->m_ServerBan);
+
+		pServer->m_Fifo.Init(pServer->Console(), pServer->Config()->m_SvInputFifo, CFGFLAG_SERVER);
+		m_pServer->Antibot()->Init();
+		GameServer()->OnInit(nullptr);
+		pServer->ReadAnnouncementsFile();
+		pServer->InitMaplist();
+
+		pServer->m_pConsole->StoreCommands(false);
+		pServer->m_pRegister->OnConfigChange();
 	};
 
 	~GameWorld()
 	{
+		m_pServer->m_pRegister->OnShutdown();
+		m_pServer->m_Econ.Shutdown();
+		m_pServer->m_Fifo.Shutdown();
+		m_pServer->Engine()->ShutdownJobs();
 		m_pGameServer->OnShutdown(nullptr);
+		m_pServer->m_pMap->Unload();
+		m_pServer->DbPool()->OnShutdown();
+		m_pServer->m_NetServer.Close();
 		m_pServerLogger->OnServerDeletion();
 		delete m_pKernel;
 	};
