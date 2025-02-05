@@ -119,6 +119,8 @@ jobs:
         cd debug
         ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests ${{ matrix.build-args }} || true
         ls testrunner.exe
+        # gdb should be installed according to https://github.com/actions/runner-images/blob/win22/20250203.1/images/windows/Windows2022-Readme.md
+        gdb --ex=r --ex=bt --ex=q ./testrunner.exe
 
     - name: Run debug server
       run: |
