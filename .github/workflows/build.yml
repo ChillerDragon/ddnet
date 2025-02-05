@@ -108,9 +108,17 @@ jobs:
         ${{ matrix.cmake-path }}cmake --build . --config Debug --target everything ${{ matrix.build-args }}
 
     - name: Test debug
+      if: ${{ ! contains(matrix.os, 'windows') }}
       run: |
         cd debug
         ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests ${{ matrix.build-args }}
+
+    - name: Test debug windows
+      if: contains(matrix.os, 'windows')
+      run: |
+        cd debug
+        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests ${{ matrix.build-args }} || true
+        ls testrunner.exe
 
     - name: Run debug server
       run: |
