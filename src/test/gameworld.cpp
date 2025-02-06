@@ -135,7 +135,7 @@ public:
 		m_pGameServer->OnShutdown(nullptr);
 		m_pServer->m_pMap->Unload();
 		m_pServer->DbPool()->OnShutdown();
-		m_pServer->m_NetServer.Close();
+		// m_pServer->m_NetServer.Close();
 		m_pServerLogger->OnServerDeletion();
 		delete m_pKernel;
 	};
