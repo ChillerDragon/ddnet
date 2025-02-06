@@ -118,7 +118,7 @@ jobs:
       run: |
         cd debug
         ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests ${{ matrix.build-args }} || true
-        devenv /testrunner.exe
+        devenv /DebugExe testrunner.exe
 
     - name: Run debug server
       run: |
