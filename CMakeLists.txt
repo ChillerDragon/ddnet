@@ -1896,7 +1896,19 @@ file(COPY ${COPY_DIRS} DESTINATION .)
 # CODE GENERATION
 ########################################################################
 
+set(GENERATED_HEADERS2 )
+
 function(generate_source output_file script_parameter)
+  message(STATUS "gen source called for file ${GENERATED_HEADERS2}")
+  list(APPEND GENERATED_HEADERS2 ${output_file} )
+  set(GENERATED_HEADERS2 ${GENERATED_HEADERS2} PARENT_SCOPE)
+
+  # message(STATUS "gen source called for file ${output_file}")
+  # set(GENERATED_HEADERS2 ${GENERATED_HEADERS2} PARENT_SCOPE)
+  # message(STATUS "BEFORE hjeaders: ${GENERATED_HEADERS2}")
+  # list(APPEND GENERATED_HEADERS2 ${output_file} )
+  # message(STATUS "AFTER  hjeaders: ${GENERATED_HEADERS2}")
+
   add_custom_command(OUTPUT ${output_file}
     COMMAND ${Python3_EXECUTABLE} datasrc/compile.py ${script_parameter}
       > "${PROJECT_BINARY_DIR}/${output_file}"
@@ -1910,6 +1922,7 @@ function(generate_source output_file script_parameter)
 endfunction()
 
 function(generate_source7 output_file script_parameter)
+  list(APPEND GENERATED_HEADERS2 ${output_file})
   add_custom_command(OUTPUT ${output_file}
     COMMAND ${Python3_EXECUTABLE} -m datasrc.seven.compile ${script_parameter}
       > "${PROJECT_BINARY_DIR}/${output_file}"
@@ -1939,6 +1952,10 @@ function(generate_maps output_file script_parameter)
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   )
 endfunction()
+
+
+
+message(STATUS "XXX mkdir gen")
 
 file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/src/game/generated/")
 execute_process(COMMAND git rev-parse --git-dir
@@ -1975,6 +1992,9 @@ generate_source7("src/game/generated/protocol7.cpp" "network_source")
 generate_source7("src/game/generated/protocol7.h" "network_header")
 generate_source7("src/game/generated/client_data7.cpp" "client_content_source")
 generate_source7("src/game/generated/client_data7.h" "client_content_header")
+
+
+message(STATUS "XXX called gensource")
 
 generate_maps("src/game/generated/protocolglue.h" "map_header")
 generate_maps("src/game/generated/protocolglue.cpp" "map_source")
@@ -2224,6 +2244,11 @@ target_include_directories(engine-gfx PRIVATE ${PNG_INCLUDE_DIRS})
 add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_INTERFACE} ${ENGINE_SHARED} ${ENGINE_UUID_SHARED} ${BASE})
 add_library(game-shared EXCLUDE_FROM_ALL OBJECT ${GAME_SHARED} ${GAME_GENERATED_SHARED})
 list(APPEND TARGETS_OWN engine-gfx engine-shared game-shared)
+
+
+message(STATUS "hjeaders: ${GENERATED_HEADERS2}")
+
+add_custom_target(gen ALL DEPENDS ${GENERATED_HEADERS2})
 
 if(DISCORD AND NOT DISCORD_DYNAMIC)
   add_library(discord-shared SHARED IMPORTED)
