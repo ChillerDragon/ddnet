@@ -563,6 +563,7 @@ public:
 	void OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy) override;
 	void InvalidateSnapshot() override;
 	void OnNewSnapshot() override;
+	void OnDemoRecSnap() override;
 	void OnPredict() override;
 	void OnActivateEditor() override;
 	void OnDummySwap() override;
@@ -617,6 +618,7 @@ public:
 	CNetObj_PlayerInput m_HammerInput;
 	unsigned int m_DummyFire;
 	bool m_ReceivedDDNetPlayer;
+	CNetMsg_Cl_CameraInfo m_LastCameraInfo;
 
 	class CTeamsCore m_Teams;
 

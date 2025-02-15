@@ -22,6 +22,7 @@
 #include <engine/shared/fifo.h>
 #include <engine/shared/http.h>
 #include <engine/shared/network.h>
+#include <engine/shared/snapshot.h>
 #include <engine/textrender.h>
 #include <engine/warning.h>
 
@@ -347,8 +348,10 @@ public:
 	int GetPredictionTick() override;
 	const void *SnapFindItem(int SnapId, int Type, int Id) const override;
 	int SnapNumItems(int SnapId) const override;
+	void *SnapNewItem(int Type, int Id, int Size) override;
 	void SnapSetStaticsize(int ItemType, int Size) override;
 	void SnapSetStaticsize7(int ItemType, int Size) override;
+	CSnapshotBuilder m_DemoRecSnapshotBuilder;
 
 	void Render();
 	void DebugRender();

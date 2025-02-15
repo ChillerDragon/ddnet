@@ -12,4 +12,9 @@ void CSnapshotBuilder::Init7(const CSnapshot *pSnapshot)
 	m_NumItems = pSnapshot->m_NumItems;
 	mem_copy(m_aOffsets, pSnapshot->Offsets(), sizeof(int) * m_NumItems);
 	mem_copy(m_aData, pSnapshot->DataStart(), m_DataSize);
+
+	for(int i = 0; i < m_NumExtendedItemTypes; i++)
+	{
+		AddExtendedItemType(i);
+	}
 }

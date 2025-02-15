@@ -238,6 +238,7 @@ public:
 	virtual int SnapNumItems(int SnapId) const = 0;
 	virtual const void *SnapFindItem(int SnapId, int Type, int Id) const = 0;
 	virtual CSnapItem SnapGetItem(int SnapId, int Index) const = 0;
+	virtual void *SnapNewItem(int Type, int Id, int Size) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 	virtual void SnapSetStaticsize7(int ItemType, int Size) = 0;
@@ -357,6 +358,7 @@ public:
 	virtual void OnInit() = 0;
 	virtual void InvalidateSnapshot() = 0;
 	virtual void OnNewSnapshot() = 0;
+	virtual void OnDemoRecSnap() = 0;
 	virtual void OnEnterGame() = 0;
 	virtual void OnShutdown() = 0;
 	virtual void OnRender() = 0;

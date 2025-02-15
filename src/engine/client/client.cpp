@@ -854,6 +854,12 @@ void CClient::SnapSetStaticsize7(int ItemType, int Size)
 	m_SnapshotDelta.SetStaticsize7(ItemType, Size);
 }
 
+void *CClient::SnapNewItem(int Type, int Id, int Size)
+{
+	dbg_assert(Id >= -1 && Id <= 0xffff, "incorrect id");
+	return Id < 0 ? 0 : m_DemoRecSnapshotBuilder.NewItem(Type, Id, Size);
+}
+
 void CClient::DebugRender()
 {
 	if(!g_Config.m_Debug)
@@ -2078,6 +2084,26 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 							{
 								dbg_msg("sixup", "demo snapshot failed. error=%d", DemoSnapSize);
 							}
+						}
+						else
+						{
+							bool AnyDemoRec = false;
+							for(auto &DemoRecorder : m_aDemoRecorder)
+								if(DemoRecorder.IsRecording())
+									AnyDemoRec = true;
+
+							if(AnyDemoRec)
+							{
+								m_DemoRecSnapshotBuilder.Init7(pTmpBuffer3);
+								GameClient()->OnDemoRecSnap();
+								DemoSnapSize = m_DemoRecSnapshotBuilder.Finish(pTmpBuffer3);
+							}
+
+							// GameClient()->GetNetObjHandler()->DebugDumpSnapshot(pTmpBuffer3);
+
+							// m_DemoRecSnapshotBuilder.Init(pTmpBuffer3);
+							// GameClient()->OnDemoRecSnap();
+							// SnapSize = m_DemoRecSnapshotBuilder.Finish(pTmpBuffer3);
 						}
 
 						if(DemoSnapSize >= 0)

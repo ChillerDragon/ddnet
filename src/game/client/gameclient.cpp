@@ -2145,16 +2145,24 @@ void CGameClient::OnNewSnapshot()
 	// send camera info
 	if(Zoom != m_LastZoom || Deadzone != m_LastDeadzone || FollowFactor != m_LastFollowFactor)
 	{
-		CNetMsg_Cl_CameraInfo Msg;
-		Msg.m_Zoom = round_truncate(Zoom * 1000.f);
-		Msg.m_Deadzone = Deadzone;
-		Msg.m_FollowFactor = FollowFactor;
-		CMsgPacker Packer(&Msg);
-		Msg.Pack(&Packer);
+		m_LastCameraInfo.m_Zoom = round_truncate(Zoom * 1000.f);
+		m_LastCameraInfo.m_Deadzone = Deadzone;
+		m_LastCameraInfo.m_FollowFactor = FollowFactor;
+		CMsgPacker Packer(&m_LastCameraInfo);
+		m_LastCameraInfo.Pack(&Packer);
 
 		Client()->SendMsg(IClient::CONN_MAIN, &Packer, MSGFLAG_VITAL);
 		if(Client()->DummyConnected() && m_LastDummyConnected)
 			Client()->SendMsg(IClient::CONN_DUMMY, &Packer, MSGFLAG_VITAL);
+
+		// 	CNetObj_DDNetSpectatorInfo *pDDNetSpectatorInfo = Server()->SnapNewItem<CNetObj_DDNetSpectatorInfo>(id);
+		// 	if(!pDDNetSpectatorInfo)
+		// 		return;
+
+		// 	pDDNetSpectatorInfo->m_HasCameraInfo = pSpecPlayer->m_CameraInfo.m_HasCameraInfo;
+		// 	pDDNetSpectatorInfo->m_Zoom = pSpecPlayer->m_CameraInfo.m_Zoom * 1000.0f;
+		// 	pDDNetSpectatorInfo->m_Deadzone = pSpecPlayer->m_CameraInfo.m_Deadzone;
+		// 	pDDNetSpectatorInfo->m_FollowFactor = pSpecPlayer->m_CameraInfo.m_FollowFactor;
 	}
 
 	m_LastShowDistanceZoom = ShowDistanceZoom;
@@ -2233,6 +2241,38 @@ void CGameClient::OnNewSnapshot()
 	// update prediction data
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		UpdatePrediction();
+}
+
+void CGameClient::OnDemoRecSnap()
+{
+	CNetObj_DDNetSpectatorInfo *pDDNetSpectatorInfo = static_cast<CNetObj_DDNetSpectatorInfo *>(Client()->SnapNewItem(NETOBJTYPE_DDNETSPECTATORINFO, 0, sizeof(CNetObj_DDNetSpectatorInfo)));
+	if(!pDDNetSpectatorInfo)
+	{
+		log_error("nsppao", "fatal failed to add to snap");
+		return;
+	}
+
+	pDDNetSpectatorInfo->m_HasCameraInfo = true;
+	pDDNetSpectatorInfo->m_Zoom = m_LastCameraInfo.m_Zoom;
+	pDDNetSpectatorInfo->m_Deadzone = m_LastCameraInfo.m_Deadzone;
+	pDDNetSpectatorInfo->m_FollowFactor = m_LastCameraInfo.m_FollowFactor;
+
+	log_info("snapppo", "adding spec info");
+
+	// +               CNetObj_De_ClientInfo *pClientInfo = static_cast<CNetObj_De_ClientInfo *>(Client()->SnapNewItem(NETOBJTYPE_DE_CLIENTINFO, i, sizeof(CNetObj_De_ClientInfo)));
+	// +               if(!pClientInfo)
+	// +                       return;
+	// +
+	// +               StrToInts(pClientInfo->m_aName, 4, m_aClients[i].m_aName);
+	// +               StrToInts(pClientInfo->m_aClan, 3, m_aClients[i].m_aClan);
+	// +               pClientInfo->m_Country = m_aClients[i].m_Country;
+	// +
+	// +               for(int p = 0; p < 6; p++)
+	// +               {
+	// +                       StrToInts(pClientInfo->m_aaSkinPartNames[p], 6, m_aClients[i].m_aaSkinPartNames[p]);
+	// +                       pClientInfo->m_aUseCustomColors[p] = m_aClients[i].m_aUseCustomColors[p];
+	// +                       pClientInfo->m_aSkinPartColors[p] = m_aClients[i].m_aSkinPartColors[p];
+	// +               }
 }
 
 void CGameClient::UpdateEditorIngameMoved()
