@@ -3,6 +3,7 @@
 #include "laser.h"
 
 #include "character.h"
+#include "ic_placed_object.h"
 
 #include <engine/shared/config.h>
 
