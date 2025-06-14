@@ -8,7 +8,7 @@
 class CLaser : public CEntity
 {
 public:
-	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int Type);
+	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int DDRaceTeam, int Type);
 
 	virtual void Reset() override;
 	virtual void Tick() override;
@@ -31,6 +31,7 @@ private:
 	int m_Bounces;
 	int m_EvalTick;
 	int m_Owner;
+	int m_DDRaceTeam;
 	CClientMask m_TeamMask;
 	bool m_ZeroEnergyBounceInLastTick;
 

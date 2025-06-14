@@ -565,6 +565,12 @@ CClientMask CGameTeams::TeamMask(int Team, int ExceptId, int Asker, int VersionF
 				}
 				else if(GetPlayer(i)->m_ShowOthers == SHOW_OTHERS_OFF)
 				{
+ 					// TODO: what to do about solo? I think we need to store solo state in laser
+					//       but then what happens when a laser keeps bouncing while player leaves solo tile
+					//
+					//       that case should be first inspected carefully how it is right now
+					//       maybe we can even write a gameworld test for shoting laser from solo
+					//       and hitting after leaving solo
 					if(m_Core.GetSolo(Asker))
 						continue; // When in solo part don't show others
 					if(m_Core.GetSolo(GetPlayer(i)->m_SpectatorId))
