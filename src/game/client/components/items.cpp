@@ -402,7 +402,7 @@ void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA In
 	}
 
 	// render head
-	if(Type == LASERTYPE_DOOR)
+	if(Type == LASERTYPE_DOOR && !g_Config.m_ClOldDoorLaser)
 	{
 		Graphics()->TextureClear();
 		Graphics()->QuadsSetRotation(0);
@@ -438,7 +438,7 @@ void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA In
 			}
 		}
 	}
-	else if(Type == LASERTYPE_FREEZE)
+	else if(Type == LASERTYPE_FREEZE && !g_Config.m_ClOldFreezeLaser)
 	{
 		float Pulsation = 6.f / 5.f + 1.f / 10.f * std::sin(TicksHead / 2.f);
 		float Angle = angle(Pos - From);
