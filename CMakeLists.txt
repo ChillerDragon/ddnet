@@ -1141,6 +1141,8 @@ set(EXPECTED_DATA
   blob.png
   censorlist.txt
   communityicons/none.png
+  console.png
+  console_bar.png
   countryflags/AD.png
   countryflags/AE.png
   countryflags/AF.png

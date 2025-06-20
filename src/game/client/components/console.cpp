@@ -1094,14 +1094,30 @@ void CGameConsole::OnRender()
 
 	Ui()->MapScreen();
 
-	// background
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BACKGROUND_NOISE].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(aBackgroundColors[m_ConsoleType]);
-	Graphics()->QuadsSetSubset(0, 0, Screen.w / 80.0f, ConsoleHeight / 80.0f);
-	IGraphics::CQuadItem QuadItemBackground(0.0f, 0.0f, Screen.w, ConsoleHeight);
-	Graphics()->QuadsDrawTL(&QuadItemBackground, 1);
-	Graphics()->QuadsEnd();
+	int ExtraHeight = 0;
+	if (g_Config.m_ClOldClientConsole >= 1)
+		ExtraHeight = 10;
+	if (g_Config.m_ClOldClientConsole >= 2) {
+		// do background
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(0.2f, 0.2f, 0.2f, 0.9f);
+		if(m_ConsoleType == CONSOLETYPE_REMOTE)
+			Graphics()->SetColor(0.4f, 0.2f, 0.2f, 0.9f);
+		Graphics()->QuadsSetSubset(0, -ConsoleHeight * 0.075f, Screen.w * 0.075f * 0.5f, 0);
+		IGraphics::CQuadItem QuadItem(0, 0, Screen.w, ConsoleHeight + ExtraHeight);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+	} else {
+		// background
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BACKGROUND_NOISE].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(aBackgroundColors[m_ConsoleType]);
+		Graphics()->QuadsSetSubset(0, 0, Screen.w / 80.0f, ConsoleHeight / 80.0f);
+		IGraphics::CQuadItem QuadItemBackground(0.0f, 0.0f, Screen.w, ConsoleHeight + ExtraHeight);
+		Graphics()->QuadsDrawTL(&QuadItemBackground, 1);
+		Graphics()->QuadsEnd();
+	}
 
 	// bottom border
 	Graphics()->TextureClear();
@@ -1111,13 +1127,50 @@ void CGameConsole::OnRender()
 	Graphics()->QuadsDrawTL(&QuadItemBorder, 1);
 	Graphics()->QuadsEnd();
 
-	// bottom shadow
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor4(ShadowColor, ShadowColor, TransparentColor, TransparentColor);
-	IGraphics::CQuadItem QuadItemShadow(0.0f, ConsoleHeight + 1.0f, Screen.w, 10.0f);
-	Graphics()->QuadsDrawTL(&QuadItemShadow, 1);
-	Graphics()->QuadsEnd();
+	if (g_Config.m_ClOldClientConsole >= 1) {
+		// do console shadow
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		IGraphics::CColorVertex Array[4] = {
+			IGraphics::CColorVertex(0, 0, 0, 0, 0.5f),
+			IGraphics::CColorVertex(1, 0, 0, 0, 0.5f),
+			IGraphics::CColorVertex(2, 0, 0, 0, 0.0f),
+			IGraphics::CColorVertex(3, 0, 0, 0, 0.0f)};
+		Graphics()->SetColorVertex(Array, 4);
+		IGraphics::CQuadItem QuadItem(0, ConsoleHeight + 10.0f, Screen.w, 10.0f);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+
+		// do small bar shadow
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		Array[0] = IGraphics::CColorVertex(0, 0, 0, 0, 0.0f);
+		Array[1] = IGraphics::CColorVertex(1, 0, 0, 0, 0.0f);
+		Array[2] = IGraphics::CColorVertex(2, 0, 0, 0, 0.25f);
+		Array[3] = IGraphics::CColorVertex(3, 0, 0, 0, 0.25f);
+
+		Graphics()->SetColorVertex(Array, 4);
+		IGraphics::CQuadItem QuadItemShadow(0, ConsoleHeight - 10.0f, Screen.w, 10);
+		Graphics()->QuadsDrawTL(&QuadItemShadow, 1);
+		Graphics()->QuadsEnd();
+
+		// do the lower bar
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BAR].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
+		Graphics()->QuadsSetSubset(0, 0.1f, Screen.w * 0.015f, 1 - 0.1f);
+		IGraphics::CQuadItem QuadItemBar(0, ConsoleHeight, Screen.w, 10.0f);
+		Graphics()->QuadsDrawTL(&QuadItemBar, 1);
+		Graphics()->QuadsEnd();
+	} else {
+		// bottom shadow
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor4(ShadowColor, ShadowColor, TransparentColor, TransparentColor);
+		IGraphics::CQuadItem QuadItemShadow(0.0f, ConsoleHeight + 1.0f, Screen.w, 10.0f);
+		Graphics()->QuadsDrawTL(&QuadItemShadow, 1);
+		Graphics()->QuadsEnd();
+	}
 
 	{
 		// Get height of 1 line
