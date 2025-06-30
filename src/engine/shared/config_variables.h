@@ -746,6 +746,7 @@ MACRO_CONFIG_INT(ClOldDoorLaser, cl_old_door_laser, 0, 0, 1, CFGFLAG_SAVE | CFGF
 MACRO_CONFIG_INT(ClOldFreezeLaser, cl_old_freeze_laser, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Use old freeze laser end")
 MACRO_CONFIG_INT(ClOldClientConsole, cl_old_client_console, 0, 0, 2, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Use old client console")
 MACRO_CONFIG_INT(ClBloodParticles, cl_blood_particles, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Add extra blood particles")
+MACRO_CONFIG_INT(ClPosistionCommunityFilter, cl_position_community_filter, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Where to place the community filter in the browser")
 
 // graphic library
 #if !defined(CONF_ARCH_IA32) && !defined(CONF_PLATFORM_MACOS)

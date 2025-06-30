@@ -848,6 +848,14 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		}
 	}
 
+	if(g_Config.m_ClPosistionCommunityFilter && g_Config.m_ClEnableCommunities && (g_Config.m_UiPage == PAGE_INTERNET || g_Config.m_UiPage == PAGE_FAVORITES) && !ServerBrowser()->Communities().empty())
+	{
+		CUIRect CommunityFilter;
+		View.HSplitTop(19.0f + 4.0f * 17.0f + CScrollRegion::HEIGHT_MAGIC_FIX, &CommunityFilter, &View);
+		View.HSplitTop(8.0f, nullptr, &View);
+		RenderServerbrowserCommunitiesFilter(CommunityFilter);
+	}
+
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset filter"), 0, &ResetButton))
 	{
@@ -1858,7 +1866,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 	MainView.VSplitRight(205.0f, &ServerList, &ToolBox);
 	ServerList.VSplitRight(5.0f, &ServerList, nullptr);
 
-	if(g_Config.m_ClEnableCommunities && (g_Config.m_UiPage == PAGE_INTERNET || g_Config.m_UiPage == PAGE_FAVORITES) && !ServerBrowser()->Communities().empty())
+	if(!g_Config.m_ClPosistionCommunityFilter && g_Config.m_ClEnableCommunities && (g_Config.m_UiPage == PAGE_INTERNET || g_Config.m_UiPage == PAGE_FAVORITES) && !ServerBrowser()->Communities().empty())
 	{
 		CUIRect CommunityFilter;
 		ToolBox.HSplitTop(19.0f + 4.0f * 17.0f + CScrollRegion::HEIGHT_MAGIC_FIX, &CommunityFilter, &ToolBox);
