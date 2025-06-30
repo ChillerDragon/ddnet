@@ -47,6 +47,33 @@ void CEffects::AirJump(vec2 Pos, float Alpha)
 		GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
+void CEffects::LaserBounce(vec2 Pos, float Alpha)
+{
+	if (!g_Config.m_ClExtraParticles)
+		return;
+
+	CParticle p;
+	for (int i = 0; i < 3; i++) {
+		p.SetDefault();
+		p.m_Spr = SPRITE_PART_HIT01;
+		p.m_Pos = Pos + vec2(-6.0f, 16.0f);
+		p.m_Vel = random_direction() * (100.0f);
+		p.m_LifeSpan = 1.0f;
+		p.m_StartSize = 38.0f;
+		p.m_EndSize = 0;
+		p.m_Rot = random_angle();
+		p.m_Rotspeed = 0;
+		p.m_Gravity = 0;
+		p.m_Friction = 0.9f;
+		p.m_FlowAffected = 0.0f;
+		p.m_Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClLaserRifleInnerColor));
+		p.m_Color.a = Alpha;
+		p.m_StartAlpha = Alpha;
+		p.m_Collides = false;
+		GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
+	}
+}
+
 void CEffects::DamageIndicator(vec2 Pos, vec2 Dir, float Alpha)
 {
 	GameClient()->m_DamageInd.Create(Pos, Dir, Alpha);
@@ -267,6 +294,31 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientId, float Alpha)
 		p.m_StartAlpha = Alpha;
 		GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
 	}
+
+	// Pointer31's
+	if (g_Config.m_ClBloodParticles) {
+		for(int i = 0; i < 64; i++)
+		{
+			CParticle p;
+			p.SetDefault();
+			p.m_Spr = SPRITE_PART_SPLAT01 + (rand() % 3);
+			p.m_Pos = Pos;
+			p.m_Vel = random_direction() * (random_float(0.1f, 1.1f) * 700.0f);
+			p.m_LifeSpan = random_float(1.4f, 1.9f);
+			p.m_StartSize = random_float(14.0f, 30.0f);
+			p.m_EndSize = 10.0f;
+			p.m_Rot = random_angle();
+			p.m_Rotspeed = random_float(-0.5f, 0.5f) * pi;
+			p.m_Gravity = 1200.0f;
+			p.m_Friction = 0.99f;
+			ColorRGBA c = vec4(0.9f, 0.1f, 0.1f, 1.0f);
+			p.m_Color = ColorRGBA(c.r, c.g, c.b, 0.75f * Alpha);
+			p.m_StartAlpha = Alpha;
+			p.m_EndAlpha = 0.0f;
+			p.m_UseAlphaFading = true;
+			GameClient()->m_Particles.Add(CParticles::GROUP_GENERAL, &p);
+		}
+	}
 }
 
 void CEffects::Confetti(vec2 Pos, float Alpha)
@@ -348,6 +400,27 @@ void CEffects::Explosion(vec2 Pos, float Alpha)
 	p.m_Color.a = Alpha;
 	p.m_StartAlpha = Alpha;
 	GameClient()->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &p);
+
+	if (g_Config.m_ClExtraParticles)
+		for(int i = 0; i < 14; i++)
+		{
+			p.SetDefault();
+			p.m_Spr = SPRITE_PART_SMOKE; // SPRITE_PART_AIRJUMP
+			p.m_Pos = Pos + random_direction() * (random_float(0.0f, 1.0f) * 32.0f);
+			p.m_Vel = {0,0};
+			p.m_LifeSpan = random_float(1.5f, 1.7f);
+			p.m_StartSize = random_float(28.0f, 35.0f);
+			p.m_EndSize = random_float(28.0f, 35.0f);
+			p.m_Gravity = 0;
+			p.m_Friction = 1.0f;
+			p.m_Color = mix(vec4(0.35f, 0.35f, 0.35f, 1.0f), vec4(0.2f, 0.2f, 0.2f, 1.0f), random_float());
+			p.m_Color.a *= 0.9f;
+			p.m_StartAlpha = p.m_Color.a;
+			p.m_EndAlpha = 0.0f;
+			p.m_UseAlphaFading = true;
+			if (Collision()->CheckPoint(p.m_Pos))
+				GameClient()->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &p);
+		}
 
 	// Nudge position slightly to edge of closest tile so the
 	// smoke doesn't get stuck inside the tile.

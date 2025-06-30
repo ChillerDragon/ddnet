@@ -1427,6 +1427,9 @@ void CGameClient::ProcessEvents()
 			if(m_GameInfo.m_RaceSounds && ((pEvent->m_SoundId == SOUND_GUN_FIRE && !g_Config.m_SndGun) || (pEvent->m_SoundId == SOUND_PLAYER_PAIN_LONG && !g_Config.m_SndLongPain)))
 				continue;
 
+			if (pEvent->m_SoundId == SOUND_LASER_BOUNCE)
+				m_Effects.LaserBounce(vec2(pEvent->m_X, pEvent->m_Y), Alpha);
+
 			m_Sounds.PlayAt(CSounds::CHN_WORLD, pEvent->m_SoundId, 1.0f, vec2(pEvent->m_X, pEvent->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_MAPSOUNDWORLD)

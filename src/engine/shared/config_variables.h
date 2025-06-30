@@ -741,9 +741,11 @@ MACRO_CONFIG_INT(ClDemoShowPause, cl_demo_show_pause, 1, 0, 1, CFGFLAG_SAVE | CF
 MACRO_CONFIG_INT(ClDemoKeyboardShortcuts, cl_demo_keyboard_shortcuts, 1, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Enable keyboard shortcuts in demo player")
 
 // Pointer31's additions
+MACRO_CONFIG_INT(ClExtraParticles, cl_extra_particles, 1, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Whether to enable more particles")
 MACRO_CONFIG_INT(ClOldDoorLaser, cl_old_door_laser, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Use old door laser end")
 MACRO_CONFIG_INT(ClOldFreezeLaser, cl_old_freeze_laser, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Use old freeze laser end")
 MACRO_CONFIG_INT(ClOldClientConsole, cl_old_client_console, 0, 0, 2, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Use old client console")
+MACRO_CONFIG_INT(ClBloodParticles, cl_blood_particles, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Add extra blood particles")
 
 // graphic library
 #if !defined(CONF_ARCH_IA32) && !defined(CONF_PLATFORM_MACOS)
