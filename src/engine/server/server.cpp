@@ -725,6 +725,8 @@ int CServer::Port() const
 
 int CServer::MaxClients() const
 {
+	log_info("server", "unitinakaiazdzedz = %d", m_RunServer == UNINITIALIZED);
+	log_info("server", "netmax clients %d", m_NetServer.MaxClients());
 	return m_RunServer == UNINITIALIZED ? 0 : m_NetServer.MaxClients();
 }
 

@@ -1032,6 +1032,8 @@ void CGameContext::OnPreTickTeehistorian()
 
 void CGameContext::OnTick()
 {
+	log_info("server", "game tick");
+
 	// check tuning
 	CheckPureTuning();
 

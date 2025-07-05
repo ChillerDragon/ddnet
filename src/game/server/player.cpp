@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "player.h"
+#include "base/log.h"
 #include "entities/character.h"
 #include "gamecontext.h"
 #include "gamecontroller.h"
@@ -163,6 +164,8 @@ static int PlayerFlags_SixToSeven(int Flags)
 
 void CPlayer::Tick()
 {
+	log_info("player", "tick");
+
 	if(m_ScoreQueryResult != nullptr && m_ScoreQueryResult->m_Completed && m_SentSnaps >= 3)
 	{
 		ProcessScoreResult(*m_ScoreQueryResult);
@@ -738,6 +741,7 @@ bool CPlayer::SetTimerType(int TimerType)
 
 void CPlayer::TryRespawn()
 {
+	log_info("player", "trying to spawn");
 	vec2 SpawnPos;
 
 	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos, GameServer()->GetDDRaceTeam(m_ClientId)))

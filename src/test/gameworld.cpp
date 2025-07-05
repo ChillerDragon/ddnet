@@ -257,7 +257,23 @@ TEST_F(CTestGameWorld, BasicTick)
 	bool Afk = true;
 	int LastWhisperTo = -1;
 	const int StartTeam = GameServer()->m_pController->GetAutoTeam(ClientId);
+
+	ASSERT_EQ(StartTeam, TEAM_SPECTATORS);
+
 	GameServer()->CreatePlayer(ClientId, StartTeam, Afk, LastWhisperTo);
 
+	char aError[512];
+	bool CanJoin = GameServer()->m_pController->CanJoinTeam(TEAM_RED, ClientId, aError, sizeof(aError));
+	EXPECT_EQ(CanJoin, false);
+	EXPECT_STREQ(aError, "Only 0 active players are allowed");
+
+	EXPECT_EQ(GameServer()->Server()->MaxClients(), 0);
+
+	CPlayer *pPlayer = GameServer()->m_apPlayers[ClientId];
+	ASSERT_EQ(pPlayer->GetCharacter(), nullptr);
+	ASSERT_EQ(pPlayer->GetTeam(), TEAM_SPECTATORS);
+
 	GameServer()->OnTick();
+
+	ASSERT_EQ(pPlayer->GetCharacter(), nullptr);
 }
