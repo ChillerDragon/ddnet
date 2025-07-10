@@ -3202,7 +3202,25 @@ void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
 {
-	((CGameClient *)pUserData)->SendKill();
+	static int lastKillTime = 0;
+	static int killAttempts = 0;
+
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	int time = pClient->CurrentRaceTime();
+
+	// after 1-2 seconds, the attempts should be reset
+	if (abs(lastKillTime - time) > 1)
+		killAttempts = 0;
+	
+	lastKillTime = time;
+	
+	// if not enough time has passed for the protection to be avtive, or it had already been activated prior, then kill
+	if (g_Config.m_ClConfirmKillTime == -1 || time <= g_Config.m_ClConfirmKillTime || killAttempts >= 1)
+		pClient->SendKill();
+	else
+		pClient->m_Chat.Echo("Self kill attempt prevented. Trigger self kill again to confirm.");
+
+	killAttempts++;
 }
 
 void CGameClient::ConReadyChange7(IConsole::IResult *pResult, void *pUserData)
