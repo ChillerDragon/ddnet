@@ -1719,6 +1719,9 @@ void CGameClient::OnNewSnapshot()
 					pClient->m_UseCustomColor = pInfo->m_UseCustomColor;
 					pClient->m_ColorBody = pInfo->m_ColorBody;
 					pClient->m_ColorFeet = pInfo->m_ColorFeet;
+
+					if (g_Config.m_ClDuckFilter)
+						str_copy(pClient->m_aSkinName, "Scrubby Duck");
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
