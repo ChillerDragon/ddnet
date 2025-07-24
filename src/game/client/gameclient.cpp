@@ -84,6 +84,8 @@
 #include <chrono>
 #include <limits>
 
+#include <game/client/laser_data.h>
+
 using namespace std::chrono_literals;
 
 const char *CGameClient::Version() const { return GAME_VERSION; }
@@ -1427,8 +1429,32 @@ void CGameClient::ProcessEvents()
 			if(m_GameInfo.m_RaceSounds && ((pEvent->m_SoundId == SOUND_GUN_FIRE && !g_Config.m_SndGun) || (pEvent->m_SoundId == SOUND_PLAYER_PAIN_LONG && !g_Config.m_SndLongPain)))
 				continue;
 
-			if (pEvent->m_SoundId == SOUND_LASER_BOUNCE)
-				m_Effects.LaserBounce(vec2(pEvent->m_X, pEvent->m_Y), Alpha);
+			if (pEvent->m_SoundId == SOUND_LASER_BOUNCE && g_Config.m_ClExtraParticles) {
+				vec2 Pos = vec2(pEvent->m_X, pEvent->m_Y);
+				bool IsShotgun = false;
+				for(const CSnapEntities &Ent : SnapEntities())
+				{
+					const IClient::CSnapItem Item = Ent.m_Item;
+					const void *pData = Item.m_pData;
+					const CNetObj_EntityEx *pEntEx = Ent.m_pDataEx;
+					if(Item.m_Type == NETOBJTYPE_LASER || Item.m_Type == NETOBJTYPE_DDNETLASER)
+					{
+						CLaserData Data = ExtractLaserInfo(Item.m_Type, pData, &m_GameWorld, pEntEx);
+						if (abs(Data.m_To.x - Pos.x) < 10 && abs(Data.m_To.y - Pos.y) < 10) {
+							if(Data.m_Type == LASERTYPE_SHOTGUN)
+								IsShotgun = true;
+							// else if(Data.m_Type == LASERTYPE_RIFLE)
+							// 	printf("oooh a laser from rifle!!\n");
+							// else
+							// 	printf("oooh a laser!!\n");
+						}
+					}
+				}
+				if (IsShotgun)
+					m_Effects.LaserBounce(Pos, Alpha, g_Config.m_ClLaserShotgunInnerColor);
+				else
+					m_Effects.LaserBounce(Pos, Alpha, g_Config.m_ClLaserRifleInnerColor);	
+			}
 
 			m_Sounds.PlayAt(CSounds::CHN_WORLD, pEvent->m_SoundId, 1.0f, vec2(pEvent->m_X, pEvent->m_Y));
 		}

@@ -47,7 +47,7 @@ void CEffects::AirJump(vec2 Pos, float Alpha)
 		GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
-void CEffects::LaserBounce(vec2 Pos, float Alpha)
+void CEffects::LaserBounce(vec2 Pos, float Alpha, unsigned int Color)
 {
 	if (!g_Config.m_ClExtraParticles)
 		return;
@@ -66,7 +66,7 @@ void CEffects::LaserBounce(vec2 Pos, float Alpha)
 		p.m_Gravity = 0;
 		p.m_Friction = 0.9f;
 		p.m_FlowAffected = 0.0f;
-		p.m_Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClLaserRifleInnerColor));
+		p.m_Color = color_cast<ColorRGBA>(ColorHSLA(Color));
 		p.m_Color.a = Alpha;
 		p.m_StartAlpha = Alpha;
 		p.m_Collides = false;
