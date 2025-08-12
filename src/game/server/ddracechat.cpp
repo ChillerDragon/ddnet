@@ -1379,7 +1379,10 @@ void CGameContext::ConTeam(IConsole::IResult *pResult, void *pUserData)
 
 	if(pResult->NumArguments() > 0)
 	{
-		pSelf->AttemptJoinTeam(pResult->m_ClientId, pResult->GetInteger(0));
+		int Team = pResult->GetInteger(0);
+		pSelf->AttemptJoinTeam(pResult->m_ClientId, Team);
+		pSelf->m_pController->Teams().SetTeamLock(Team, true);
+		pPlayer->KillCharacter();
 	}
 	else
 	{
