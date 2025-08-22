@@ -48,7 +48,7 @@ void CAuthManager::Init()
 	}
 }
 
-int CAuthManager::AddKeyHash(const char *pIdent, MD5_DIGEST Hash, const unsigned char *pSalt, int AuthLevel)
+int CAuthManager::AddKeyHash(const char *pIdent, MD5_DIGEST Hash, const unsigned char *pSalt, const char * pAuthLevel)
 {
 	if(FindKey(pIdent) >= 0)
 		return -1;
@@ -57,18 +57,18 @@ int CAuthManager::AddKeyHash(const char *pIdent, MD5_DIGEST Hash, const unsigned
 	str_copy(Key.m_aIdent, pIdent);
 	Key.m_Pw = Hash;
 	mem_copy(Key.m_aSalt, pSalt, SALT_BYTES);
-	Key.m_Level = AuthLevel;
+	str_copy(Key.m_aLevel, pAuthLevel);
 
 	m_vKeys.push_back(Key);
 	return m_vKeys.size() - 1;
 }
 
-int CAuthManager::AddKey(const char *pIdent, const char *pPw, int AuthLevel)
+int CAuthManager::AddKey(const char *pIdent, const char *pPw, const char *pAuthLevel)
 {
 	// Generate random salt
 	unsigned char aSalt[SALT_BYTES];
 	secure_random_fill(aSalt, SALT_BYTES);
-	return AddKeyHash(pIdent, HashPassword(pPw, aSalt), aSalt, AuthLevel);
+	return AddKeyHash(pIdent, HashPassword(pPw, aSalt), aSalt, pAuthLevel);
 }
 
 void CAuthManager::RemoveKey(int Slot)
@@ -111,11 +111,11 @@ int CAuthManager::DefaultKey(int AuthLevel) const
 	return m_aDefault[AUTHED_ADMIN - AuthLevel];
 }
 
-int CAuthManager::KeyLevel(int Slot) const
+const char *CAuthManager::KeyLevel(int Slot) const
 {
 	if(Slot < 0 || Slot >= (int)m_vKeys.size())
-		return false;
-	return m_vKeys[Slot].m_Level;
+		return nullptr;
+	return m_vKeys[Slot].m_aLevel;
 }
 
 const char *CAuthManager::KeyIdent(int Slot) const
@@ -130,7 +130,7 @@ bool CAuthManager::IsValidIdent(const char *pIdent) const
 	return str_length(pIdent) < (int)sizeof(CKey().m_aIdent);
 }
 
-void CAuthManager::UpdateKeyHash(int Slot, MD5_DIGEST Hash, const unsigned char *pSalt, int AuthLevel)
+void CAuthManager::UpdateKeyHash(int Slot, MD5_DIGEST Hash, const unsigned char *pSalt, const char *pAuthLevel)
 {
 	if(Slot < 0 || Slot >= (int)m_vKeys.size())
 		return;
@@ -138,10 +138,10 @@ void CAuthManager::UpdateKeyHash(int Slot, MD5_DIGEST Hash, const unsigned char 
 	CKey *pKey = &m_vKeys[Slot];
 	pKey->m_Pw = Hash;
 	mem_copy(pKey->m_aSalt, pSalt, SALT_BYTES);
-	pKey->m_Level = AuthLevel;
+	str_copy(pKey->m_aLevel, pAuthLevel);
 }
 
-void CAuthManager::UpdateKey(int Slot, const char *pPw, int AuthLevel)
+void CAuthManager::UpdateKey(int Slot, const char *pPw, const char *pAuthLevel)
 {
 	if(Slot < 0 || Slot >= (int)m_vKeys.size())
 		return;
@@ -149,25 +149,23 @@ void CAuthManager::UpdateKey(int Slot, const char *pPw, int AuthLevel)
 	// Generate random salt
 	unsigned char aSalt[SALT_BYTES];
 	secure_random_fill(aSalt, SALT_BYTES);
-	UpdateKeyHash(Slot, HashPassword(pPw, aSalt), aSalt, AuthLevel);
+	UpdateKeyHash(Slot, HashPassword(pPw, aSalt), aSalt, pAuthLevel);
 }
 
 void CAuthManager::ListKeys(FListCallback pfnListCallback, void *pUser)
 {
 	for(auto &Key : m_vKeys)
-		pfnListCallback(Key.m_aIdent, Key.m_Level, pUser);
+		pfnListCallback(Key.m_aIdent, Key.m_aLevel, pUser);
 }
 
-void CAuthManager::AddDefaultKey(int Level, const char *pPw)
+void CAuthManager::AddDefaultKey(const char *pLevel, const char *pPw)
 {
-	if(Level < AUTHED_HELPER || Level > AUTHED_ADMIN)
-		return;
-
 	static const char s_aaIdents[3][sizeof(HELPER_IDENT)] = {ADMIN_IDENT, MOD_IDENT, HELPER_IDENT};
-	int Index = AUTHED_ADMIN - Level;
+	int Index = AUTHED_ADMIN - AccessLevelTo;
 	if(m_aDefault[Index] >= 0)
 		return; // already exists
-	m_aDefault[Index] = AddKey(s_aaIdents[Index], pPw, Level);
+	
+	m_aDefault[Index] = AddKey(s_aaIdents[Index], pPw, pLevel);
 }
 
 bool CAuthManager::IsGenerated() const

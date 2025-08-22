@@ -14,6 +14,11 @@ static constexpr ColorRGBA gs_ConsoleDefaultColor(1, 1, 1, 1);
 enum LEVEL : char;
 struct CChecksumData;
 
+#define ACCESS_LEVEL_STR_ADMIN "admin"
+#define ACCESS_LEVEL_STR_MODERATOR "moderator"
+#define ACCESS_LEVEL_STR_HELPER "helper"
+#define ACCESS_LEVEL_STR_USER "user"
+
 class IConsole : public IInterface
 {
 	MACRO_INTERFACE("console")

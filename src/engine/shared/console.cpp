@@ -7,6 +7,8 @@
 #include <base/system.h>
 
 #include <engine/client/checksum.h>
+#include <engine/console.h>
+#include <engine/shared/access_level.h>
 #include <engine/shared/protocol.h>
 #include <engine/storage.h>
 
@@ -17,6 +19,7 @@
 #include <algorithm>
 #include <iterator> // std::size
 #include <new>
+
 
 // todo: rework this
 
@@ -829,6 +832,33 @@ void CConsole::ConUserCommandStatus(IResult *pResult, void *pUser)
 	CConsole::ConCommandStatus(&Result, pConsole);
 }
 
+void CConsole::ConAddAccessLevel(IResult *pResult, void *pUser)
+{
+	CConsole *pConsole = static_cast<CConsole *>(pUser);
+	pConsole->m_vAccessLevels.emplace_back(pResult->GetString(0));
+}
+
+void CConsole::ConAddCommandToAccessLevel(IResult *pResult, void *pUser)
+{
+	CConsole *pConsole = static_cast<CConsole *>(pUser);
+	const char *pCommand = pResult->GetString(0);
+	const char *pAccessLevelName = pResult->GetString(1);
+	CAccessLevel *pAccessLevel = CAccessLevel::FindAccessLevelByName(pConsole->m_vAccessLevels, pAccessLevelName);
+	if(!pAccessLevel)
+	{
+		log_error("console", "access level '%s' not found", pAccessLevelName);
+		return;
+	}
+	if(pAccessLevel->AllowCommand(pCommand))
+	{
+		log_info("console", "command '%s' now available to access level '%s'", pCommand, pAccessLevelName);
+	}
+	else
+	{
+		log_info("console", "command '%s' already available to access level '%s'", pCommand, pAccessLevelName);
+	}
+}
+
 void CConsole::TraverseChain(FCommandCallback *ppfnCallback, void **ppUserData)
 {
 	while(*ppfnCallback == Con_Chain)
@@ -861,6 +891,8 @@ CConsole::CConsole(int FlagMask)
 
 	Register("access_level", "s[command] ?s['admin'|'moderator'|'helper'|'all']", CFGFLAG_SERVER, ConCommandAccess, this, "Specify command accessibility for given access level");
 	Register("access_status", "s['admin'|'moderator'|'helper'|'all']", CFGFLAG_SERVER, ConCommandStatus, this, "List all commands which are accessible for given access level");
+	Register("add_access_level", "s[name]", CFGFLAG_SERVER, ConAddAccessLevel, this, "Add access level");
+	Register("add_cmd_to_access_level", "s[command] s[level]", CFGFLAG_SERVER, ConAddCommandToAccessLevel, this, "Add access level");
 	Register("cmdlist", "", CFGFLAG_SERVER | CFGFLAG_CHAT, ConUserCommandStatus, this, "List all commands which are accessible for users");
 
 	// DDRace

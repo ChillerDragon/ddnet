@@ -6,6 +6,7 @@
 #include "memheap.h"
 
 #include <engine/console.h>
+#include <engine/shared/access_level.h>
 #include <engine/storage.h>
 
 #include <vector>
@@ -51,6 +52,8 @@ class CConsole : public IConsole
 	IStorage *m_pStorage;
 	int m_AccessLevel;
 
+	std::vector<CAccessLevel> m_vAccessLevels;
+
 	CCommand *m_pRecycleList;
 	CHeap m_TempCommands;
 
@@ -61,6 +64,8 @@ class CConsole : public IConsole
 	static void Con_Exec(IResult *pResult, void *pUserData);
 	static void ConCommandAccess(IResult *pResult, void *pUser);
 	static void ConCommandStatus(IConsole::IResult *pResult, void *pUser);
+	static void ConAddAccessLevel(IConsole::IResult *pResult, void *pUser);
+	static void ConAddCommandToAccessLevel(IConsole::IResult *pResult, void *pUser);
 
 	void ExecuteLineStroked(int Stroke, const char *pStr, int ClientId = -1, bool InterpretSemicolons = true) override;
 

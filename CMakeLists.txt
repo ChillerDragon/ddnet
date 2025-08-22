@@ -2053,6 +2053,8 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   warning.h
 )
 set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
+  access_level.cpp
+  access_level.h
   assertion_logger.cpp
   assertion_logger.h
   compression.cpp

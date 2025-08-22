@@ -1974,6 +1974,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 			int AuthLevel = -1;
 			int KeySlot = -1;
+			char aAuthLevel[512] = "";
 
 			if(!pName[0])
 			{
@@ -1988,7 +1989,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				KeySlot = m_AuthManager.FindKey(pName);
 				if(m_AuthManager.CheckKey(KeySlot, pPw))
-					AuthLevel = m_AuthManager.KeyLevel(KeySlot);
+					str_copy(aAuthLevel, m_AuthManager.KeyLevel(KeySlot));
 			}
 
 			if(AuthLevel != -1)
@@ -3639,7 +3640,7 @@ void CServer::ConAuthUpdateHashed(IConsole::IResult *pResult, void *pUser)
 		return;
 	}
 
-	pManager->UpdateKeyHash(KeySlot, Hash, aSalt, Level);
+	pManager->UpdateKeyHash(KeySlot, Hash, aSalt, pLevel);
 	pThis->LogoutKey(KeySlot, "key update");
 
 	pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "auth", "key updated");
