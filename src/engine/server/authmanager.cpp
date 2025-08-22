@@ -160,11 +160,21 @@ void CAuthManager::ListKeys(FListCallback pfnListCallback, void *pUser)
 
 void CAuthManager::AddDefaultKey(const char *pLevel, const char *pPw)
 {
+	// TODO: what the flipphone
+	
+	int Index = 0;
+	if(!str_comp(pLevel, "admin"))
+		Index = 0;
+	else if(!str_comp(pLevel, "moderator"))
+		Index = 1;
+	else if(!str_comp(pLevel, "helper"))
+		Index = 2;
+	else
+		return;
+
 	static const char s_aaIdents[3][sizeof(HELPER_IDENT)] = {ADMIN_IDENT, MOD_IDENT, HELPER_IDENT};
-	int Index = AUTHED_ADMIN - AccessLevelTo;
 	if(m_aDefault[Index] >= 0)
 		return; // already exists
-	
 	m_aDefault[Index] = AddKey(s_aaIdents[Index], pPw, pLevel);
 }
 

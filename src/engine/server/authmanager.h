@@ -40,7 +40,7 @@ public:
 	void UpdateKeyHash(int Slot, MD5_DIGEST Hash, const unsigned char *pSalt, const char * pAuthLevel);
 	void UpdateKey(int Slot, const char *pPw, const char *pAuthLevel);
 	void ListKeys(FListCallback pfnListCallbac, void *pUser);
-	void AddDefaultKey(int Level, const char *pPw);
+	void AddDefaultKey(const char *pLevel, const char *pPw);
 	bool IsGenerated() const;
 	int NumNonDefaultKeys() const;
 };
