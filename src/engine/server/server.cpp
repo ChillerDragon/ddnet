@@ -44,6 +44,7 @@
 
 #include "databases/connection.h"
 #include "databases/connection_pool.h"
+#include "game/generated/protocol.h"
 #include "register.h"
 
 #include <chrono>
@@ -1990,9 +1991,14 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 			else
 			{
+				log_info("rcon", "login with username %s", pName);
 				KeySlot = m_AuthManager.FindKey(pName);
 				if(m_AuthManager.CheckKey(KeySlot, pPw))
 					str_copy(aAuthLevel, m_AuthManager.KeyLevel(KeySlot));
+				else
+					log_warn("rcon", "username %s and password %s have no key", pName, pPw);
+
+				log_info("rcon", "auth level %s", aAuthLevel);
 			}
 
 			if(AuthLevel != -1)

@@ -1,5 +1,6 @@
 #include "authmanager.h"
 #include "engine/console.h"
+#include <base/log.h>
 #include <base/hash_ctxt.h>
 #include <base/system.h>
 #include <engine/shared/config.h>
@@ -91,10 +92,12 @@ void CAuthManager::RemoveKey(int Slot)
 
 int CAuthManager::FindKey(const char *pIdent) const
 {
+	log_info("authmanager", "FindKey(%s)", pIdent);
 	for(size_t i = 0; i < m_vKeys.size(); i++)
 		if(!str_comp(m_vKeys[i].m_aIdent, pIdent))
 			return i;
 
+	log_error("authmanager", "FindKey(%s) NOT FOUND", pIdent);
 	return -1;
 }
 
