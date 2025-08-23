@@ -627,6 +627,7 @@ const char *CServer::GetAuthName(int ClientId) const
 
 bool CServer::HasAuthHidden(int ClientId) const
 {
+	// WHAT THE RUST
 	dbg_assert(ClientId >= 0 && ClientId < MAX_CLIENTS, "ClientId is not valid");
 	return m_aClients[ClientId].m_AuthHidden;
 }
