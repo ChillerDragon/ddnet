@@ -33,7 +33,7 @@ public:
 	void RemoveKey(int Slot);
 	int FindKey(const char *pIdent) const;
 	bool CheckKey(int Slot, const char *pPw) const;
-	int DefaultKey(int AuthLevel) const;
+	int DefaultKey(const char *pAuthLevel) const;
 	const char *KeyLevel(int Slot) const;
 	const char *KeyIdent(int Slot) const;
 	bool IsValidIdent(const char *pIdent) const;

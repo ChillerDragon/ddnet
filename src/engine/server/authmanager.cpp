@@ -1,4 +1,5 @@
 #include "authmanager.h"
+#include "engine/console.h"
 #include <base/hash_ctxt.h>
 #include <base/system.h>
 #include <engine/shared/config.h>
@@ -43,7 +44,7 @@ void CAuthManager::Init()
 	if(m_vKeys.size() == NumDefaultKeys && !g_Config.m_SvRconPassword[0])
 	{
 		secure_random_password(g_Config.m_SvRconPassword, sizeof(g_Config.m_SvRconPassword), 6);
-		AddDefaultKey(AUTHED_ADMIN, g_Config.m_SvRconPassword);
+		AddDefaultKey(ACCESS_LEVEL_STR_ADMIN, g_Config.m_SvRconPassword);
 		m_Generated = true;
 	}
 }
@@ -104,8 +105,20 @@ bool CAuthManager::CheckKey(int Slot, const char *pPw) const
 	return m_vKeys[Slot].m_Pw == HashPassword(pPw, m_vKeys[Slot].m_aSalt);
 }
 
-int CAuthManager::DefaultKey(int AuthLevel) const
+int CAuthManager::DefaultKey(const char *pAuthLevel) const
 {
+	// TODO: what the flipphone
+	
+	int AuthLevel = 0;
+	if(!str_comp(pAuthLevel, ACCESS_LEVEL_STR_ADMIN))
+		AuthLevel = AUTHED_ADMIN;
+	else if(!str_comp(pAuthLevel, ACCESS_LEVEL_STR_MODERATOR))
+		AuthLevel = AUTHED_MOD;
+	else if(!str_comp(pAuthLevel, ACCESS_LEVEL_STR_HELPER))
+		AuthLevel = AUTHED_HELPER;
+	else
+		return 0;
+
 	if(AuthLevel < 0 || AuthLevel > AUTHED_ADMIN)
 		return 0;
 	return m_aDefault[AUTHED_ADMIN - AuthLevel];
@@ -163,11 +176,11 @@ void CAuthManager::AddDefaultKey(const char *pLevel, const char *pPw)
 	// TODO: what the flipphone
 	
 	int Index = 0;
-	if(!str_comp(pLevel, "admin"))
+	if(!str_comp(pLevel, ACCESS_LEVEL_STR_ADMIN))
 		Index = 0;
-	else if(!str_comp(pLevel, "moderator"))
+	else if(!str_comp(pLevel, ACCESS_LEVEL_STR_MODERATOR))
 		Index = 1;
-	else if(!str_comp(pLevel, "helper"))
+	else if(!str_comp(pLevel, ACCESS_LEVEL_STR_HELPER))
 		Index = 2;
 	else
 		return;
