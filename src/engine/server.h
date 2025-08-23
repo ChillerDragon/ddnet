@@ -368,7 +368,7 @@ public:
 
 	virtual void OnPreTickTeehistorian() = 0;
 
-	virtual void OnSetAuthed(int ClientId, int Level) = 0;
+	virtual void OnSetAuthed(int ClientId, const char *pLevel) = 0;
 	virtual bool PlayerExists(int ClientId) const = 0;
 
 	virtual void TeehistorianRecordAntibot(const void *pData, int DataSize) = 0;

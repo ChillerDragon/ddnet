@@ -4622,9 +4622,14 @@ const char *CGameContext::NetVersion() const { return GAME_NETVERSION; }
 
 IGameServer *CreateGameServer() { return new CGameContext; }
 
-void CGameContext::OnSetAuthed(int ClientId, int Level)
+void CGameContext::OnSetAuthed(int ClientId, const char *pLevel)
 {
-	if(m_apPlayers[ClientId] && m_VoteCloseTime && Level != AUTHED_NO)
+	bool NotAuthed = str_comp(pLevel, ACCESS_LEVEL_STR_NO) == 0;
+
+	// TODO: do not make up a random level xd
+	int Level = 1;
+
+	if(m_apPlayers[ClientId] && m_VoteCloseTime && NotAuthed)
 	{
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "ban %s %d Banned by vote", Server()->ClientAddrString(ClientId, false), g_Config.m_SvVoteKickBantime);
@@ -4637,7 +4642,7 @@ void CGameContext::OnSetAuthed(int ClientId, int Level)
 
 	if(m_TeeHistorianActive)
 	{
-		if(Level != AUTHED_NO)
+		if(NotAuthed)
 		{
 			m_TeeHistorian.RecordAuthLogin(ClientId, Level, Server()->GetAuthName(ClientId));
 		}

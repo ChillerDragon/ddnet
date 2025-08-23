@@ -18,6 +18,7 @@ struct CChecksumData;
 #define ACCESS_LEVEL_STR_MODERATOR "moderator"
 #define ACCESS_LEVEL_STR_HELPER "helper"
 #define ACCESS_LEVEL_STR_USER "user"
+#define ACCESS_LEVEL_STR_NO ""
 
 class IConsole : public IInterface
 {

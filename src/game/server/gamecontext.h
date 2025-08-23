@@ -628,7 +628,7 @@ public:
 
 	void SendRecord(int ClientId);
 	void SendFinish(int ClientId, float Time, float PreviousBestTime);
-	void OnSetAuthed(int ClientId, int Level) override;
+	void OnSetAuthed(int ClientId, const char *pLevel) override;
 
 	void ResetTuning();
 };
