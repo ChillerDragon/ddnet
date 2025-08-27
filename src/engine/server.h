@@ -251,10 +251,11 @@ public:
 		RCON_CID_SERV = -1,
 		RCON_CID_VOTE = -2,
 	};
+	virtual class CRconRole *RoleOrNullptr(int ClientId) = 0;
 	virtual void SetRconCid(int ClientId) = 0;
-	virtual int GetAuthedState(int ClientId) const = 0;
-	virtual bool IsRconAuthed(int ClientId) const = 0;
-	virtual bool IsRconAuthedAdmin(int ClientId) const = 0;
+	virtual int GetAuthRank(int ClientId) = 0;
+	virtual bool IsRconAuthed(int ClientId) = 0;
+	virtual bool IsRconAuthedAdmin(int ClientId) = 0;
 	virtual const char *GetAuthName(int ClientId) const = 0;
 	virtual bool HasAuthHidden(int ClientId) const = 0;
 	virtual void Kick(int ClientId, const char *pReason) = 0;
