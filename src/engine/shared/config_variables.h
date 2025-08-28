@@ -750,6 +750,8 @@ MACRO_CONFIG_INT(ClPosistionCommunityFilter, cl_position_community_filter, 0, 0,
 MACRO_CONFIG_INT(ClConfirmKillTime, cl_confirm_kill_time, 60, -1, 14400, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Confirmation message before killing self after game time (in seconds, -1 to turn off, 0 to always turn on)")
 MACRO_CONFIG_INT(ClDuckFilter, cl_duck_filter, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Replace all skins with a duck skin")
 
+MACRO_CONFIG_INT(ClWeatherSnow, cl_weather_snow, 0, 0, 1, CFGFLAG_CLIENT, "Whether to spawn snow")
+
 // graphic library
 #if !defined(CONF_ARCH_IA32) && !defined(CONF_PLATFORM_MACOS)
 MACRO_CONFIG_INT(GfxGLMajor, gfx_gl_major, 1, 1, 10, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Graphic library major version")

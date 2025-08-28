@@ -929,6 +929,13 @@ void CGameClient::OnRender()
 	}
 
 	UpdateManagedTeeRenderInfos();
+
+	if (g_Config.m_ClWeatherSnow) {
+		if (WasNewTick) {
+			for (int i = 0; i < 10; i++)
+				m_Effects.Snow(m_LocalCharacterPos);
+		}
+	}
 }
 
 void CGameClient::OnDummyDisconnect()
