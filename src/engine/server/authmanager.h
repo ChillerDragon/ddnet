@@ -3,6 +3,7 @@
 
 #include <base/hash.h>
 #include <base/system.h>
+#include <engine/permissions_manager.h>
 #include <generated/protocol.h>
 
 #include <string>
@@ -48,7 +49,7 @@ public:
 	}
 };
 
-class CAuthManager
+class CAuthManager : public IPermissionsManager
 {
 private:
 	class CKey
@@ -91,7 +92,7 @@ public:
 	int NumNonDefaultKeys() const;
 	CRconRole *FindRole(const char *pName);
 	bool AddRole(const char *pName, int Rank);
-	bool CanRoleUseCommand(const char *pRoleName, const char *pCommand);
+	bool CanRoleUseCommand(const char *pRoleName, const char *pCommand) override;
 	void GetRoleNames(char *pBuf, size_t BufSize);
 };
 

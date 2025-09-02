@@ -2044,6 +2044,7 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   map.h
   message.h
   notifications.h
+  permissions_manager.h
   rust.h
   server.h
   serverbrowser.h
