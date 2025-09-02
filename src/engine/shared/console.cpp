@@ -395,6 +395,12 @@ void CConsole::SetUnknownCommandCallback(FUnknownCommandCallback pfnCallback, vo
 	m_pUnknownCommandUserdata = pUser;
 }
 
+void CConsole::SetCanUseCommandCallback(FCanUseCommandCallback pfnCallback, void *pUser)
+{
+	m_pfnCanUseCommandCallback = pfnCallback;
+	m_pCanUseCommandUserData = pUser;
+}
+
 void CConsole::InitChecksum(CChecksumData *pData) const
 {
 	pData->m_NumCommands = 0;
@@ -525,6 +531,13 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 
 		if(pCommand)
 		{
+			bool CanUseCommand = pCommand->GetAccessLevel() >= m_AccessLevel;
+			if(!CanUseCommand)
+			{
+				if(m_pfnCanUseCommandCallback && m_pfnCanUseCommandCallback(Result.m_ClientId, Result.m_pCommand, m_pCanUseCommandUserData))
+					CanUseCommand = true;
+			}
+
 			if(ClientId == IConsole::CLIENT_ID_GAME && !(pCommand->m_Flags & CFGFLAG_GAME))
 			{
 				if(Stroke)
@@ -545,7 +558,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 					Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 				}
 			}
-			else if(pCommand->GetAccessLevel() >= m_AccessLevel)
+			else if(CanUseCommand)
 			{
 				int IsStrokeCommand = 0;
 				if(Result.m_pCommand[0] == '+')
