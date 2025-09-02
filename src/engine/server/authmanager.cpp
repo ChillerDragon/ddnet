@@ -272,3 +272,25 @@ bool CAuthManager::CanRoleUseCommand(const char *pRoleName, const char *pCommand
 
 	return pRole->CanUseRconCommand(pCommand);
 }
+
+void CAuthManager::GetRoleNames(char *pBuf, size_t BufSize)
+{
+	size_t WriteLen = 1;
+	pBuf[0] = '\0';
+
+	bool First = true;
+	for(const auto &It : m_Roles)
+	{
+		if(!First)
+			WriteLen += str_length(It.second.Name());
+		WriteLen += str_length(It.second.Name());
+		if(WriteLen >= BufSize)
+			break;
+
+		if(!First)
+			str_append(pBuf, ", ", BufSize - WriteLen);
+		str_append(pBuf, It.second.Name(), BufSize - WriteLen);
+		First = false;
+	}
+}
+
