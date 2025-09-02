@@ -82,6 +82,9 @@ class CConsole : public IConsole
 	FUnknownCommandCallback m_pfnUnknownCommandCallback = EmptyUnknownCommandCallback;
 	void *m_pUnknownCommandUserdata = nullptr;
 
+	FCanUseCommandCallback m_pfnCanUseCommandCallback = nullptr;
+	void *m_pCanUseCommandUserData;
+
 	enum
 	{
 		CONSOLE_MAX_STR_LENGTH = 8192,
@@ -187,6 +190,7 @@ public:
 	void Print(int Level, const char *pFrom, const char *pStr, ColorRGBA PrintColor = gs_ConsoleDefaultColor) const override;
 	void SetTeeHistorianCommandCallback(FTeeHistorianCommandCallback pfnCallback, void *pUser) override;
 	void SetUnknownCommandCallback(FUnknownCommandCallback pfnCallback, void *pUser) override;
+	void SetCanUseCommandCallback(FCanUseCommandCallback pfnCallback, void *pUser) override;
 	void InitChecksum(CChecksumData *pData) const override;
 
 	void SetAccessLevel(EAccessLevel AccessLevel) override;

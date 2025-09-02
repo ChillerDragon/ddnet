@@ -31,6 +31,7 @@ class CRconRole
 	char m_aName[64];
 	int m_Rank = RoleRank::NONE;
 	std::vector<CRconRole *> m_vpParents;
+	std::vector<std::string> m_vRconCommands;
 
 public:
 	// inherit all command access from a parent role
@@ -46,6 +47,9 @@ public:
 	// Roles with higher rank can see commands executed by roles with lower rank
 	// but not vice versa.
 	int Rank() const { return m_Rank; }
+
+	bool CanUseRconCommand(const char *pCommand);
+	bool AllowCommand(const char *pCommand);
 
 	CRconRole(const char *pName, int Rank) :
 		m_Rank(Rank)
@@ -91,6 +95,7 @@ private:
 public:
 	int DefaultKey(const char *pRoleName) const;
 	int KeyLevel(int Slot) const;
+	CRconRole *KeyRole(int Slot) const;
 	const char *KeyIdent(int Slot) const;
 	bool IsValidIdent(const char *pIdent) const;
 	void UpdateKeyHash(int Slot, MD5_DIGEST Hash, const unsigned char *pSalt, const char *pRoleName);
@@ -101,6 +106,7 @@ public:
 	int NumNonDefaultKeys() const;
 	CRconRole *FindRole(const char *pName);
 	bool AddRole(const char *pName, int Rank);
+	bool CanRoleUseCommand(const char *pRoleName, const char *pCommand);
 };
 
 #endif //ENGINE_SERVER_AUTHMANAGER_H

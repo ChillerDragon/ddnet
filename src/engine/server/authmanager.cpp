@@ -1,4 +1,5 @@
 #include "authmanager.h"
+#include <algorithm>
 #include <base/hash_ctxt.h>
 #include <base/system.h>
 #include <engine/shared/config.h>
@@ -7,6 +8,24 @@
 #define ADMIN_IDENT "default_admin"
 #define MOD_IDENT "default_mod"
 #define HELPER_IDENT "default_helper"
+
+bool CRconRole::CanUseRconCommand(const char *pCommand)
+{
+	return std::ranges::any_of(
+		m_vRconCommands,
+		[pCommand](const std::string &Command) {
+			return str_comp_nocase(Command.c_str(), pCommand) == 0;
+		});
+}
+
+bool CRconRole::AllowCommand(const char *pCommand)
+{
+	if(CanUseRconCommand(pCommand))
+		return false;
+
+	m_vRconCommands.emplace_back(pCommand);
+	return true;
+}
 
 const char *CAuthManager::AuthLevelToRoleName(int AuthLevel)
 {
@@ -161,6 +180,13 @@ int CAuthManager::KeyLevel(int Slot) const
 	return m_vKeys[Slot].m_pRole->Rank();
 }
 
+CRconRole *CAuthManager::KeyRole(int Slot) const
+{
+	if(Slot < 0 || Slot >= (int)m_vKeys.size())
+		return nullptr;
+	return m_vKeys[Slot].m_pRole;
+}
+
 const char *CAuthManager::KeyIdent(int Slot) const
 {
 	if(Slot < 0 || Slot >= (int)m_vKeys.size())
@@ -241,4 +267,13 @@ bool CAuthManager::AddRole(const char *pName, int Rank)
 
 	m_Roles.insert({pName, CRconRole(pName, Rank)});
 	return true;
+}
+
+bool CAuthManager::CanRoleUseCommand(const char *pRoleName, const char *pCommand)
+{
+	CRconRole *pRole = FindRole(pRoleName);
+	if(!pRole)
+		return false;
+
+	return pRole->CanUseRconCommand(pCommand);
 }
