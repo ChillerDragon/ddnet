@@ -35,6 +35,7 @@
 #include <engine/shared/protocol_ex.h>
 #include <engine/shared/rust_version.h>
 #include <engine/shared/snapshot.h>
+#include <generated/protocol.h>
 
 #include <game/version.h>
 
@@ -3549,14 +3550,20 @@ void CServer::ConAuthAdd(IConsole::IResult *pResult, void *pUser)
 		return;
 	}
 
-	int Level = GetAuthLevel(pLevel);
-	if(Level == -1)
+	if(!pManager->FindRole(pLevel))
 	{
-		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "auth", "level can be one of {\"admin\", \"mod(erator)\", \"helper\"}");
-		return;
+		int Level = GetAuthLevel(pLevel);
+		if(Level == -1)
+		{
+			// TODO: this will cut on too many rcon roles. Which is better than flooding the rcon messages.
+			char aRoles[512];
+			pManager->GetRoleNames(aRoles, sizeof(aRoles));
+			log_warn("auth", "role can be one of: %s", aRoles);
+			return;
+		}
+		// back compat to support "mod", "modder" and so on as values for "moderator"
+		pLevel = CAuthManager::AuthLevelToRoleName(Level);
 	}
-	// back compat to support "mod", "modder" and so on as values for "moderator"
-	pLevel = CAuthManager::AuthLevelToRoleName(Level);
 
 	bool NeedUpdate = !pManager->NumNonDefaultKeys();
 	if(pManager->AddKey(pIdent, pPw, pLevel) < 0)
@@ -3585,14 +3592,20 @@ void CServer::ConAuthAddHashed(IConsole::IResult *pResult, void *pUser)
 		return;
 	}
 
-	int Level = GetAuthLevel(pLevel);
-	if(Level == -1)
+	if(!pManager->FindRole(pLevel))
 	{
-		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "auth", "level can be one of {\"admin\", \"mod(erator)\", \"helper\"}");
-		return;
+		int Level = GetAuthLevel(pLevel);
+		if(Level == -1)
+		{
+			// TODO: this will cut on too many rcon roles. Which is better than flooding the rcon messages.
+			char aRoles[512];
+			pManager->GetRoleNames(aRoles, sizeof(aRoles));
+			log_warn("auth", "role can be one of: %s", aRoles);
+			return;
+		}
+		// back compat to support "mod", "modder" and so on as values for "moderator"
+		pLevel = CAuthManager::AuthLevelToRoleName(Level);
 	}
-	// back compat to support "mod", "modder" and so on as values for "moderator"
-	pLevel = CAuthManager::AuthLevelToRoleName(Level);
 
 	MD5_DIGEST Hash;
 	unsigned char aSalt[SALT_BYTES];
@@ -3636,14 +3649,20 @@ void CServer::ConAuthUpdate(IConsole::IResult *pResult, void *pUser)
 		return;
 	}
 
-	int Level = GetAuthLevel(pLevel);
-	if(Level == -1)
+	if(!pManager->FindRole(pLevel))
 	{
-		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "auth", "level can be one of {\"admin\", \"mod(erator)\", \"helper\"}");
-		return;
+		int Level = GetAuthLevel(pLevel);
+		if(Level == -1)
+		{
+			// TODO: this will cut on too many rcon roles. Which is better than flooding the rcon messages.
+			char aRoles[512];
+			pManager->GetRoleNames(aRoles, sizeof(aRoles));
+			log_warn("auth", "role can be one of: %s", aRoles);
+			return;
+		}
+		// back compat to support "mod", "modder" and so on as values for "moderator"
+		pLevel = CAuthManager::AuthLevelToRoleName(Level);
 	}
-	// back compat to support "mod", "modder" and so on as values for "moderator"
-	pLevel = CAuthManager::AuthLevelToRoleName(Level);
 
 	pManager->UpdateKey(KeySlot, pPw, pLevel);
 	pThis->LogoutKey(KeySlot, "key update");
@@ -3668,14 +3687,20 @@ void CServer::ConAuthUpdateHashed(IConsole::IResult *pResult, void *pUser)
 		return;
 	}
 
-	int Level = GetAuthLevel(pLevel);
-	if(Level == -1)
+	if(!pManager->FindRole(pLevel))
 	{
-		pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "auth", "level can be one of {\"admin\", \"mod(erator)\", \"helper\"}");
-		return;
+		int Level = GetAuthLevel(pLevel);
+		if(Level == -1)
+		{
+			// TODO: this will cut on too many rcon roles. Which is better than flooding the rcon messages.
+			char aRoles[512];
+			pManager->GetRoleNames(aRoles, sizeof(aRoles));
+			log_warn("auth", "role can be one of: %s", aRoles);
+			return;
+		}
+		// back compat to support "mod", "modder" and so on as values for "moderator"
+		pLevel = CAuthManager::AuthLevelToRoleName(Level);
 	}
-	// back compat to support "mod", "modder" and so on as values for "moderator"
-	pLevel = CAuthManager::AuthLevelToRoleName(Level);
 
 	MD5_DIGEST Hash;
 	unsigned char aSalt[SALT_BYTES];
@@ -3760,7 +3785,35 @@ void CServer::ConRoleAllow(IConsole::IResult *pResult, void *pUser)
 	}
 	else
 	{
-		log_info("auth", "Role '%s' already had access to command '%s'.", pRoleName, pCommand);
+		log_warn("auth", "Role '%s' already had access to command '%s'.", pRoleName, pCommand);
+	}
+}
+
+void CServer::ConRoleCreate(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+
+	const char *pRoleName = pResult->GetString(0);
+	int Rank = 1; // lowest rank by default
+
+	// Rank 1 happens to be AUTHED_HELPER
+	// meaning new roles will get access to all commands
+	// that helper has access to.
+	//
+	// That is NOT good.
+	// We can also not go down to 0 because thats the special unauthed rank.
+	// Would be nice if we could shift these default roles to higher ranks.
+	// Something like 998, 999 and 1000
+	// But then the problem will be that all the code has to change.
+
+	if(pManager->AddRole(pRoleName, Rank))
+	{
+		log_info("auth", "Role '%s' created.", pRoleName);
+	}
+	else
+	{
+		log_warn("auth", "Role '%s' already exists.", pRoleName);
 	}
 }
 
@@ -4337,6 +4390,7 @@ void CServer::RegisterCommands()
 	Console()->Register("auth_list", "", CFGFLAG_SERVER, ConAuthList, this, "List all rcon keys");
 
 	Console()->Register("role_allow", "s[role] s[command]", CFGFLAG_SERVER, ConRoleAllow, this, "");
+	Console()->Register("role_create", "s[role]", CFGFLAG_SERVER, ConRoleCreate, this, "");
 
 	Console()->Register("reload_announcement", "", CFGFLAG_SERVER, ConReloadAnnouncement, this, "Reload the announcements");
 	Console()->Register("reload_maplist", "", CFGFLAG_SERVER, ConReloadMaplist, this, "Reload the maplist");
