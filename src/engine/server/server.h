@@ -358,6 +358,7 @@ public:
 	void SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientId);
 	void SendRconCmdGroupStart(int ClientId);
 	void SendRconCmdGroupEnd(int ClientId);
+	int RconRank(int ClientId);
 	int NumRconCommands(int ClientId);
 	void UpdateClientRconCommands(int ClientId);
 

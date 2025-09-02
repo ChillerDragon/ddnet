@@ -81,7 +81,8 @@ std::optional<ColorHSLA> CConsole::CResult::GetColor(unsigned Index, float Darke
 	return ColorParse(m_apArgs[Index], DarkestLighting);
 }
 
-const IConsole::CCommandInfo *CConsole::CCommand::NextCommandInfo(int AccessLevel, int FlagMask) const
+// TODO: here we need to pass ClientId as argument to be able to get the custom role cmd access
+const IConsole::CCommandInfo *CConsole::CCommand::NextCommandInfo(int ClientId, int AccessLevel, int FlagMask) const
 {
 	const CCommand *pInfo = m_pNext;
 	while(pInfo)
@@ -98,7 +99,8 @@ void CConsole::CCommand::SetAccessLevel(int AccessLevel)
 	m_AccessLevel = std::clamp(AccessLevel, (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_USER));
 }
 
-const IConsole::CCommandInfo *CConsole::FirstCommandInfo(int AccessLevel, int FlagMask) const
+// TODO: here we need to pass ClientId as argument to be able to get the custom role cmd access
+const IConsole::CCommandInfo *CConsole::FirstCommandInfo(int ClientId, int AccessLevel, int FlagMask) const
 {
 	for(const CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{

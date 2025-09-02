@@ -1484,12 +1484,20 @@ void CServer::SendRconCmdGroupEnd(int ClientId)
 	SendMsg(&Msg, MSGFLAG_VITAL, ClientId);
 }
 
+int CServer::RconRank(int ClientId)
+{
+	CRconRole *pRole = m_AuthManager.KeyRole(m_aClients[ClientId].m_AuthKey);
+	if(!pRole)
+		return RANK_NONE;
+	return pRole->Rank();
+}
+
 int CServer::NumRconCommands(int ClientId)
 {
 	int Num = 0;
 	const int AccessLevel = ConsoleAccessLevel(ClientId);
-	for(const IConsole::CCommandInfo *pCmd = Console()->FirstCommandInfo(AccessLevel, CFGFLAG_SERVER);
-		pCmd; pCmd = pCmd->NextCommandInfo(AccessLevel, CFGFLAG_SERVER))
+	for(const IConsole::CCommandInfo *pCmd = Console()->FirstCommandInfo(ClientId, AccessLevel, CFGFLAG_SERVER);
+		pCmd; pCmd = pCmd->NextCommandInfo(ClientId, AccessLevel, CFGFLAG_SERVER))
 	{
 		Num++;
 	}
@@ -1510,7 +1518,7 @@ void CServer::UpdateClientRconCommands(int ClientId)
 	for(int i = 0; i < MAX_RCONCMD_SEND && Client.m_pRconCmdToSend; ++i)
 	{
 		SendRconCmdAdd(Client.m_pRconCmdToSend, ClientId);
-		Client.m_pRconCmdToSend = Client.m_pRconCmdToSend->NextCommandInfo(AccessLevel, CFGFLAG_SERVER);
+		Client.m_pRconCmdToSend = Client.m_pRconCmdToSend->NextCommandInfo(ClientId, AccessLevel, CFGFLAG_SERVER);
 		if(Client.m_pRconCmdToSend == nullptr)
 		{
 			SendRconCmdGroupEnd(ClientId);
@@ -2042,7 +2050,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					int SendRconCmds = IsSixup(ClientId) ? true : Unpacker.GetInt();
 					if(!Unpacker.Error() && SendRconCmds)
 					{
-						m_aClients[ClientId].m_pRconCmdToSend = Console()->FirstCommandInfo(ConsoleAccessLevel(ClientId), CFGFLAG_SERVER);
+						m_aClients[ClientId].m_pRconCmdToSend = Console()->FirstCommandInfo(ClientId, ConsoleAccessLevel(ClientId), CFGFLAG_SERVER);
 						SendRconCmdGroupStart(ClientId);
 						if(m_aClients[ClientId].m_pRconCmdToSend == nullptr)
 						{
@@ -3795,17 +3803,7 @@ void CServer::ConRoleCreate(IConsole::IResult *pResult, void *pUser)
 	CAuthManager *pManager = &pThis->m_AuthManager;
 
 	const char *pRoleName = pResult->GetString(0);
-	int Rank = 1; // lowest rank by default
-
-	// Rank 1 happens to be AUTHED_HELPER
-	// meaning new roles will get access to all commands
-	// that helper has access to.
-	//
-	// That is NOT good.
-	// We can also not go down to 0 because thats the special unauthed rank.
-	// Would be nice if we could shift these default roles to higher ranks.
-	// Something like 998, 999 and 1000
-	// But then the problem will be that all the code has to change.
+	int Rank = RANK_DEFAULT; // lowest rank by default
 
 	if(pManager->AddRole(pRoleName, Rank))
 	{

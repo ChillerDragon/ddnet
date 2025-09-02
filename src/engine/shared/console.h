@@ -22,7 +22,7 @@ class CConsole : public IConsole
 		FCommandCallback m_pfnCallback;
 		void *m_pUserData;
 
-		const CCommandInfo *NextCommandInfo(int AccessLevel, int FlagMask) const override;
+		const CCommandInfo *NextCommandInfo(int ClientId, int AccessLevel, int FlagMask) const override;
 
 		void SetAccessLevel(int AccessLevel);
 	};
@@ -158,7 +158,7 @@ public:
 	~CConsole();
 
 	void Init() override;
-	const CCommandInfo *FirstCommandInfo(int AccessLevel, int FlagMask) const override;
+	const CCommandInfo *FirstCommandInfo(int ClientId, int AccessLevel, int FlagMask) const override;
 	const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) override;
 	int PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) override;
 

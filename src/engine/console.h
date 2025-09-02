@@ -81,7 +81,7 @@ public:
 		const char *m_pHelp;
 		const char *m_pParams;
 
-		virtual const CCommandInfo *NextCommandInfo(int AccessLevel, int FlagMask) const = 0;
+		virtual const CCommandInfo *NextCommandInfo(int ClientId, int AccessLevel, int FlagMask) const = 0;
 
 		int GetAccessLevel() const { return m_AccessLevel; }
 	};
@@ -97,7 +97,7 @@ public:
 	static bool EmptyUnknownCommandCallback(const char *pCommand, void *pUser) { return false; }
 
 	virtual void Init() = 0;
-	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int Flagmask) const = 0;
+	virtual const CCommandInfo *FirstCommandInfo(int ClientId, int AccessLevel, int Flagmask) const = 0;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) = 0;
 	virtual int PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback = EmptyPossibleCommandCallback, void *pUser = nullptr) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;

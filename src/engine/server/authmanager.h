@@ -15,10 +15,14 @@
 #define ROLE_NAME_MODERATOR "moderator"
 #define ROLE_NAME_HELPER "helper"
 
-#define RANK_ADMIN AUTHED_ADMIN // TODO: change this to 1000
-#define RANK_MODERATOR AUTHED_MOD
-#define RANK_HELPER AUTHED_HELPER
-#define RANK_NONE AUTHED_NO
+#define RANK_ADMIN 1000
+#define RANK_MODERATOR 999
+#define RANK_HELPER 998
+#define RANK_DEFAULT 1
+#define RANK_NONE 0
+
+// TODO: remove this and send role as string over the network
+int rcon_rank_to_network(int Rank);
 
 class CRconRole
 {
