@@ -3504,6 +3504,17 @@ static int GetAuthLevel(const char *pLevel)
 	return Level;
 }
 
+bool CServer::CanClientUseCommand(int ClientId, const char *pCommand, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+	CRconRole *pRole = pManager->KeyRole(pThis->m_aClients[ClientId].m_AuthKey);
+	if(!pRole)
+		return false;
+
+	return pRole->CanUseRconCommand(pCommand);
+}
+
 void CServer::AuthRemoveKey(int KeySlot)
 {
 	m_AuthManager.RemoveKey(KeySlot);
@@ -3723,6 +3734,34 @@ void CServer::ConAuthList(IConsole::IResult *pResult, void *pUser)
 	CAuthManager *pManager = &pThis->m_AuthManager;
 
 	pManager->ListKeys(ListKeysCallback, pThis);
+}
+
+void CServer::ConRoleAllow(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+
+	const char *pRoleName = pResult->GetString(0);
+	const char *pCommand = pResult->GetString(1);
+
+	CRconRole *pRole = pManager->FindRole(pRoleName);
+
+	if(!pRole)
+	{
+		log_error("auth", "Role '%s' not found.", pRoleName);
+		return;
+	}
+
+	// TODO: no such command?
+
+	if(pRole->AllowCommand(pCommand))
+	{
+		log_info("auth", "Role '%s' can now use command '%s'.", pRoleName, pCommand);
+	}
+	else
+	{
+		log_info("auth", "Role '%s' already had access to command '%s'.", pRoleName, pCommand);
+	}
 }
 
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
@@ -4297,6 +4336,8 @@ void CServer::RegisterCommands()
 	Console()->Register("auth_remove", "s[ident]", CFGFLAG_SERVER | CFGFLAG_NONTEEHISTORIC, ConAuthRemove, this, "Remove a rcon key");
 	Console()->Register("auth_list", "", CFGFLAG_SERVER, ConAuthList, this, "List all rcon keys");
 
+	Console()->Register("role_allow", "s[role] s[command]", CFGFLAG_SERVER, ConRoleAllow, this, "");
+
 	Console()->Register("reload_announcement", "", CFGFLAG_SERVER, ConReloadAnnouncement, this, "Reload the announcements");
 	Console()->Register("reload_maplist", "", CFGFLAG_SERVER, ConReloadMaplist, this, "Reload the maplist");
 
@@ -4330,6 +4371,9 @@ void CServer::RegisterCommands()
 	m_ServerBan.InitServerBan(Console(), Storage(), this);
 	m_NameBans.InitConsole(Console());
 	m_pGameServer->OnConsoleInit();
+
+	// TODO: this probably does not belong here
+	Console()->SetCanUseCommandCallback(CanClientUseCommand, this);
 }
 
 int CServer::SnapNewId()
