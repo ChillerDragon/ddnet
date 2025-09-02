@@ -450,6 +450,8 @@ public:
 	static void ConAuthRemove(IConsole::IResult *pResult, void *pUser);
 	static void ConAuthList(IConsole::IResult *pResult, void *pUser);
 
+	static void ConRoleAllow(IConsole::IResult *pResult, void *pUser);
+
 	// console commands for sqlmasters
 	static void ConAddSqlServer(IConsole::IResult *pResult, void *pUserData);
 	static void ConDumpSqlServers(IConsole::IResult *pResult, void *pUserData);
@@ -512,6 +514,7 @@ public:
 		return m_aClients[ClientId].m_DnsblState == EDnsblState::BLACKLISTED;
 	}
 
+	static bool CanClientUseCommand(int ClientId, const char *pCommand, void *pUser);
 	void AuthRemoveKey(int KeySlot);
 	bool ClientPrevIngame(int ClientId) override { return m_aPrevStates[ClientId] == CClient::STATE_INGAME; }
 	const char *GetNetErrorString(int ClientId) override { return m_NetServer.ErrorString(ClientId); }
