@@ -16,12 +16,15 @@ class CConsole : public IConsole
 	class CCommand : public CCommandInfo
 	{
 	public:
+		using CCommandInfo::CCommandInfo;
+
 		CCommand *m_pNext;
 		int m_Flags;
 		bool m_Temp;
 		FCommandCallback m_pfnCallback;
 		void *m_pUserData;
 
+		void SetCanUseCallback(FCanUseCommandCallback pfnCanUseCallback, void *pUser) override;
 		const CCommandInfo *NextCommandInfo(int ClientId, int AccessLevel, int FlagMask) const override;
 
 		void SetAccessLevel(int AccessLevel);

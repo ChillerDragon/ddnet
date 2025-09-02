@@ -81,13 +81,24 @@ std::optional<ColorHSLA> CConsole::CResult::GetColor(unsigned Index, float Darke
 	return ColorParse(m_apArgs[Index], DarkestLighting);
 }
 
-// TODO: here we need to pass ClientId as argument to be able to get the custom role cmd access
+void CConsole::CCommand::SetCanUseCallback(FCanUseCommandCallback pfnCanUseCallback, void *pUser)
+{
+	m_pfnCanUseCommandCallback = pfnCanUseCallback;
+	m_pCanUseCommandUserData = pUser;
+}
+
 const IConsole::CCommandInfo *CConsole::CCommand::NextCommandInfo(int ClientId, int AccessLevel, int FlagMask) const
 {
 	const CCommand *pInfo = m_pNext;
 	while(pInfo)
 	{
-		if(pInfo->m_Flags & FlagMask && pInfo->m_AccessLevel >= AccessLevel)
+		bool CanUse = pInfo->m_AccessLevel >= AccessLevel;
+		if(!CanUse)
+		{
+			if(m_pfnCanUseCommandCallback(ClientId, m_pName, m_pCanUseCommandUserData))
+				CanUse = true;
+		}
+		if(pInfo->m_Flags & FlagMask && CanUse)
 			break;
 		pInfo = pInfo->m_pNext;
 	}
@@ -99,12 +110,17 @@ void CConsole::CCommand::SetAccessLevel(int AccessLevel)
 	m_AccessLevel = std::clamp(AccessLevel, (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_USER));
 }
 
-// TODO: here we need to pass ClientId as argument to be able to get the custom role cmd access
 const IConsole::CCommandInfo *CConsole::FirstCommandInfo(int ClientId, int AccessLevel, int FlagMask) const
 {
 	for(const CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
-		if(pCommand->m_Flags & FlagMask && pCommand->GetAccessLevel() >= AccessLevel)
+		bool CanUse = pCommand->GetAccessLevel() >= AccessLevel;
+		if(!CanUse)
+		{
+			if(m_pfnCanUseCommandCallback && m_pfnCanUseCommandCallback(ClientId, pCommand->m_pName, m_pCanUseCommandUserData))
+				CanUse = true;
+		}
+		if(pCommand->m_Flags & FlagMask && CanUse)
 			return pCommand;
 	}
 
@@ -969,7 +985,7 @@ void CConsole::Register(const char *pName, const char *pParams,
 	bool DoAdd = false;
 	if(pCommand == nullptr)
 	{
-		pCommand = new CCommand();
+		pCommand = new CCommand(m_pfnCanUseCommandCallback, m_pCanUseCommandUserData);
 		DoAdd = true;
 	}
 	pCommand->m_pfnCallback = pfnFunc;
@@ -1003,7 +1019,7 @@ void CConsole::RegisterTemp(const char *pName, const char *pParams, int Flags, c
 	}
 	else
 	{
-		pCommand = new(m_TempCommands.Allocate(sizeof(CCommand))) CCommand;
+		pCommand = new(m_TempCommands.Allocate(sizeof(CCommand))) CCommand(m_pfnCanUseCommandCallback, m_pCanUseCommandUserData);
 		char *pMem = static_cast<char *>(m_TempCommands.Allocate(TEMPCMD_NAME_LENGTH));
 		str_copy(pMem, pName, TEMPCMD_NAME_LENGTH);
 		pCommand->m_pName = pMem;

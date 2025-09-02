@@ -4363,6 +4363,10 @@ void CServer::RegisterCommands()
 
 	Kernel()->RegisterInterface(static_cast<IHttp *>(&m_Http), false);
 
+	// TODO: this probably does not belong here
+	Console()->SetCanUseCommandCallback(CanClientUseCommand, this);
+	log_info("server", "SET CONSOLE CALLBACK");
+
 	// register console commands
 	Console()->Register("kick", "i[id] ?r[reason]", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("status", "?r[name]", CFGFLAG_SERVER, ConStatus, this, "List players containing name or all players");
@@ -4423,9 +4427,6 @@ void CServer::RegisterCommands()
 	m_ServerBan.InitServerBan(Console(), Storage(), this);
 	m_NameBans.InitConsole(Console());
 	m_pGameServer->OnConsoleInit();
-
-	// TODO: this probably does not belong here
-	Console()->SetCanUseCommandCallback(CanClientUseCommand, this);
 }
 
 int CServer::SnapNewId()

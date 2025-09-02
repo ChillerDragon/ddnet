@@ -11,15 +11,16 @@
 
 int rcon_rank_to_network(int Rank)
 {
-	switch (Rank) {
-		case RANK_ADMIN:
-			return AUTHED_ADMIN;
-		case RANK_MODERATOR:
-			return AUTHED_MOD;
-		case RANK_HELPER:
-			return AUTHED_HELPER;
-		case RANK_NONE:
-			return AUTHED_NO;
+	switch(Rank)
+	{
+	case RANK_ADMIN:
+		return AUTHED_ADMIN;
+	case RANK_MODERATOR:
+		return AUTHED_MOD;
+	case RANK_HELPER:
+		return AUTHED_HELPER;
+	case RANK_NONE:
+		return AUTHED_NO;
 	}
 
 	dbg_assert(Rank > RANK_NONE && Rank < RANK_ADMIN, "Rank %d not in the allowed range %d-%d.", Rank, RANK_NONE + 1, RANK_ADMIN - 1);
@@ -310,4 +311,3 @@ void CAuthManager::GetRoleNames(char *pBuf, size_t BufSize)
 		First = false;
 	}
 }
-

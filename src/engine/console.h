@@ -5,6 +5,8 @@
 
 #include "kernel.h"
 #include <base/color.h>
+#include <base/log.h>
+#include <base/system.h>
 #include <engine/storage.h>
 
 #include <memory>
@@ -69,18 +71,30 @@ public:
 		virtual int GetVictim() const = 0;
 	};
 
+	typedef bool (*FCanUseCommandCallback)(int ClientId, const char *pCommand, void *pUser);
+
 	class CCommandInfo
 	{
 	protected:
 		int m_AccessLevel;
+		FCanUseCommandCallback m_pfnCanUseCommandCallback = nullptr;
+		void *m_pCanUseCommandUserData = nullptr;
 
 	public:
-		CCommandInfo() { m_AccessLevel = ACCESS_LEVEL_ADMIN; }
+		CCommandInfo(FCanUseCommandCallback pfnCanUseCommandCallback, void *pUser)
+		{
+			m_AccessLevel = ACCESS_LEVEL_ADMIN;
+			m_pfnCanUseCommandCallback = pfnCanUseCommandCallback;
+			m_pCanUseCommandUserData = pUser;
+			dbg_assert(m_pfnCanUseCommandCallback != nullptr, "permissions callback is null");
+			dbg_assert(m_pCanUseCommandUserData != nullptr, "permissions context is null");
+		}
 		virtual ~CCommandInfo() = default;
 		const char *m_pName;
 		const char *m_pHelp;
 		const char *m_pParams;
 
+		virtual void SetCanUseCallback(FCanUseCommandCallback pfnCanUseCallback, void *pUser) = 0;
 		virtual const CCommandInfo *NextCommandInfo(int ClientId, int AccessLevel, int FlagMask) const = 0;
 
 		int GetAccessLevel() const { return m_AccessLevel; }
@@ -91,7 +105,6 @@ public:
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
 	typedef bool (*FUnknownCommandCallback)(const char *pCommand, void *pUser); // returns true if the callback has handled the argument
-	typedef bool (*FCanUseCommandCallback)(int ClientId, const char *pCommand, void *pUser);
 
 	static void EmptyPossibleCommandCallback(int Index, const char *pCmd, void *pUser) {}
 	static bool EmptyUnknownCommandCallback(const char *pCommand, void *pUser) { return false; }
