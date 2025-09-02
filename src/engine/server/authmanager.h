@@ -107,6 +107,7 @@ public:
 	CRconRole *FindRole(const char *pName);
 	bool AddRole(const char *pName, int Rank);
 	bool CanRoleUseCommand(const char *pRoleName, const char *pCommand);
+	void GetRoleNames(char *pBuf, size_t BufSize);
 };
 
 #endif //ENGINE_SERVER_AUTHMANAGER_H
