@@ -5,6 +5,7 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/server.h>
+#include <engine/server/authmanager.h>
 #include <engine/storage.h>
 
 #include <engine/server/antibot.h>
@@ -101,6 +102,7 @@ int main(int argc, const char **argv)
 	signal(SIGINT, HandleSigIntTerm);
 	signal(SIGTERM, HandleSigIntTerm);
 
+	CAuthManager AuthManager;
 	CServer *pServer = CreateServer();
 	pServer->SetLoggers(pFutureFileLogger, std::move(pStdoutLogger));
 
