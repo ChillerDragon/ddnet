@@ -81,14 +81,7 @@ public:
 		void *m_pCanUseCommandUserData = nullptr;
 
 	public:
-		CCommandInfo(FCanUseCommandCallback pfnCanUseCommandCallback, void *pUser)
-		{
-			m_AccessLevel = ACCESS_LEVEL_ADMIN;
-			m_pfnCanUseCommandCallback = pfnCanUseCommandCallback;
-			m_pCanUseCommandUserData = pUser;
-			dbg_assert(m_pfnCanUseCommandCallback != nullptr, "permissions callback is null");
-			dbg_assert(m_pCanUseCommandUserData != nullptr, "permissions context is null");
-		}
+		CCommandInfo() { m_AccessLevel = ACCESS_LEVEL_ADMIN; }
 		virtual ~CCommandInfo() = default;
 		const char *m_pName;
 		const char *m_pHelp;

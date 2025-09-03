@@ -417,6 +417,18 @@ void CConsole::SetCanUseCommandCallback(FCanUseCommandCallback pfnCallback, void
 {
 	m_pfnCanUseCommandCallback = pfnCallback;
 	m_pCanUseCommandUserData = pUser;
+
+	log_info("console", "set callback for all commands");
+	int NumCommands = 0;
+
+	// yes wha the fuk
+	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
+	{
+		pCommand->SetCanUseCallback(pfnCallback, pUser);
+		NumCommands++;
+	}
+
+	log_info("console", "set callback on %d commands", NumCommands);
 }
 
 void CConsole::InitChecksum(CChecksumData *pData) const
@@ -985,7 +997,7 @@ void CConsole::Register(const char *pName, const char *pParams,
 	bool DoAdd = false;
 	if(pCommand == nullptr)
 	{
-		pCommand = new CCommand(m_pfnCanUseCommandCallback, m_pCanUseCommandUserData);
+		pCommand = new CCommand();
 		DoAdd = true;
 	}
 	pCommand->m_pfnCallback = pfnFunc;
@@ -1019,7 +1031,7 @@ void CConsole::RegisterTemp(const char *pName, const char *pParams, int Flags, c
 	}
 	else
 	{
-		pCommand = new(m_TempCommands.Allocate(sizeof(CCommand))) CCommand(m_pfnCanUseCommandCallback, m_pCanUseCommandUserData);
+		pCommand = new(m_TempCommands.Allocate(sizeof(CCommand))) CCommand();
 		char *pMem = static_cast<char *>(m_TempCommands.Allocate(TEMPCMD_NAME_LENGTH));
 		str_copy(pMem, pName, TEMPCMD_NAME_LENGTH);
 		pCommand->m_pName = pMem;
