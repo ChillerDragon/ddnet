@@ -6,6 +6,7 @@
 #include "memheap.h"
 
 #include <engine/console.h>
+#include <engine/permissions_manager.h>
 #include <engine/storage.h>
 
 #include <optional>
@@ -51,6 +52,8 @@ class CConsole : public IConsole
 	CExecFile *m_pFirstExec;
 	IStorage *m_pStorage;
 	int m_AccessLevel;
+
+	IPermissionsManager *m_pPermissionsManager = nullptr;
 
 	CCommand *m_pRecycleList;
 	CHeap m_TempCommands;
