@@ -15,18 +15,13 @@ class CConsole : public IConsole
 {
 	class CCommand : public CCommandInfo
 	{
-		CCommand *m_pNext;
-
 	public:
-		const CCommand *Next() const { return m_pNext; }
-		CCommand *Next() { return m_pNext; }
-		void SetNext(CCommand *pNext) { m_pNext = pNext; }
-		int m_Flags;
+		const CCommand *Next() const { return (CCommand *)m_pNext; }
+		CCommand *Next() { return (CCommand *)m_pNext; }
+		void SetNext(CCommandInfo *pNext) { m_pNext = pNext; }
 		bool m_Temp;
 		FCommandCallback m_pfnCallback;
 		void *m_pUserData;
-
-		const CCommandInfo *NextCommandInfo(EAccessLevel AccessLevel, int FlagMask) const override;
 
 		void SetAccessLevel(EAccessLevel AccessLevel);
 	};
@@ -160,6 +155,7 @@ public:
 
 	void Init() override;
 	const CCommandInfo *FirstCommandInfo(EAccessLevel AccessLevel, int FlagMask) const override;
+	const CCommandInfo *NextCommandInfo(const IConsole::CCommandInfo *pInfo, EAccessLevel AccessLevel, int FlagMask) const override;
 	const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) override;
 	int PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) override;
 
