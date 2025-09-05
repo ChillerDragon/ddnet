@@ -16,18 +16,15 @@ class CConsole : public IConsole
 	class CCommand : public ICommandInfo
 	{
 		EAccessLevel m_AccessLevel;
-		CCommand *m_pNext;
+		ICommandInfo *m_pNext;
 
 	public:
 		const char *m_pName;
 		const char *m_pHelp;
 		const char *m_pParams;
 
-		const CCommand *Next() const { return m_pNext; }
-		CCommand *Next() { return m_pNext; }
-		void SetNext(CCommand *pNext) { m_pNext = pNext; }
 		int m_Flags;
-		bool m_Temp;
+		bool m_IsTemp;
 		FCommandCallback m_pfnCallback;
 		void *m_pUserData;
 
@@ -37,6 +34,16 @@ class CConsole : public IConsole
 		const char *Params() const override { return m_pParams; }
 		EAccessLevel GetAccessLevel() const override { return m_AccessLevel; }
 		void SetAccessLevel(EAccessLevel AccessLevel);
+
+		const ICommandInfo *Next() const override { return m_pNext; }
+		ICommandInfo *Next() override { return m_pNext; }
+		void SetNext(ICommandInfo *pNext) override { m_pNext = pNext; }
+		int Flags() const override { return m_Flags; }
+		bool IsTemp() const override { return m_IsTemp; }
+		void *CallbackUserData() const override { return m_pUserData; }
+		FCommandCallback Callback() const override { return m_pfnCallback; }
+		void SetCallback(FCommandCallback pfnCallback, void *pUserData) override { m_pfnCallback = pfnCallback; m_pUserData = pUserData; }
+		void ExecCallback(IResult *pResult) override { m_pfnCallback(pResult, m_pUserData); }
 	};
 
 	class CChain
@@ -51,7 +58,7 @@ class CConsole : public IConsole
 	int m_FlagMask;
 	bool m_StoreCommands;
 	const char *m_apStrokeStr[2];
-	CCommand *m_pFirstCommand;
+	ICommandInfo *m_pFirstCommand;
 
 	class CExecFile
 	{
@@ -64,7 +71,7 @@ class CConsole : public IConsole
 	IStorage *m_pStorage;
 	EAccessLevel m_AccessLevel;
 
-	CCommand *m_pRecycleList;
+	ICommandInfo *m_pRecycleList;
 	CHeap m_TempCommands;
 
 	static void TraverseChain(FCommandCallback *ppfnCallback, void **ppUserData);
@@ -158,7 +165,7 @@ class CConsole : public IConsole
 	std::vector<CExecutionQueueEntry> m_vExecutionQueue;
 
 	void AddCommandSorted(CCommand *pCommand);
-	CCommand *FindCommand(const char *pName, int FlagMask);
+	ICommandInfo *FindCommand(const char *pName, int FlagMask);
 
 	bool m_Cheated;
 
@@ -168,6 +175,7 @@ public:
 
 	void Init() override;
 	const ICommandInfo *FirstCommandInfo(EAccessLevel AccessLevel, int FlagMask) const override;
+	const ICommandInfo *NextCommandInfo(const IConsole::ICommandInfo *pInfo, EAccessLevel AccessLevel, int FlagMask) const override;
 	const ICommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) override;
 	int PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) override;
 
