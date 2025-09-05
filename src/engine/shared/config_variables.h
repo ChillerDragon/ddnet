@@ -751,6 +751,7 @@ MACRO_CONFIG_INT(ClConfirmKillTime, cl_confirm_kill_time, 60, -1, 14400, CFGFLAG
 MACRO_CONFIG_INT(ClDuckFilter, cl_duck_filter, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Replace all skins with a duck skin")
 
 MACRO_CONFIG_INT(ClWeatherSnow, cl_weather_snow, 0, 0, 1, CFGFLAG_CLIENT, "Whether to spawn snow")
+MACRO_CONFIG_INT(ClUIWidth, cl_ui_width, 600, 400, 1000, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Size of UI (low values may break some UI, might need restart)")
 
 // graphic library
 #if !defined(CONF_ARCH_IA32) && !defined(CONF_PLATFORM_MACOS)
