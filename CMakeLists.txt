@@ -2437,6 +2437,8 @@ if(CLIENT)
     components/spectator.h
     components/statboard.cpp
     components/statboard.h
+    components/tclient/custom_communities.cpp
+    components/tclient/custom_communities.h
     components/tooltips.cpp
     components/tooltips.h
     components/touch_controls.cpp
