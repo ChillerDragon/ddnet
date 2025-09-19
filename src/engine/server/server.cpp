@@ -3500,11 +3500,25 @@ static int GetAuthLevel(const char *pLevel)
 	return Level;
 }
 
-bool CServer::CanClientUseCommand(int ClientId, const char *pCommand, void *pUser)
+bool CServer::CanClientUseRconCommandCallback(int ClientId, const char *pCommand, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
-	CAuthManager *pManager = &pThis->m_AuthManager;
-	CRconRole *pRole = pManager->KeyRole(pThis->m_aClients[ClientId].m_AuthKey);
+	return pThis->CanClientUseRconCommand(ClientId, pCommand);
+}
+
+bool CServer::CanClientUseRconCommand(int ClientId, const char *pCommand)
+{
+	if(!IsRconAuthed(ClientId))
+		return false;
+
+	const IConsole::CCommandInfo *pInfo = Console()->GetCommandInfo(pCommand, CFGFLAG_SERVER, false);
+	if(!pInfo)
+		return false;
+	if(pInfo->GetAccessLevel() <= ConsoleAccessLevel(ClientId))
+		return true;
+
+	CAuthManager *pManager = &m_AuthManager;
+	CRconRole *pRole = pManager->KeyRole(m_aClients[ClientId].m_AuthKey);
 	if(!pRole)
 		return false;
 
@@ -4133,43 +4147,54 @@ void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 
 void CServer::ConchainCommandAccessUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
-	if(pResult->NumArguments() == 2)
+	if(pResult->NumArguments() != 2)
 	{
-		CServer *pThis = static_cast<CServer *>(pUserData);
-		const IConsole::CCommandInfo *pInfo = pThis->Console()->GetCommandInfo(pResult->GetString(0), CFGFLAG_SERVER, false);
-		IConsole::EAccessLevel OldAccessLevel = IConsole::EAccessLevel::ADMIN;
-		if(pInfo)
-			OldAccessLevel = pInfo->GetAccessLevel();
 		pfnCallback(pResult, pCallbackUserData);
-		if(pInfo && OldAccessLevel != pInfo->GetAccessLevel())
-		{
-			for(int i = 0; i < MAX_CLIENTS; ++i)
-			{
-				if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
-					continue;
-				if(!pThis->IsRconAuthed(i))
-					continue;
-
-				const IConsole::EAccessLevel ClientAccessLevel = pThis->ConsoleAccessLevel(i);
-				bool HadAccess = ClientAccessLevel >= OldAccessLevel;
-				bool HasAccess = ClientAccessLevel >= pInfo->GetAccessLevel();
-
-				// Nothing changed
-				if(HadAccess == HasAccess)
-					continue;
-				// Command not sent yet. The sending will happen in alphabetical order with correctly updated permissions.
-				if(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pResult->GetString(0), pThis->m_aClients[i].m_pRconCmdToSend->m_pName) >= 0)
-					continue;
-
-				if(HasAccess)
-					pThis->SendRconCmdAdd(pInfo, i);
-				else
-					pThis->SendRconCmdRem(pInfo, i);
-			}
-		}
+		return;
 	}
-	else
-		pfnCallback(pResult, pCallbackUserData);
+
+	CServer *pThis = static_cast<CServer *>(pUserData);
+	const char *pCommand = pResult->GetString(0);
+	bool aHadAcces[MAX_CLIENTS] = {};
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
+			continue;
+		if(!pThis->IsRconAuthed(i))
+			continue;
+
+		aHadAcces[i] = pThis->CanClientUseRconCommand(i, pCommand);
+	}
+
+	pfnCallback(pResult, pCallbackUserData);
+
+	const IConsole::CCommandInfo *pInfo = pThis->Console()->GetCommandInfo(pCommand, CFGFLAG_SERVER, false);
+	if(!pInfo)
+		return;
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
+			continue;
+		if(!pThis->IsRconAuthed(i))
+			continue;
+
+		bool HadAccess = aHadAcces[i];
+		bool HasAccess = pThis->CanClientUseRconCommand(i, pCommand);
+
+		// Nothing changed
+		if(HadAccess == HasAccess)
+			continue;
+		// Command not sent yet. The sending will happen in alphabetical order with correctly updated permissions.
+		if(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pCommand, pThis->m_aClients[i].m_pRconCmdToSend->m_pName) >= 0)
+			continue;
+
+		if(HasAccess)
+			pThis->SendRconCmdAdd(pInfo, i);
+		else
+			pThis->SendRconCmdRem(pInfo, i);
+	}
 }
 
 void CServer::LogoutClient(int ClientId, const char *pReason)
@@ -4405,6 +4430,7 @@ void CServer::RegisterCommands()
 
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("access_level", ConchainCommandAccessUpdate, this);
+	Console()->Chain("role_allow", ConchainCommandAccessUpdate, this);
 
 	Console()->Chain("sv_rcon_password", ConchainRconPasswordChange, this);
 	Console()->Chain("sv_rcon_mod_password", ConchainRconModPasswordChange, this);
@@ -4429,7 +4455,7 @@ void CServer::RegisterCommands()
 	m_pGameServer->OnConsoleInit();
 
 	// TODO: this probably does not belong here
-	Console()->SetCanUseCommandCallback(CanClientUseCommand, this);
+	Console()->SetCanUseCommandCallback(CanClientUseRconCommandCallback, this);
 }
 
 int CServer::SnapNewId()
