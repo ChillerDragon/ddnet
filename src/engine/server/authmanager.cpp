@@ -298,4 +298,3 @@ void CAuthManager::GetRoleNames(char *pBuf, size_t BufSize)
 		First = false;
 	}
 }
-
