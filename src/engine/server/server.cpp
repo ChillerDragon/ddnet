@@ -3,6 +3,7 @@
 
 #include "server.h"
 
+#include <base/log.h>
 #include <base/logger.h>
 #include <base/math.h>
 #include <base/system.h>
@@ -3505,13 +3506,26 @@ bool CServer::CanClientUseCommandCallback(int ClientId, const IConsole::ICommand
 
 bool CServer::CanClientUseCommand(int ClientId, const IConsole::ICommandInfo *pCommand)
 {
+	// everyone can use all chat commands
 	if(pCommand->Flags() & CFGFLAG_CHAT)
 		return true;
 	if(pCommand->Flags() & CMDFLAG_PRACTICE)
 		return true;
+	// some commands are run with -1 if they are executed
+	// by the server it self and not by a human
+	// those are always allowed
+	if(ClientId == -1)
+		return true;
 	if(!IsRconAuthed(ClientId))
 		return false;
-	return pCommand->GetAccessLevel() <= ConsoleAccessLevel(ClientId);
+	// TODO: remove this legacy shit
+	if(ConsoleAccessLevel(ClientId) >= pCommand->GetAccessLevel())
+		return true;
+	CAuthManager *pManager = &m_AuthManager;
+	CRconRole *pRole = pManager->KeyRole(m_aClients[ClientId].m_AuthKey);
+	if(!pRole)
+		return false;
+	return pRole->CanUseRconCommand(pCommand->Name());
 }
 
 void CServer::AuthRemoveKey(int KeySlot)
@@ -3760,8 +3774,8 @@ void CServer::ConRoleAllow(IConsole::IResult *pResult, void *pUser)
 	CServer *pThis = (CServer *)pUser;
 	CAuthManager *pManager = &pThis->m_AuthManager;
 
-	const char *pRoleName = pResult->GetString(0);
-	const char *pCommand = pResult->GetString(1);
+	const char *pCommand = pResult->GetString(0);
+	const char *pRoleName = pResult->GetString(1);
 
 	CRconRole *pRole = pManager->FindRole(pRoleName);
 
@@ -4132,43 +4146,57 @@ void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 
 void CServer::ConchainCommandAccessUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
-	if(pResult->NumArguments() == 2)
+	if(pResult->NumArguments() != 2)
 	{
-		CServer *pThis = static_cast<CServer *>(pUserData);
-		const IConsole::ICommandInfo *pInfo = pThis->Console()->GetCommandInfo(pResult->GetString(0), CFGFLAG_SERVER, false);
-		IConsole::EAccessLevel OldAccessLevel = IConsole::EAccessLevel::ADMIN;
-		if(pInfo)
-			OldAccessLevel = pInfo->GetAccessLevel();
 		pfnCallback(pResult, pCallbackUserData);
-		if(pInfo && OldAccessLevel != pInfo->GetAccessLevel())
-		{
-			for(int i = 0; i < MAX_CLIENTS; ++i)
-			{
-				if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
-					continue;
-				if(!pThis->IsRconAuthed(i))
-					continue;
-
-				const IConsole::EAccessLevel ClientAccessLevel = pThis->ConsoleAccessLevel(i);
-				bool HadAccess = ClientAccessLevel >= OldAccessLevel;
-				bool HasAccess = ClientAccessLevel >= pInfo->GetAccessLevel();
-
-				// Nothing changed
-				if(HadAccess == HasAccess)
-					continue;
-				// Command not sent yet. The sending will happen in alphabetical order with correctly updated permissions.
-				if(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pResult->GetString(0), pThis->m_aClients[i].m_pRconCmdToSend->Name()) >= 0)
-					continue;
-
-				if(HasAccess)
-					pThis->SendRconCmdAdd(pInfo, i);
-				else
-					pThis->SendRconCmdRem(pInfo, i);
-			}
-		}
+		return;
 	}
-	else
-		pfnCallback(pResult, pCallbackUserData);
+
+	CServer *pThis = static_cast<CServer *>(pUserData);
+	const char *pCommand = pResult->GetString(0);
+	const IConsole::ICommandInfo *pInfo = pThis->Console()->GetCommandInfo(pCommand, CFGFLAG_SERVER, false);
+	if(!pInfo)
+	{
+		log_warn("server", "Command '%s' not found!", pCommand);
+		return;
+	}
+
+	bool aHadAcces[MAX_CLIENTS] = {};
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
+			continue;
+		if(!pThis->IsRconAuthed(i))
+			continue;
+
+		aHadAcces[i] = pThis->CanClientUseCommand(i, pInfo);
+	}
+
+	pfnCallback(pResult, pCallbackUserData);
+
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
+			continue;
+		if(!pThis->IsRconAuthed(i))
+			continue;
+
+		bool HadAccess = aHadAcces[i];
+		bool HasAccess = pThis->CanClientUseCommand(i, pInfo);
+
+		// Nothing changed
+		if(HadAccess == HasAccess)
+			continue;
+		// Command not sent yet. The sending will happen in alphabetical order with correctly updated permissions.
+		if(pThis->m_aClients[i].m_pRconCmdToSend && str_comp(pCommand, pThis->m_aClients[i].m_pRconCmdToSend->Name()) >= 0)
+			continue;
+
+		if(HasAccess)
+			pThis->SendRconCmdAdd(pInfo, i);
+		else
+			pThis->SendRconCmdRem(pInfo, i);
+	}
 }
 
 void CServer::LogoutClient(int ClientId, const char *pReason)
@@ -4390,7 +4418,8 @@ void CServer::RegisterCommands()
 	Console()->Register("auth_remove", "s[ident]", CFGFLAG_SERVER | CFGFLAG_NONTEEHISTORIC, ConAuthRemove, this, "Remove a rcon key");
 	Console()->Register("auth_list", "", CFGFLAG_SERVER, ConAuthList, this, "List all rcon keys");
 
-	Console()->Register("role_allow", "s[role] s[command]", CFGFLAG_SERVER, ConRoleAllow, this, "");
+	// TODO: delete this command? it will do the same as access_level anyways??????
+	Console()->Register("role_allow", "s[command] s[role]", CFGFLAG_SERVER, ConRoleAllow, this, "");
 	Console()->Register("role_create", "s[role]", CFGFLAG_SERVER, ConRoleCreate, this, "");
 
 	Console()->Register("reload_announcement", "", CFGFLAG_SERVER, ConReloadAnnouncement, this, "Reload the announcements");
@@ -4404,6 +4433,7 @@ void CServer::RegisterCommands()
 
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("access_level", ConchainCommandAccessUpdate, this);
+	Console()->Chain("role_allow", ConchainCommandAccessUpdate, this);
 
 	Console()->Chain("sv_rcon_password", ConchainRconPasswordChange, this);
 	Console()->Chain("sv_rcon_mod_password", ConchainRconModPasswordChange, this);
