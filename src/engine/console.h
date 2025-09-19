@@ -104,7 +104,7 @@ public:
 
 	virtual void Init() = 0;
 	virtual const CCommandInfo *FirstCommandInfo(EAccessLevel AccessLevel, int Flagmask) const = 0;
-	virtual const CCommandInfo *NextCommandInfo(const IConsole::CCommandInfo *pInfo, EAccessLevel AccessLevel, int FlagMask) const = 0;
+	virtual const CCommandInfo *NextCommandInfo(const IConsole::CCommandInfo *pInfo, int ClientId, EAccessLevel AccessLevel, int FlagMask) const = 0;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) = 0;
 	virtual int PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback = EmptyPossibleCommandCallback, void *pUser = nullptr) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;

@@ -98,12 +98,16 @@ const IConsole::CCommandInfo *CConsole::FirstCommandInfo(EAccessLevel AccessLeve
 	return nullptr;
 }
 
-const IConsole::CCommandInfo *CConsole::NextCommandInfo(const IConsole::CCommandInfo *pInfo, EAccessLevel AccessLevel, int FlagMask) const
+const IConsole::CCommandInfo *CConsole::NextCommandInfo(const IConsole::CCommandInfo *pInfo, int ClientId, EAccessLevel AccessLevel, int FlagMask) const
 {
 	const CCommandInfo *pNext = pInfo->m_pNext;
 	while(pNext)
 	{
-		if(pNext->m_Flags & FlagMask && pNext->GetAccessLevel() >= AccessLevel)
+		bool CanUseCommand = pNext->GetAccessLevel() <= AccessLevel;
+		if(!CanUseCommand && m_pfnCanUseCommandCallback)
+			CanUseCommand = m_pfnCanUseCommandCallback(ClientId, pNext->m_pName, m_pCanUseCommandUserData);
+
+		if(pNext->m_Flags & FlagMask && CanUseCommand)
 			break;
 		pNext = pNext->m_pNext;
 	}

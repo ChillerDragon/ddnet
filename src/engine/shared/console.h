@@ -158,7 +158,7 @@ public:
 
 	void Init() override;
 	const CCommandInfo *FirstCommandInfo(EAccessLevel AccessLevel, int FlagMask) const override;
-	const CCommandInfo *NextCommandInfo(const IConsole::CCommandInfo *pInfo, EAccessLevel AccessLevel, int FlagMask) const override;
+	const CCommandInfo *NextCommandInfo(const IConsole::CCommandInfo *pInfo, int ClientId, EAccessLevel AccessLevel, int FlagMask) const override;
 	const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) override;
 	int PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) override;
 
