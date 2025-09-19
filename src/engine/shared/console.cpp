@@ -538,12 +538,9 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 
 		if(pCommand)
 		{
-			bool CanUseCommand = pCommand->GetAccessLevel() <= m_AccessLevel;
-			if(!CanUseCommand)
-			{
-				if(m_pfnCanUseCommandCallback(Result.m_ClientId, pCommand, m_pCanUseCommandUserData))
-					CanUseCommand = true;
-			}
+			bool CanUseCommand = false;
+			if(m_pfnCanUseCommandCallback(Result.m_ClientId, pCommand, m_pCanUseCommandUserData))
+				CanUseCommand = true;
 
 			if(ClientId == IConsole::CLIENT_ID_GAME && !(pCommand->m_Flags & CFGFLAG_GAME))
 			{
