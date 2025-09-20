@@ -24,7 +24,6 @@ class CRconRole
 {
 	char m_aName[64];
 	int m_Rank = RANK_NONE;
-	std::vector<CRconRole *> m_vpParents;
 	std::vector<std::string> m_vRconCommands;
 
 public:
@@ -44,6 +43,8 @@ public:
 
 	bool CanUseRconCommand(const char *pCommand);
 	bool AllowCommand(const char *pCommand);
+
+	std::vector<CRconRole *> m_vpParents;
 
 	CRconRole(const char *pName, int Rank) :
 		m_Rank(Rank)
