@@ -3499,6 +3499,13 @@ static int GetAuthLevel(const char *pLevel)
 	return Level;
 }
 
+CRconRole *CServer::RoleOrNullptr(int ClientId)
+{
+	CAuthManager *pManager = &m_AuthManager;
+	CRconRole *pRole = pManager->KeyRole(m_aClients[ClientId].m_AuthKey);
+	return pRole;
+}
+
 bool CServer::CanClientUseCommandCallback(int ClientId, const IConsole::ICommandInfo *pCommand, void *pUser)
 {
 	return ((CServer *)pUser)->CanClientUseCommand(ClientId, pCommand);
@@ -3521,8 +3528,7 @@ bool CServer::CanClientUseCommand(int ClientId, const IConsole::ICommandInfo *pC
 	// TODO: remove this legacy shit
 	if(ConsoleAccessLevel(ClientId) >= pCommand->GetAccessLevel())
 		return true;
-	CAuthManager *pManager = &m_AuthManager;
-	CRconRole *pRole = pManager->KeyRole(m_aClients[ClientId].m_AuthKey);
+	CRconRole *pRole = RoleOrNullptr(ClientId);
 	if(!pRole)
 		return false;
 	return pRole->CanUseRconCommand(pCommand->Name());
@@ -3823,6 +3829,32 @@ void CServer::ConRoleCreate(IConsole::IResult *pResult, void *pUser)
 	{
 		log_warn("auth", "Role '%s' already exists.", pRoleName);
 	}
+}
+
+void CServer::ConRoleDelete(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+	const char *pRoleName = pResult->GetString(0);
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(pThis->m_aClients[i].m_State == CServer::CClient::STATE_EMPTY)
+			continue;
+		if(!pThis->IsRconAuthed(i))
+			continue;
+
+		CRconRole *pRole = pThis->RoleOrNullptr(i);
+		// TODO: is this sus? shouldn't all authed players have a role???
+		if(!pRole)
+			continue;
+		if(str_comp(pRole->Name(), pRoleName))
+			continue;
+
+		pThis->LogoutClient(i, "role deletion");
+	}
+
+	pManager->DeleteRole(pRoleName);
 }
 
 void CServer::ConRoleInherit(IConsole::IResult *pResult, void *pUser)
@@ -4433,6 +4465,7 @@ void CServer::RegisterCommands()
 	// TODO: delete this command? it will do the same as access_level anyways??????
 	Console()->Register("role_allow", "s[command] s[role]", CFGFLAG_SERVER, ConRoleAllow, this, "");
 	Console()->Register("role_create", "s[role]", CFGFLAG_SERVER, ConRoleCreate, this, "");
+	Console()->Register("role_delete", "s[role]", CFGFLAG_SERVER, ConRoleDelete, this, "");
 	Console()->Register("role_inherit", "s[role] s[parent]", CFGFLAG_SERVER, ConRoleInherit, this, "");
 
 	Console()->Register("reload_announcement", "", CFGFLAG_SERVER, ConReloadAnnouncement, this, "Reload the announcements");

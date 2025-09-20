@@ -452,6 +452,7 @@ public:
 
 	static void ConRoleAllow(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleCreate(IConsole::IResult *pResult, void *pUser);
+	static void ConRoleDelete(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleInherit(IConsole::IResult *pResult, void *pUser);
 
 	// console commands for sqlmasters
@@ -516,6 +517,7 @@ public:
 		return m_aClients[ClientId].m_DnsblState == EDnsblState::BLACKLISTED;
 	}
 
+	CRconRole *RoleOrNullptr(int ClientId);
 	static bool CanClientUseCommandCallback(int ClientId, const IConsole::ICommandInfo *pCommand, void *pUser);
 	bool CanClientUseCommand(int ClientId, const IConsole::ICommandInfo *pCommand);
 	void AuthRemoveKey(int KeySlot);

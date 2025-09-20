@@ -13,6 +13,11 @@
 #define MOD_IDENT "default_mod"
 #define HELPER_IDENT "default_helper"
 
+bool CRconRole::IsParent(CRconRole *pParent) const
+{
+	return std::find(m_vpParents.cbegin(), m_vpParents.cend(), pParent) != m_vpParents.cend();
+}
+
 bool CRconRole::CanUseRconCommand(const char *pCommand)
 {
 	bool CanDirect = std::ranges::any_of(
@@ -278,6 +283,28 @@ bool CAuthManager::AddRole(const char *pName, int Rank)
 
 	m_Roles.insert({pName, CRconRole(pName, Rank)});
 	return true;
+}
+
+void CAuthManager::DeleteRole(const char *pName)
+{
+	CRconRole *pDelRole = FindRole(pName);
+	if(!pDelRole)
+	{
+		log_warn("auth", "Role '%s' not found!", pName);
+		return;
+	}
+
+	for(const auto &It : m_Roles)
+	{
+		const CRconRole *pRole = &It.second;
+		if(pRole->IsParent(pDelRole))
+		{
+			log_error("auth", "Can not delete role '%s' because it is the parent of role '%s'.", pName, pRole->Name());
+			return;
+		}
+	}
+
+	dbg_assert(m_Roles.erase(pName) == 1, "Deleted unexpected amount of roles.");
 }
 
 bool CAuthManager::CanRoleUseCommand(const char *pRoleName, const char *pCommand)
