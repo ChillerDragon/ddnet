@@ -87,26 +87,28 @@ void CConsole::CCommand::SetAccessLevel(EAccessLevel AccessLevel)
 	m_AccessLevel = AccessLevel;
 }
 
-const IConsole::ICommandInfo *CConsole::FirstCommandInfo(EAccessLevel AccessLevel, int FlagMask) const
+const IConsole::ICommandInfo *CConsole::FirstCommandInfo(int ClientId, int FlagMask) const
 {
 	for(const CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->Next())
 	{
-		if(pCommand->m_Flags & FlagMask && pCommand->GetAccessLevel() <= AccessLevel)
+		bool CanUseCommand = false;
+		if(m_pfnCanUseCommandCallback(ClientId, pCommand, m_pCanUseCommandUserData))
+			CanUseCommand = true;
+		if(pCommand->m_Flags & FlagMask && CanUseCommand)
 			return pCommand;
 	}
 
 	return nullptr;
 }
 
-const IConsole::ICommandInfo *CConsole::NextCommandInfo(const IConsole::ICommandInfo *pInfo, int ClientId, EAccessLevel AccessLevel, int FlagMask) const
+const IConsole::ICommandInfo *CConsole::NextCommandInfo(const IConsole::ICommandInfo *pInfo, int ClientId, int FlagMask) const
 {
 	const CCommand *pNext = ((CCommand *)pInfo)->Next();
 	while(pNext)
 	{
-		bool CanUseCommand = pNext->GetAccessLevel() <= AccessLevel;
-		if(!CanUseCommand && m_pfnCanUseCommandCallback)
-			CanUseCommand = m_pfnCanUseCommandCallback(ClientId, pNext->m_pName, m_pCanUseCommandUserData);
-
+		bool CanUseCommand = false;
+		if(m_pfnCanUseCommandCallback(ClientId, pNext, m_pCanUseCommandUserData))
+			CanUseCommand = true;
 		if(pNext->m_Flags & FlagMask && CanUseCommand)
 			break;
 		pNext = pNext->Next();
@@ -539,7 +541,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 			bool CanUseCommand = pCommand->GetAccessLevel() <= m_AccessLevel;
 			if(!CanUseCommand)
 			{
-				if(m_pfnCanUseCommandCallback && m_pfnCanUseCommandCallback(Result.m_ClientId, Result.m_pCommand, m_pCanUseCommandUserData))
+				if(m_pfnCanUseCommandCallback(Result.m_ClientId, pCommand, m_pCanUseCommandUserData))
 					CanUseCommand = true;
 			}
 
