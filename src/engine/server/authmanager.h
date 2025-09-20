@@ -24,8 +24,12 @@ class CRconRole
 {
 	char m_aName[64];
 	int m_Rank = RANK_NONE;
+	std::vector<CRconRole *> m_vpParents;
 
 public:
+	// inherit all command access from a parent role
+	void AddParent(CRconRole *pRole) { m_vpParents.emplace_back(pRole); }
+
 	// Name of the rcon role. For example "admin".
 	const char *Name() const { return m_aName; }
 
