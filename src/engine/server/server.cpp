@@ -1483,9 +1483,8 @@ void CServer::SendRconCmdGroupEnd(int ClientId)
 int CServer::NumRconCommands(int ClientId)
 {
 	int Num = 0;
-	const IConsole::EAccessLevel AccessLevel = ConsoleAccessLevel(ClientId);
-	for(const IConsole::ICommandInfo *pCmd = Console()->FirstCommandInfo(AccessLevel, CFGFLAG_SERVER);
-		pCmd; pCmd = Console()->NextCommandInfo(pCmd, ClientId, AccessLevel, CFGFLAG_SERVER))
+	for(const IConsole::ICommandInfo *pCmd = Console()->FirstCommandInfo(ClientId, CFGFLAG_SERVER);
+		pCmd; pCmd = Console()->NextCommandInfo(pCmd, ClientId, CFGFLAG_SERVER))
 	{
 		Num++;
 	}
@@ -1502,11 +1501,10 @@ void CServer::UpdateClientRconCommands(int ClientId)
 		return;
 	}
 
-	const IConsole::EAccessLevel AccessLevel = ConsoleAccessLevel(ClientId);
 	for(int i = 0; i < MAX_RCONCMD_SEND && Client.m_pRconCmdToSend; ++i)
 	{
 		SendRconCmdAdd(Client.m_pRconCmdToSend, ClientId);
-		Client.m_pRconCmdToSend = Console()->NextCommandInfo(Client.m_pRconCmdToSend, ClientId, AccessLevel, CFGFLAG_SERVER);
+		Client.m_pRconCmdToSend = Console()->NextCommandInfo(Client.m_pRconCmdToSend, ClientId, CFGFLAG_SERVER);
 		if(Client.m_pRconCmdToSend == nullptr)
 		{
 			SendRconCmdGroupEnd(ClientId);
@@ -2037,7 +2035,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					int SendRconCmds = IsSixup(ClientId) ? true : Unpacker.GetInt();
 					if(!Unpacker.Error() && SendRconCmds)
 					{
-						m_aClients[ClientId].m_pRconCmdToSend = Console()->FirstCommandInfo(ConsoleAccessLevel(ClientId), CFGFLAG_SERVER);
+						m_aClients[ClientId].m_pRconCmdToSend = Console()->FirstCommandInfo(ClientId, CFGFLAG_SERVER);
 						SendRconCmdGroupStart(ClientId);
 						if(m_aClients[ClientId].m_pRconCmdToSend == nullptr)
 						{
@@ -3500,15 +3498,20 @@ static int GetAuthLevel(const char *pLevel)
 	return Level;
 }
 
-bool CServer::CanClientUseCommand(int ClientId, const char *pCommand, void *pUser)
+bool CServer::CanClientUseCommandCallback(int ClientId, const IConsole::ICommandInfo *pCommand, void *pUser)
 {
-	CServer *pThis = (CServer *)pUser;
-	CAuthManager *pManager = &pThis->m_AuthManager;
-	CRconRole *pRole = pManager->KeyRole(pThis->m_aClients[ClientId].m_AuthKey);
-	if(!pRole)
-		return false;
+	return ((CServer *)pUser)->CanClientUseCommand(ClientId, pCommand);
+}
 
-	return pRole->CanUseRconCommand(pCommand);
+bool CServer::CanClientUseCommand(int ClientId, const IConsole::ICommandInfo *pCommand)
+{
+	if(pCommand->Flags() & CFGFLAG_CHAT)
+		return true;
+	if(pCommand->Flags() & CMDFLAG_PRACTICE)
+		return true;
+	if(!IsRconAuthed(ClientId))
+		return false;
+	return pCommand->GetAccessLevel() <= ConsoleAccessLevel(ClientId);
 }
 
 void CServer::AuthRemoveKey(int KeySlot)
@@ -4423,9 +4426,7 @@ void CServer::RegisterCommands()
 	m_ServerBan.InitServerBan(Console(), Storage(), this);
 	m_NameBans.InitConsole(Console());
 	m_pGameServer->OnConsoleInit();
-
-	// TODO: this probably does not belong here
-	Console()->SetCanUseCommandCallback(CanClientUseCommand, this);
+	Console()->SetCanUseCommandCallback(CanClientUseCommandCallback, this);
 }
 
 int CServer::SnapNewId()

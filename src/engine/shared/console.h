@@ -34,6 +34,7 @@ class CConsole : public IConsole
 		const char *Name() const override { return m_pName; }
 		const char *Help() const override { return m_pHelp; }
 		const char *Params() const override { return m_pParams; }
+		int Flags() const override { return m_Flags; }
 		EAccessLevel GetAccessLevel() const override { return m_AccessLevel; }
 		void SetAccessLevel(EAccessLevel AccessLevel);
 	};
@@ -169,8 +170,8 @@ public:
 	~CConsole() override;
 
 	void Init() override;
-	const ICommandInfo *FirstCommandInfo(EAccessLevel AccessLevel, int FlagMask) const override;
-	const ICommandInfo *NextCommandInfo(const IConsole::ICommandInfo *pInfo, int ClientId, EAccessLevel AccessLevel, int FlagMask) const override;
+	const ICommandInfo *FirstCommandInfo(int ClientId, int FlagMask) const override;
+	const ICommandInfo *NextCommandInfo(const IConsole::ICommandInfo *pInfo, int ClientId, int FlagMask) const override;
 	const ICommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) override;
 	int PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) override;
 
