@@ -451,6 +451,7 @@ public:
 	static void ConAuthList(IConsole::IResult *pResult, void *pUser);
 
 	static void ConRoleAllow(IConsole::IResult *pResult, void *pUser);
+	static void ConRoleDisallow(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleCreate(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleDelete(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleInherit(IConsole::IResult *pResult, void *pUser);

@@ -43,6 +43,15 @@ bool CRconRole::AllowCommand(const char *pCommand)
 	return true;
 }
 
+bool CRconRole::DisallowCommand(const char *pCommand)
+{
+	if(!CanUseRconCommand(pCommand))
+		return false;
+
+	m_vRconCommands.erase(std::remove(m_vRconCommands.begin(), m_vRconCommands.end(), pCommand), m_vRconCommands.end());
+	return true;
+}
+
 const char *CAuthManager::AuthLevelToRoleName(int AuthLevel)
 {
 	switch(AuthLevel)

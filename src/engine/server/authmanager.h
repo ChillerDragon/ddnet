@@ -45,6 +45,7 @@ public:
 
 	bool CanUseRconCommand(const char *pCommand);
 	bool AllowCommand(const char *pCommand);
+	bool DisallowCommand(const char *pCommand);
 
 	std::vector<CRconRole *> m_vpParents;
 
