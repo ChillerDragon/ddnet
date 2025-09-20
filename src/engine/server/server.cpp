@@ -3825,6 +3825,18 @@ void CServer::ConRoleCreate(IConsole::IResult *pResult, void *pUser)
 	}
 }
 
+void CServer::ConRoleInherit(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+	const char *pRole = pResult->GetString(0);
+	const char *pParent = pResult->GetString(1);
+	if(pManager->RoleInherit(pRole, pParent))
+	{
+		log_info("auth", "'%s' now inherits all commands from '%s'", pRole, pParent);
+	}
+}
+
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
 	CServer *pThis = static_cast<CServer *>(pUser);
@@ -4421,6 +4433,7 @@ void CServer::RegisterCommands()
 	// TODO: delete this command? it will do the same as access_level anyways??????
 	Console()->Register("role_allow", "s[command] s[role]", CFGFLAG_SERVER, ConRoleAllow, this, "");
 	Console()->Register("role_create", "s[role]", CFGFLAG_SERVER, ConRoleCreate, this, "");
+	Console()->Register("role_inherit", "s[role] s[parent]", CFGFLAG_SERVER, ConRoleInherit, this, "");
 
 	Console()->Register("reload_announcement", "", CFGFLAG_SERVER, ConReloadAnnouncement, this, "Reload the announcements");
 	Console()->Register("reload_maplist", "", CFGFLAG_SERVER, ConReloadMaplist, this, "Reload the maplist");

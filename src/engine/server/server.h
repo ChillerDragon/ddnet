@@ -452,6 +452,7 @@ public:
 
 	static void ConRoleAllow(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleCreate(IConsole::IResult *pResult, void *pUser);
+	static void ConRoleInherit(IConsole::IResult *pResult, void *pUser);
 
 	// console commands for sqlmasters
 	static void ConAddSqlServer(IConsole::IResult *pResult, void *pUserData);

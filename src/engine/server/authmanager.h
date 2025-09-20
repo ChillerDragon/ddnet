@@ -109,6 +109,7 @@ public:
 	bool AddRole(const char *pName, int Rank);
 	bool CanRoleUseCommand(const char *pRoleName, const char *pCommand);
 	void GetRoleNames(char *pBuf, size_t BufSize);
+	bool RoleInherit(const char *pRoleName, const char *pParentRoleName);
 };
 
 #endif //ENGINE_SERVER_AUTHMANAGER_H

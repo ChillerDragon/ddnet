@@ -1,9 +1,13 @@
 #include "authmanager.h"
-#include <algorithm>
+
 #include <base/hash_ctxt.h>
+#include <base/log.h>
 #include <base/system.h>
+
 #include <engine/shared/config.h>
 #include <generated/protocol.h>
+
+#include <algorithm>
 
 #define ADMIN_IDENT "default_admin"
 #define MOD_IDENT "default_mod"
@@ -11,11 +15,18 @@
 
 bool CRconRole::CanUseRconCommand(const char *pCommand)
 {
-	return std::ranges::any_of(
+	bool CanDirect = std::ranges::any_of(
 		m_vRconCommands,
 		[pCommand](const std::string &Command) {
 			return str_comp_nocase(Command.c_str(), pCommand) == 0;
 		});
+
+	if(CanDirect)
+		return true;
+
+	return std::any_of(m_vpParents.cbegin(), m_vpParents.cend(), [pCommand](CRconRole *pParent) {
+		return pParent->CanUseRconCommand(pCommand);
+	});
 }
 
 bool CRconRole::AllowCommand(const char *pCommand)
@@ -275,12 +286,7 @@ bool CAuthManager::CanRoleUseCommand(const char *pRoleName, const char *pCommand
 	if(!pRole)
 		return false;
 
-	if(pRole->CanUseRconCommand(pCommand))
-		return true;
-
-	return std::any_of(pRole->m_vpParents.cbegin(), pRole->m_vpParents.cend(), [pCommand](CRconRole *pParent) {
-		return pParent->CanUseRconCommand(pCommand);
-	});
+	return pRole->CanUseRconCommand(pCommand);
 }
 
 void CAuthManager::GetRoleNames(char *pBuf, size_t BufSize)
@@ -302,4 +308,22 @@ void CAuthManager::GetRoleNames(char *pBuf, size_t BufSize)
 		str_append(pBuf, It.second.Name(), BufSize - WriteLen);
 		First = false;
 	}
+}
+
+bool CAuthManager::RoleInherit(const char *pRoleName, const char *pParentRoleName)
+{
+	CRconRole *pRole = FindRole(pRoleName);
+	CRconRole *pParent = FindRole(pParentRoleName);
+	if(!pRole)
+	{
+		log_warn("auth", "Role '%s' not found!", pRoleName);
+		return false;
+	}
+	if(!pParent)
+	{
+		log_warn("auth", "Role '%s' not found!", pParentRoleName);
+		return false;
+	}
+	pRole->AddParent(pParent);
+	return true;
 }
