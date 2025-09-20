@@ -42,9 +42,11 @@
 
 // DDRace
 #include <engine/shared/linereader.h>
+#include <optional>
 #include <vector>
 #include <zlib.h>
 
+#include "base/str.h"
 #include "databases/connection.h"
 #include "databases/connection_pool.h"
 #include "register.h"
@@ -3897,6 +3899,81 @@ void CServer::ConRoleInherit(IConsole::IResult *pResult, void *pUser)
 	}
 }
 
+void CServer::ConAccessLevel(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+
+	const char *pCommand = pResult->GetString(0);
+	const char *pRoleName = pResult->GetString(1);
+
+	const IConsole::ICommandInfo *pInfo = pThis->Console()->GetCommandInfo(pCommand, CFGFLAG_SERVER, false);
+	if(!pInfo)
+	{
+		log_error("server", "No such command: '%s'.", pCommand);
+		return;
+	}
+
+	CRconRole *pModerator = pManager->FindRole(RoleName::MODERATOR);
+	CRconRole *pHelper = pManager->FindRole(RoleName::HELPER);
+
+	if(pResult->NumArguments() > 1)
+	{
+		// // TODO: could also support custom roles here
+		// //       but then the output should change because we do not want to list ALL roles in that case
+		// //       needs to be planned first how this should behave exactly for custom roles
+		// if(!pManager->IsDefaultRole(pRoleName))
+		// {
+		// 	log_error("auth", "This command only works for default roles. Use role_allow, role_disallow instead.");
+		// 	return;
+		// }
+
+		CRconRole *pRole = pManager->FindRole(pRoleName);
+		if(!pRole)
+		{
+			if(str_startswith(pRoleName, "mod"))
+				pRole = pManager->FindRole(RoleName::MODERATOR);
+		}
+		if(!pRole)
+		{
+
+			log_error("auth", "Role '%s' not found.", pRoleName);
+			return;
+		}
+
+		if(!str_comp(pRole->Name(), RoleName::ADMIN))
+		{
+			pModerator->DisallowCommand(pCommand);
+			pHelper->DisallowCommand(pCommand);
+		}
+		else if(!str_comp(pRole->Name(), RoleName::MODERATOR))
+		{
+			pModerator->AllowCommand(pCommand);
+			pHelper->DisallowCommand(pCommand);
+		}
+		else if(!str_comp(pRole->Name(), RoleName::HELPER))
+		{
+			pHelper->AllowCommand(pCommand);
+		}
+		else
+		{
+			log_error("auth", "This command only works for default roles. Use role_allow, role_disallow instead.");
+			return;
+		}
+	}
+
+	if(pResult->NumArguments() == 2)
+	{
+		log_info("server", "moderator access for '%s' is now %s", pCommand, pModerator->CanUseRconCommand(pCommand) ? "enabled" : "disabled");
+		log_info("server", "helper access for '%s' is now %s", pCommand, pHelper->CanUseRconCommand(pCommand) ? "enabled" : "disabled");
+	}
+	else
+	{
+		log_info("server", "moderator access for '%s' is %s", pCommand, pModerator->CanUseRconCommand(pCommand) ? "enabled" : "disabled");
+		log_info("server", "helper access for '%s' is %s", pCommand, pHelper->CanUseRconCommand(pCommand) ? "enabled" : "disabled");
+	}
+}
+
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
 	CServer *pThis = static_cast<CServer *>(pUser);
@@ -4496,6 +4573,8 @@ void CServer::RegisterCommands()
 	Console()->Register("role_create", "s[role]", CFGFLAG_SERVER, ConRoleCreate, this, "");
 	Console()->Register("role_delete", "s[role]", CFGFLAG_SERVER, ConRoleDelete, this, "");
 	Console()->Register("role_inherit", "s[role] s[parent]", CFGFLAG_SERVER, ConRoleInherit, this, "");
+	// backwards compatible alias for role_allow, role_disallow
+	Console()->Register("access_level", "s[command] ?s[role]", CFGFLAG_SERVER, ConAccessLevel, this, "");
 
 	Console()->Register("reload_announcement", "", CFGFLAG_SERVER, ConReloadAnnouncement, this, "Reload the announcements");
 	Console()->Register("reload_maplist", "", CFGFLAG_SERVER, ConReloadMaplist, this, "Reload the maplist");
@@ -4507,6 +4586,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("sv_spectator_slots", ConchainSpecialInfoupdate, this);
 
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
+	Console()->Chain("access_level_legacy", ConchainCommandAccessUpdate, this);
 	Console()->Chain("access_level", ConchainCommandAccessUpdate, this);
 	Console()->Chain("role_allow", ConchainCommandAccessUpdate, this);
 	Console()->Chain("role_disallow", ConchainCommandAccessUpdate, this);

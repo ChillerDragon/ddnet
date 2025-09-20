@@ -114,6 +114,7 @@ public:
 	bool CanRoleUseCommand(const char *pRoleName, const char *pCommand);
 	void GetRoleNames(char *pBuf, size_t BufSize);
 	bool RoleInherit(const char *pRoleName, const char *pParentRoleName);
+	bool IsDefaultRole(const char *pRoleName);
 };
 
 #endif //ENGINE_SERVER_AUTHMANAGER_H

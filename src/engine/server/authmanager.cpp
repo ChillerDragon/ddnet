@@ -101,6 +101,7 @@ CAuthManager::CAuthManager()
 	AddRole(RoleName::ADMIN, RoleRank::ADMIN);
 	AddRole(RoleName::MODERATOR, RoleRank::MODERATOR);
 	AddRole(RoleName::HELPER, RoleRank::HELPER);
+	RoleInherit(RoleName::MODERATOR, RoleName::HELPER);
 }
 
 void CAuthManager::Init()
@@ -362,4 +363,26 @@ bool CAuthManager::RoleInherit(const char *pRoleName, const char *pParentRoleNam
 	}
 	pRole->AddParent(pParent);
 	return true;
+}
+
+bool CAuthManager::IsDefaultRole(const char *pRoleName)
+{
+	CRconRole *pRole = FindRole(pRoleName);
+
+	// back compat match moderator with "mod"*
+	// but only if it is no direct match of a custom role
+	if(str_startswith(pRoleName, "mod"))
+	{
+		if(!pRole)
+			return true;
+	}
+
+	if(!pRole)
+		return false;
+
+	bool CleanMatch = !str_comp(pRole->Name(), RoleName::ADMIN) || !str_comp(pRole->Name(), RoleName::MODERATOR) || !str_comp(pRole->Name(), RoleName::HELPER);
+	if(CleanMatch)
+		return true;
+
+	return false;
 }
