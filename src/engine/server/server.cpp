@@ -3803,6 +3803,34 @@ void CServer::ConRoleAllow(IConsole::IResult *pResult, void *pUser)
 	}
 }
 
+void CServer::ConRoleDisallow(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+
+	const char *pCommand = pResult->GetString(0);
+	const char *pRoleName = pResult->GetString(1);
+
+	CRconRole *pRole = pManager->FindRole(pRoleName);
+
+	if(!pRole)
+	{
+		log_error("auth", "Role '%s' not found.", pRoleName);
+		return;
+	}
+
+	// TODO: no such command?
+
+	if(pRole->DisallowCommand(pCommand))
+	{
+		log_info("auth", "Role '%s' can no longer use command '%s'.", pRoleName, pCommand);
+	}
+	else
+	{
+		log_warn("auth", "Role '%s' already had no access to command '%s'.", pRoleName, pCommand);
+	}
+}
+
 void CServer::ConRoleCreate(IConsole::IResult *pResult, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
@@ -4464,6 +4492,7 @@ void CServer::RegisterCommands()
 
 	// TODO: delete this command? it will do the same as access_level anyways??????
 	Console()->Register("role_allow", "s[command] s[role]", CFGFLAG_SERVER, ConRoleAllow, this, "");
+	Console()->Register("role_disallow", "s[command] s[role]", CFGFLAG_SERVER, ConRoleDisallow, this, "");
 	Console()->Register("role_create", "s[role]", CFGFLAG_SERVER, ConRoleCreate, this, "");
 	Console()->Register("role_delete", "s[role]", CFGFLAG_SERVER, ConRoleDelete, this, "");
 	Console()->Register("role_inherit", "s[role] s[parent]", CFGFLAG_SERVER, ConRoleInherit, this, "");
@@ -4480,6 +4509,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("access_level", ConchainCommandAccessUpdate, this);
 	Console()->Chain("role_allow", ConchainCommandAccessUpdate, this);
+	Console()->Chain("role_disallow", ConchainCommandAccessUpdate, this);
 
 	Console()->Chain("sv_rcon_password", ConchainRconPasswordChange, this);
 	Console()->Chain("sv_rcon_mod_password", ConchainRconModPasswordChange, this);
