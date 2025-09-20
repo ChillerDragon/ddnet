@@ -275,7 +275,12 @@ bool CAuthManager::CanRoleUseCommand(const char *pRoleName, const char *pCommand
 	if(!pRole)
 		return false;
 
-	return pRole->CanUseRconCommand(pCommand);
+	if(pRole->CanUseRconCommand(pCommand))
+		return true;
+
+	return std::any_of(pRole->m_vpParents.cbegin(), pRole->m_vpParents.cend(), [pCommand](CRconRole *pParent) {
+		return pParent->CanUseRconCommand(pCommand);
+	});
 }
 
 void CAuthManager::GetRoleNames(char *pBuf, size_t BufSize)
