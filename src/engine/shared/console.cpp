@@ -539,7 +539,9 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 		if(pCommand)
 		{
 			bool CanUseCommand = false;
-			if(m_pfnCanUseCommandCallback(Result.m_ClientId, pCommand, m_pCanUseCommandUserData))
+			if(!m_pfnCanUseCommandCallback) // fallback for the rust tests
+				CanUseCommand = true;
+			else if(m_pfnCanUseCommandCallback(Result.m_ClientId, pCommand, m_pCanUseCommandUserData))
 				CanUseCommand = true;
 
 			if(ClientId == IConsole::CLIENT_ID_GAME && !(pCommand->m_Flags & CFGFLAG_GAME))

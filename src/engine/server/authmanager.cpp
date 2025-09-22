@@ -23,9 +23,19 @@ void CRconRole::RemoveParent(CRconRole *pRole)
 	m_vpParents.erase(std::remove(m_vpParents.begin(), m_vpParents.end(), pRole), m_vpParents.end());
 }
 
-bool CRconRole::IsParent(CRconRole *pParent) const
+bool CRconRole::IsParent(const CRconRole *pParent) const
 {
 	return std::find(m_vpParents.cbegin(), m_vpParents.cend(), pParent) != m_vpParents.cend();
+}
+
+bool CRconRole::IsAncestor(const CRconRole *pAncestor) const
+{
+	if(IsParent(pAncestor))
+		return true;
+
+	return std::any_of(m_vpParents.cbegin(), m_vpParents.cend(), [pAncestor](const CRconRole *pParent) {
+		return pParent->IsAncestor(pAncestor);
+	});
 }
 
 bool CRconRole::CanUseRconCommand(const char *pCommand)
@@ -371,6 +381,23 @@ bool CAuthManager::RoleInherit(const char *pRoleName, const char *pParentRoleNam
 		log_warn("auth", "Role '%s' not found!", pParentRoleName);
 		return false;
 	}
+
+	if(pRole->IsParent(pParent))
+	{
+		log_warn("auth", "Role '%s' is already inheriting from '%s'. Parent error.", pRoleName, pParentRoleName);
+		return false;
+	}
+	if(pRole->IsAncestor(pParent))
+	{
+		log_warn("auth", "Role '%s' is already inheriting from '%s'. Grandparent error.", pRoleName, pParentRoleName);
+		return false;
+	}
+	if(pParent->IsAncestor(pRole))
+	{
+		log_warn("auth", "Role '%s' is already inheriting from '%s'. Circle error.", pParentRoleName, pRoleName);
+		return false;
+	}
+
 	pRole->AddParent(pParent);
 	return true;
 }

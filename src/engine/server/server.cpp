@@ -6,6 +6,7 @@
 #include <base/log.h>
 #include <base/logger.h>
 #include <base/math.h>
+#include <base/str.h>
 #include <base/system.h>
 
 #include <engine/config.h>
@@ -46,7 +47,6 @@
 #include <vector>
 #include <zlib.h>
 
-#include "base/str.h"
 #include "databases/connection.h"
 #include "databases/connection_pool.h"
 #include "register.h"
@@ -633,7 +633,12 @@ void CServer::SetRconCid(int ClientId)
 
 int CServer::GetAuthedState(int ClientId) const
 {
-	dbg_assert(ClientId >= 0 && ClientId < MAX_CLIENTS, "ClientId is not valid");
+	if(ClientId == -1)
+		return AUTHED_ADMIN;
+	if(ClientId == IConsole::CLIENT_ID_GAME)
+		return AUTHED_ADMIN;
+
+	dbg_assert(ClientId >= 0 && ClientId < MAX_CLIENTS, "ClientId %d is not valid", ClientId);
 	dbg_assert(m_aClients[ClientId].m_State != CServer::CClient::STATE_EMPTY, "Client slot is empty");
 	return m_AuthManager.KeyLevel(m_aClients[ClientId].m_AuthKey);
 }

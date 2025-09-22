@@ -39,8 +39,11 @@ public:
 	// delete parent inheritance and lose access to all parent inherited command access
 	void RemoveParent(CRconRole *pRole);
 
-	// check if *pParent* is a parent of *this* role
-	bool IsParent(CRconRole *pParent) const;
+	// check if *pParent* is a direct parent of *this* role
+	bool IsParent(const CRconRole *pParent) const;
+
+	// check if *pAncestor* is a direct or indirect parent of *this* role
+	bool IsAncestor(const CRconRole *pAncestor) const;
 
 	// Name of the rcon role. For example "admin".
 	const char *Name() const { return m_aName; }
