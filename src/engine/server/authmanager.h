@@ -34,9 +34,13 @@ class CRconRole
 
 public:
 	// inherit all command access from a parent role
-	void AddParent(CRconRole *pRole) { m_vpParents.emplace_back(pRole); }
+	void AddParent(CRconRole *pRole);
 
-	bool IsParent(CRconRole *pRole) const;
+	// delete parent inheritance and lose access to all parent inherited command access
+	void RemoveParent(CRconRole *pRole);
+
+	// check if *pParent* is a parent of *this* role
+	bool IsParent(CRconRole *pParent) const;
 
 	// Name of the rcon role. For example "admin".
 	const char *Name() const { return m_aName; }
@@ -114,6 +118,7 @@ public:
 	bool CanRoleUseCommand(const char *pRoleName, const char *pCommand);
 	void GetRoleNames(char *pBuf, size_t BufSize);
 	bool RoleInherit(const char *pRoleName, const char *pParentRoleName);
+	bool RoleDeleteInherit(const char *pRoleName, const char *pParentRoleName);
 	bool IsDefaultRole(const char *pRoleName);
 };
 

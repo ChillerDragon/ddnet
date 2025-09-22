@@ -455,6 +455,7 @@ public:
 	static void ConRoleCreate(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleDelete(IConsole::IResult *pResult, void *pUser);
 	static void ConRoleInherit(IConsole::IResult *pResult, void *pUser);
+	static void ConRoleDisinherit(IConsole::IResult *pResult, void *pUser);
 	static void ConAccessLevel(IConsole::IResult *pResult, void *pUser);
 
 	// console commands for sqlmasters

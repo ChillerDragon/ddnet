@@ -13,6 +13,16 @@
 #define MOD_IDENT "default_mod"
 #define HELPER_IDENT "default_helper"
 
+void CRconRole::AddParent(CRconRole *pRole)
+{
+	m_vpParents.emplace_back(pRole);
+}
+
+void CRconRole::RemoveParent(CRconRole *pRole)
+{
+	m_vpParents.erase(std::remove(m_vpParents.begin(), m_vpParents.end(), pRole), m_vpParents.end());
+}
+
 bool CRconRole::IsParent(CRconRole *pParent) const
 {
 	return std::find(m_vpParents.cbegin(), m_vpParents.cend(), pParent) != m_vpParents.cend();
@@ -362,6 +372,29 @@ bool CAuthManager::RoleInherit(const char *pRoleName, const char *pParentRoleNam
 		return false;
 	}
 	pRole->AddParent(pParent);
+	return true;
+}
+
+bool CAuthManager::RoleDeleteInherit(const char *pRoleName, const char *pParentRoleName)
+{
+	CRconRole *pRole = FindRole(pRoleName);
+	CRconRole *pParent = FindRole(pParentRoleName);
+	if(!pRole)
+	{
+		log_warn("auth", "Role '%s' not found!", pRoleName);
+		return false;
+	}
+	if(!pParent)
+	{
+		log_warn("auth", "Role '%s' not found!", pParentRoleName);
+		return false;
+	}
+	if(!pRole->IsParent(pParent))
+	{
+		log_warn("auth", "Role '%s' is not a parent of '%s'!", pParentRoleName, pRoleName);
+		return false;
+	}
+	pRole->RemoveParent(pParent);
 	return true;
 }
 

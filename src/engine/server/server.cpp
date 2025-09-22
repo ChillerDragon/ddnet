@@ -3899,6 +3899,18 @@ void CServer::ConRoleInherit(IConsole::IResult *pResult, void *pUser)
 	}
 }
 
+void CServer::ConRoleDisinherit(IConsole::IResult *pResult, void *pUser)
+{
+	CServer *pThis = (CServer *)pUser;
+	CAuthManager *pManager = &pThis->m_AuthManager;
+	const char *pRole = pResult->GetString(0);
+	const char *pParent = pResult->GetString(1);
+	if(pManager->RoleDeleteInherit(pRole, pParent))
+	{
+		log_info("auth", "'%s' no longer inherits all commands from '%s'", pRole, pParent);
+	}
+}
+
 void CServer::ConAccessLevel(IConsole::IResult *pResult, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
@@ -3936,7 +3948,6 @@ void CServer::ConAccessLevel(IConsole::IResult *pResult, void *pUser)
 		}
 		if(!pRole)
 		{
-
 			log_error("auth", "Role '%s' not found.", pRoleName);
 			return;
 		}
@@ -4573,6 +4584,7 @@ void CServer::RegisterCommands()
 	Console()->Register("role_create", "s[role]", CFGFLAG_SERVER, ConRoleCreate, this, "");
 	Console()->Register("role_delete", "s[role]", CFGFLAG_SERVER, ConRoleDelete, this, "");
 	Console()->Register("role_inherit", "s[role] s[parent]", CFGFLAG_SERVER, ConRoleInherit, this, "");
+	Console()->Register("role_disinherit", "s[role] s[parent]", CFGFLAG_SERVER, ConRoleDisinherit, this, "");
 	// backwards compatible alias for role_allow, role_disallow
 	Console()->Register("access_level", "s[command] ?s[role]", CFGFLAG_SERVER, ConAccessLevel, this, "");
 
