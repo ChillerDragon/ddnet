@@ -761,43 +761,6 @@ void CConsole::Con_Exec(IResult *pResult, void *pUserData)
 	((CConsole *)pUserData)->ExecuteFile(pResult->GetString(0), -1, true, IStorage::TYPE_ALL);
 }
 
-void CConsole::ConCommandAccess(IResult *pResult, void *pUser)
-{
-	CConsole *pConsole = static_cast<CConsole *>(pUser);
-	char aBuf[CMDLINE_LENGTH + 64];
-	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), CFGFLAG_SERVER);
-	if(pCommand)
-	{
-		if(pResult->NumArguments() == 2)
-		{
-			std::optional<EAccessLevel> AccessLevel = AccessLevelToEnum(pResult->GetString(1));
-			if(!AccessLevel.has_value())
-			{
-				log_error("console", "Invalid access level '%s'. Allowed values are admin, moderator, helper and all.", pResult->GetString(1));
-				return;
-			}
-			pCommand->SetAccessLevel(AccessLevel.value());
-			str_format(aBuf, sizeof(aBuf), "moderator access for '%s' is now %s", pResult->GetString(0), pCommand->GetAccessLevel() <= EAccessLevel::MODERATOR ? "enabled" : "disabled");
-			pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
-			str_format(aBuf, sizeof(aBuf), "helper access for '%s' is now %s", pResult->GetString(0), pCommand->GetAccessLevel() <= EAccessLevel::HELPER ? "enabled" : "disabled");
-			pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
-			str_format(aBuf, sizeof(aBuf), "user access for '%s' is now %s", pResult->GetString(0), pCommand->GetAccessLevel() <= EAccessLevel::USER ? "enabled" : "disabled");
-		}
-		else
-		{
-			str_format(aBuf, sizeof(aBuf), "moderator access for '%s' is %s", pResult->GetString(0), pCommand->GetAccessLevel() <= EAccessLevel::MODERATOR ? "enabled" : "disabled");
-			pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
-			str_format(aBuf, sizeof(aBuf), "helper access for '%s' is %s", pResult->GetString(0), pCommand->GetAccessLevel() <= EAccessLevel::HELPER ? "enabled" : "disabled");
-			pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
-			str_format(aBuf, sizeof(aBuf), "user access for '%s' is %s", pResult->GetString(0), pCommand->GetAccessLevel() <= EAccessLevel::USER ? "enabled" : "disabled");
-		}
-	}
-	else
-		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
-
-	pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
-}
-
 void CConsole::ConCommandStatus(IResult *pResult, void *pUser)
 {
 	CConsole *pConsole = static_cast<CConsole *>(pUser);
@@ -877,7 +840,6 @@ CConsole::CConsole(int FlagMask)
 	Register("echo", "r[text]", CFGFLAG_SERVER, Con_Echo, this, "Echo the text");
 	Register("exec", "r[file]", CFGFLAG_SERVER | CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
 
-	Register("access_level_legacy", "s[command] ?s['admin'|'moderator'|'helper'|'all']", CFGFLAG_SERVER, ConCommandAccess, this, "Specify command accessibility for given access level");
 	Register("access_status", "s['admin'|'moderator'|'helper'|'all']", CFGFLAG_SERVER, ConCommandStatus, this, "List all commands which are accessible for given access level");
 	Register("cmdlist", "", CFGFLAG_SERVER | CFGFLAG_CHAT, ConUserCommandStatus, this, "List all commands which are accessible for users");
 

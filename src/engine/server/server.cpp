@@ -1559,11 +1559,10 @@ void CServer::UpdateClientMaplistEntries(int ClientId)
 	if(Client.m_MaplistEntryToSend == CClient::MAPLIST_UNINITIALIZED)
 	{
 		static const char *const MAP_COMMANDS[] = {"sv_map", "change_map"};
-		const IConsole::EAccessLevel AccessLevel = ConsoleAccessLevel(ClientId);
 		const bool MapCommandAllowed = std::any_of(std::begin(MAP_COMMANDS), std::end(MAP_COMMANDS), [&](const char *pMapCommand) {
 			const IConsole::ICommandInfo *pInfo = Console()->GetCommandInfo(pMapCommand, CFGFLAG_SERVER, false);
 			dbg_assert(pInfo != nullptr, "Map command not found");
-			return AccessLevel >= pInfo->GetAccessLevel();
+			return CanClientUseCommand(ClientId, pInfo);
 		});
 		if(MapCommandAllowed)
 		{
@@ -1974,7 +1973,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 					m_RconClientId = ClientId;
 					m_RconAuthLevel = GetAuthedState(ClientId);
-					Console()->SetAccessLevel(ConsoleAccessLevel(ClientId));
+					const CRconRole *pRole = RoleOrNullptr(ClientId);
+					Console()->SetAccessLevel((CConsole::EAccessLevel)pRole->Rank());
 					{
 						CRconClientLogger Logger(this, ClientId);
 						CLogScope Scope(&Logger);
@@ -3935,6 +3935,16 @@ void CServer::ConAccessLevel(IConsole::IResult *pResult, void *pUser)
 		{
 			if(str_startswith(pRoleName, "mod"))
 				pRole = pManager->FindRole(RoleName::MODERATOR);
+			else if(str_comp(pRoleName, "0"))
+				pRole = pManager->FindRole(RoleName::ADMIN);
+			else if(str_comp(pRoleName, "1"))
+				pRole = pManager->FindRole(RoleName::MODERATOR);
+			else if(str_comp(pRoleName, "2"))
+				pRole = pManager->FindRole(RoleName::HELPER);
+			// TODO: this breaks back compat but what the fuck
+			//       see https://github.com/ddnet/ddnet/issues/10966
+			// else if(str_comp(pRoleName, "3"))
+			// 	pRole = pManager->FindRole(RoleName::USER);
 		}
 		if(!pRole)
 		{
