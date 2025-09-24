@@ -56,6 +56,9 @@ public:
 	// but not vice versa.
 	int Rank() const { return m_Rank; }
 
+	// admin is the strongest role with full access
+	bool IsAdmin() const { return m_Rank == RoleRank::ADMIN; }
+
 	bool CanUseRconCommand(const char *pCommand);
 	bool AllowCommand(const char *pCommand);
 	bool DisallowCommand(const char *pCommand);

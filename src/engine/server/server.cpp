@@ -2053,28 +2053,15 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 					char aBuf[256];
 					const char *pIdent = m_AuthManager.KeyIdent(KeySlot);
-					switch(AuthLevel)
-					{
-					case AUTHED_ADMIN:
-					{
-						SendRconLine(ClientId, "Admin authentication successful. Full remote console access granted.");
-						str_format(aBuf, sizeof(aBuf), "ClientId=%d authed with key=%s (admin)", ClientId, pIdent);
-						break;
-					}
-					case AUTHED_MOD:
-					{
-						SendRconLine(ClientId, "Moderator authentication successful. Limited remote console access granted.");
-						str_format(aBuf, sizeof(aBuf), "ClientId=%d authed with key=%s (moderator)", ClientId, pIdent);
-						break;
-					}
-					case AUTHED_HELPER:
-					{
-						SendRconLine(ClientId, "Helper authentication successful. Limited remote console access granted.");
-						str_format(aBuf, sizeof(aBuf), "ClientId=%d authed with key=%s (helper)", ClientId, pIdent);
-						break;
-					}
-					}
-					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+					const CRconRole *pRole = RoleOrNullptr(ClientId);
+					str_format(
+						aBuf,
+						sizeof(aBuf),
+						"%s authentication successful. %s remote console access granted.",
+						pRole->Name(),
+						pRole->IsAdmin() ? "Full" : "Limited");
+					SendRconLine(ClientId, aBuf);
+					log_info("server", "ClientId=%d authed with key=%s (%s)", ClientId, pIdent, pRole->Name());
 
 					// DDRace
 					GameServer()->OnSetAuthed(ClientId, AuthLevel);
@@ -3469,11 +3456,9 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 			aAuthStr[0] = '\0';
 			if(pThis->m_aClients[i].m_AuthKey >= 0)
 			{
-				const char *pAuthStr = pThis->GetAuthedState(i) == AUTHED_ADMIN ? "(Admin)" :
-												  pThis->GetAuthedState(i) == AUTHED_MOD ? "(Mod)" :
-																	   pThis->GetAuthedState(i) == AUTHED_HELPER ? "(Helper)" : "";
-
-				str_format(aAuthStr, sizeof(aAuthStr), " key=%s %s", pThis->m_AuthManager.KeyIdent(pThis->m_aClients[i].m_AuthKey), pAuthStr);
+				const CRconRole *pRole = pThis->RoleOrNullptr(i);
+				const char *pAuthStr = pRole ? pRole->Name() : "";
+				str_format(aAuthStr, sizeof(aAuthStr), " key=%s (%s)", pThis->m_AuthManager.KeyIdent(pThis->m_aClients[i].m_AuthKey), pAuthStr);
 			}
 
 			const char *pClientPrefix = "";
