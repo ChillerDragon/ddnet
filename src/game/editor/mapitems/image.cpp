@@ -27,19 +27,19 @@ void CEditorImage::AnalyseTileFlags()
 {
 	mem_zero(m_aTileFlags, sizeof(m_aTileFlags));
 
-	size_t tw = m_Width / 16; // tilesizes
-	size_t th = m_Height / 16;
-	if(tw == th && m_Format == CImageInfo::FORMAT_RGBA)
+	size_t TileWidth = m_Width / 16;
+	size_t TileHeight = m_Height / 16;
+	if(TileWidth == TileHeight && m_Format == CImageInfo::FORMAT_RGBA)
 	{
 		int TileId = 0;
 		for(size_t ty = 0; ty < 16; ty++)
 			for(size_t tx = 0; tx < 16; tx++, TileId++)
 			{
 				bool Opaque = true;
-				for(size_t x = 0; x < tw; x++)
-					for(size_t y = 0; y < th; y++)
+				for(size_t x = 0; x < TileWidth; x++)
+					for(size_t y = 0; y < TileHeight; y++)
 					{
-						size_t p = (ty * tw + y) * m_Width + tx * tw + x;
+						size_t p = (ty * TileWidth + y) * m_Width + tx * TileWidth + x;
 						if(m_pData[p * 4 + 3] < 250)
 						{
 							Opaque = false;
@@ -53,28 +53,9 @@ void CEditorImage::AnalyseTileFlags()
 	}
 }
 
-bool CEditorImage::DataEquals(const CEditorImage &Other) const
+void CEditorImage::Free()
 {
-	// If height, width or pixel size don't match, then data cannot be equal
-	const size_t ImgPixelSize = PixelSize();
-
-	if(Other.m_Height != m_Height || Other.m_Width != m_Width || Other.PixelSize() != ImgPixelSize)
-		return false;
-
-	const auto &&GetPixel = [&](uint8_t *pData, int x, int y, size_t p) -> uint8_t {
-		return pData[x * ImgPixelSize + (m_Width * ImgPixelSize * y) + p];
-	};
-
-	// Look through every pixel and check if there are any difference
-	for(size_t y = 0; y < m_Height; y += ImgPixelSize)
-	{
-		for(size_t x = 0; x < m_Width; x += ImgPixelSize)
-		{
-			for(size_t p = 0; p < ImgPixelSize; p++)
-				if(GetPixel(m_pData, x, y, p) != GetPixel(Other.m_pData, x, y, p))
-					return false;
-		}
-	}
-
-	return true;
+	Graphics()->UnloadTexture(&m_Texture);
+	m_AutoMapper.Unload();
+	CImageInfo::Free();
 }

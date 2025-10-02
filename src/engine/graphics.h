@@ -3,6 +3,7 @@
 #ifndef ENGINE_GRAPHICS_H
 #define ENGINE_GRAPHICS_H
 
+#include "image.h"
 #include "kernel.h"
 #include "warning.h"
 
@@ -12,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <vector>
 
 #define GRAPHICS_TYPE_UNSIGNED_BYTE 0x1401
@@ -48,80 +50,22 @@ struct SQuadRenderInfo
 	float m_Padding;
 };
 
-struct SGraphicTile
+class CGraphicTile
 {
+public:
 	vec2 m_TopLeft;
 	vec2 m_TopRight;
 	vec2 m_BottomRight;
 	vec2 m_BottomLeft;
 };
 
-struct SGraphicTileTexureCoords
+class CGraphicTileTextureCoords
 {
+public:
 	ubvec4 m_TexCoordTopLeft;
 	ubvec4 m_TexCoordTopRight;
 	ubvec4 m_TexCoordBottomRight;
 	ubvec4 m_TexCoordBottomLeft;
-};
-
-class CImageInfo
-{
-public:
-	enum EImageFormat
-	{
-		FORMAT_ERROR = -1,
-		FORMAT_RGB = 0,
-		FORMAT_RGBA = 1,
-		FORMAT_SINGLE_COMPONENT = 2,
-	};
-
-	/**
-	 * Contains the width of the image
-	 */
-	size_t m_Width = 0;
-
-	/**
-	 * Contains the height of the image
-	 */
-	size_t m_Height = 0;
-
-	/**
-	 * Contains the format of the image.
-	 *
-	 * @see EImageFormat
-	 */
-	EImageFormat m_Format = FORMAT_ERROR;
-
-	/**
-	 * Pointer to the image data.
-	 */
-	uint8_t *m_pData = nullptr;
-
-	void Free()
-	{
-		m_Width = 0;
-		m_Height = 0;
-		m_Format = FORMAT_ERROR;
-		free(m_pData);
-		m_pData = nullptr;
-	}
-
-	static size_t PixelSize(EImageFormat Format)
-	{
-		dbg_assert(Format != FORMAT_ERROR, "Format invalid");
-		static const size_t s_aSizes[] = {3, 4, 1};
-		return s_aSizes[(int)Format];
-	}
-
-	size_t PixelSize() const
-	{
-		return PixelSize(m_Format);
-	}
-
-	size_t DataSize() const
-	{
-		return m_Width * m_Height * PixelSize(m_Format);
-	}
 };
 
 /*
@@ -238,6 +182,8 @@ typedef std::function<void()> WINDOW_PROPS_CHANGED_FUNC;
 
 typedef std::function<bool(uint32_t &Width, uint32_t &Height, CImageInfo::EImageFormat &Format, std::vector<uint8_t> &vDstData)> TGLBackendReadPresentedImageData;
 
+struct CDataSprite;
+
 class IGraphics : public IInterface
 {
 	MACRO_INTERFACE("graphics")
@@ -282,6 +228,7 @@ public:
 	virtual void WarnPngliteIncompatibleImages(bool Warn) = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
+	virtual bool SwitchWindowScreen(int Index) = 0;
 	virtual bool SetVSync(bool State) = 0;
 	virtual bool SetMultiSampling(uint32_t ReqMultiSamplingCount, uint32_t &MultiSamplingCountBackend) = 0;
 	virtual int GetWindowScreen() = 0;
@@ -290,6 +237,7 @@ public:
 	virtual void ResizeToScreen() = 0;
 	virtual void GotResized(int w, int h, int RefreshRate) = 0;
 	virtual void UpdateViewport(int X, int Y, int W, int H, bool ByResize) = 0;
+	virtual bool IsScreenKeyboardShown() = 0;
 
 	/**
 	* Listens to a resize event of the canvas, which is usually caused by a window resize.
@@ -311,7 +259,14 @@ public:
 	virtual void ClipDisable() = 0;
 
 	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) = 0;
-	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) = 0;
+
+	// helper functions
+	void CalcScreenParams(float Aspect, float Zoom, float *pWidth, float *pHeight) const;
+	void MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
+		float ParallaxZoom, float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints) const;
+	void MapScreenToInterface(float CenterX, float CenterY, float Zoom = 1.0f);
+
+	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) const = 0;
 
 	// TODO: These should perhaps not be virtuals
 	virtual void BlendNone() = 0;
@@ -328,15 +283,10 @@ public:
 	virtual const TTwGraphicsGpuList &GetGpus() const = 0;
 
 	virtual bool LoadPng(CImageInfo &Image, const char *pFilename, int StorageType) = 0;
+	virtual bool LoadPng(CImageInfo &Image, const uint8_t *pData, size_t DataSize, const char *pContextName) = 0;
 
 	virtual bool CheckImageDivisibility(const char *pContextName, CImageInfo &Image, int DivX, int DivY, bool AllowResize) = 0;
 	virtual bool IsImageFormatRgba(const char *pContextName, const CImageInfo &Image) = 0;
-
-	// destination and source buffer require to have the same width and height
-	virtual void CopyTextureBufferSub(uint8_t *pDestBuffer, const CImageInfo &SourceImage, size_t SubOffsetX, size_t SubOffsetY, size_t SubCopyWidth, size_t SubCopyHeight) = 0;
-
-	// destination width must be equal to the subwidth of the source
-	virtual void CopyTextureFromTextureBufferSub(uint8_t *pDestBuffer, size_t DestWidth, size_t DestHeight, const CImageInfo &SourceImage, size_t SrcSubOffsetX, size_t SrcSubOffsetY, size_t SrcSubCopyWidth, size_t SrcSubCopyHeight) = 0;
 
 	virtual void UnloadTexture(CTextureHandle *pIndex) = 0;
 	virtual CTextureHandle LoadTextureRaw(const CImageInfo &Image, int Flags, const char *pTexName = nullptr) = 0;
@@ -348,7 +298,7 @@ public:
 	// pTextData & pTextOutlineData are automatically free'd
 	virtual bool LoadTextTextures(size_t Width, size_t Height, CTextureHandle &TextTexture, CTextureHandle &TextOutlineTexture, uint8_t *pTextData, uint8_t *pTextOutlineData) = 0;
 	virtual bool UnloadTextTextures(CTextureHandle &TextTexture, CTextureHandle &TextOutlineTexture) = 0;
-	virtual bool UpdateTextTexture(CTextureHandle TextureId, int x, int y, size_t Width, size_t Height, const uint8_t *pData) = 0;
+	virtual bool UpdateTextTexture(CTextureHandle TextureId, int x, int y, size_t Width, size_t Height, uint8_t *pData, bool IsMovedPointer) = 0;
 
 	virtual CTextureHandle LoadSpriteTexture(const CImageInfo &FromImageInfo, const struct CDataSprite *pSprite) = 0;
 
@@ -361,7 +311,7 @@ public:
 	// specific render functions
 	virtual void RenderTileLayer(int BufferContainerIndex, const ColorRGBA &Color, char **pOffsets, unsigned int *pIndicedVertexDrawNum, size_t NumIndicesOffset) = 0;
 	virtual void RenderBorderTiles(int BufferContainerIndex, const ColorRGBA &Color, char *pIndexBufferOffset, const vec2 &Offset, const vec2 &Scale, uint32_t DrawNum) = 0;
-	virtual void RenderQuadLayer(int BufferContainerIndex, SQuadRenderInfo *pQuadInfo, size_t QuadNum, int QuadOffset) = 0;
+	virtual void RenderQuadLayer(int BufferContainerIndex, SQuadRenderInfo *pQuadInfo, size_t QuadNum, int QuadOffset, bool Grouped = false) = 0;
 	virtual void RenderText(int BufferContainerIndex, int TextQuadNum, int TextureSize, int TextureTextIndex, int TextureTextOutlineIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
 
 	// opengl 3.3 functions
@@ -396,16 +346,34 @@ public:
 	virtual const char *GetVersionString() = 0;
 	virtual const char *GetRendererString() = 0;
 
-	struct CLineItem
+	class CLineItem
 	{
+	public:
 		float m_X0, m_Y0, m_X1, m_Y1;
-		CLineItem() {}
+		CLineItem() = default;
 		CLineItem(float x0, float y0, float x1, float y1) :
 			m_X0(x0), m_Y0(y0), m_X1(x1), m_Y1(y1) {}
+		CLineItem(vec2 From, vec2 To)
+		{
+			m_X0 = From.x;
+			m_Y0 = From.y;
+			m_X1 = To.x;
+			m_Y1 = To.y;
+		}
 	};
 	virtual void LinesBegin() = 0;
 	virtual void LinesEnd() = 0;
-	virtual void LinesDraw(const CLineItem *pArray, int Num) = 0;
+	virtual void LinesDraw(const CLineItem *pArray, size_t Num) = 0;
+
+	class CLineItemBatch
+	{
+	public:
+		IGraphics::CLineItem m_aItems[256];
+		size_t m_NumItems = 0;
+	};
+	virtual void LinesBatchBegin(CLineItemBatch *pBatch) = 0;
+	virtual void LinesBatchEnd(CLineItemBatch *pBatch) = 0;
+	virtual void LinesBatchDraw(CLineItemBatch *pBatch, const CLineItem *pArray, size_t Num) = 0;
 
 	virtual void QuadsBegin() = 0;
 	virtual void QuadsEnd() = 0;
@@ -422,37 +390,26 @@ public:
 	struct CFreeformItem
 	{
 		float m_X0, m_Y0, m_X1, m_Y1, m_X2, m_Y2, m_X3, m_Y3;
-		CFreeformItem() {}
+		CFreeformItem() = default;
 		CFreeformItem(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) :
 			m_X0(x0), m_Y0(y0), m_X1(x1), m_Y1(y1), m_X2(x2), m_Y2(y2), m_X3(x3), m_Y3(y3) {}
+		CFreeformItem(vec2 Point1, vec2 Point2, vec2 Point3, vec2 Point4) :
+			m_X0(Point1.x), m_Y0(Point1.y), m_X1(Point2.x), m_Y1(Point2.y), m_X2(Point3.x), m_Y2(Point3.y), m_X3(Point4.x), m_Y3(Point4.y) {}
 	};
 
 	struct CQuadItem
 	{
 		float m_X, m_Y, m_Width, m_Height;
-		CQuadItem() {}
+		CQuadItem() = default;
 		CQuadItem(float x, float y, float w, float h) :
 			m_X(x), m_Y(y), m_Width(w), m_Height(h) {}
-		void Set(float x, float y, float w, float h)
-		{
-			m_X = x;
-			m_Y = y;
-			m_Width = w;
-			m_Height = h;
-		}
-
-		CFreeformItem ToFreeForm() const
-		{
-			return CFreeformItem(m_X, m_Y, m_X + m_Width, m_Y, m_X, m_Y + m_Height, m_X + m_Width, m_Y + m_Height);
-		}
+		CQuadItem(vec2 Position, vec2 Size) :
+			m_X(Position.x), m_Y(Position.y), m_Width(Size.x), m_Height(Size.y) {}
 	};
 	virtual void QuadsDraw(CQuadItem *pArray, int Num) = 0;
 	virtual void QuadsDrawTL(const CQuadItem *pArray, int Num) = 0;
 
 	virtual void QuadsTex3DDrawTL(const CQuadItem *pArray, int Num) = 0;
-
-	virtual const GL_STexCoord *GetCurTextureCoordinates() = 0;
-	virtual const GL_SColor *GetCurColor() = 0;
 
 	virtual int CreateQuadContainer(bool AutomaticUpload = true) = 0;
 	virtual void QuadContainerChangeAutomaticUpload(int ContainerIndex, bool AutomaticUpload) = 0;
@@ -477,6 +434,27 @@ public:
 
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num) = 0;
 	virtual void QuadsText(float x, float y, float Size, const char *pText) = 0;
+
+	// sprites
+	enum
+	{
+		SPRITE_FLAG_FLIP_Y = 1,
+		SPRITE_FLAG_FLIP_X = 2,
+	};
+	virtual void SelectSprite(int Id, int Flags = 0) = 0;
+	virtual void SelectSprite7(int Id, int Flags = 0) = 0;
+
+	virtual void GetSpriteScale(const CDataSprite *pSprite, float &ScaleX, float &ScaleY) const = 0;
+	virtual void GetSpriteScale(int Id, float &ScaleX, float &ScaleY) const = 0;
+	virtual void GetSpriteScaleImpl(int Width, int Height, float &ScaleX, float &ScaleY) const = 0;
+
+	virtual void DrawSprite(float x, float y, float Size) = 0;
+	virtual void DrawSprite(float x, float y, float ScaledWidth, float ScaledHeight) = 0;
+
+	virtual int QuadContainerAddSprite(int QuadContainerIndex, float x, float y, float Size) = 0;
+	virtual int QuadContainerAddSprite(int QuadContainerIndex, float Size) = 0;
+	virtual int QuadContainerAddSprite(int QuadContainerIndex, float Width, float Height) = 0;
+	virtual int QuadContainerAddSprite(int QuadContainerIndex, float X, float Y, float Width, float Height) = 0;
 
 	enum
 	{
@@ -504,7 +482,7 @@ public:
 	{
 		int m_Index;
 		float m_R, m_G, m_B, m_A;
-		CColorVertex() {}
+		CColorVertex() = default;
 		CColorVertex(int i, float r, float g, float b, float a) :
 			m_Index(i), m_R(r), m_G(g), m_B(b), m_A(a) {}
 		CColorVertex(int i, ColorRGBA Color) :
@@ -546,14 +524,87 @@ public:
 	// this function always returns the pixels in RGB
 	virtual TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() = 0;
 
-	virtual SWarning *GetCurWarning() = 0;
+	virtual std::optional<SWarning> CurrentWarning() = 0;
 
-	// returns true if the error msg was shown
-	virtual bool ShowMessageBox(unsigned Type, const char *pTitle, const char *pMsg) = 0;
+	/**
+	 * Type of a message box popup.
+	 *
+	 * @see CMessageBox
+	 */
+	enum class EMessageBoxType
+	{
+		ERROR,
+		WARNING,
+		INFO,
+	};
+	/**
+	 * Description of a message box popup button.
+	 *
+	 * @see CMessageBox
+	 */
+	class CMessageBoxButton
+	{
+	public:
+		/**
+		 * The label of this button.
+		 *
+		 * @remark This needs to be short because some systems do not increase the button sizes.
+		 */
+		const char *m_pLabel = nullptr;
+		/**
+		 * Whether the enter key activates this button.
+		 */
+		bool m_Confirm = false;
+		/**
+		 * Whether the escape key activates this button.
+		 *
+		 * @remark Closing the popup with the window manager will also cause this button to be activated.
+		 */
+		bool m_Cancel = false;
+	};
+	/**
+	 * Description of a message box popup.
+	 *
+	 * @see ShowMessageBox
+	 */
+	class CMessageBox
+	{
+	public:
+		/**
+		 * Title of the message box.
+		 */
+		const char *m_pTitle = nullptr;
+		/**
+		 * Main message of the message box.
+		 */
+		const char *m_pMessage = nullptr;
+		/**
+		 * Type of the message box.
+		 */
+		EMessageBoxType m_Type = EMessageBoxType::ERROR;
+		/**
+		 * Buttons shown in the message box. At least one button is required.
+		 * The buttons are layed out from left to right.
+		 */
+		std::vector<CMessageBoxButton> m_vButtons = {{.m_pLabel = "OK", .m_Confirm = true, .m_Cancel = true}};
+	};
+	/**
+	 * Shows a modal message box with configuration title, message and buttons.
+	 *
+	 * @param MessageBox Description of the message box.
+	 *
+	 * @return Optional containing the index of the pressed button if the popup was shown successfully.
+	 * @return Empty optional if the message box was not shown successfully.
+	 *
+	 * @remark Note that calling this function will destroy the current window,
+	 *         so it only makes sense for fatal errors at the moment.
+	 */
+	virtual std::optional<int> ShowMessageBox(const CMessageBox &MessageBox) = 0;
+
 	virtual bool IsBackendInitialized() = 0;
 
 protected:
-	inline CTextureHandle CreateTextureHandle(int Index)
+	CTextureHandle CreateTextureHandle(int Index)
 	{
 		CTextureHandle Tex;
 		Tex.m_Id = Index;
@@ -566,7 +617,7 @@ class IEngineGraphics : public IGraphics
 	MACRO_INTERFACE("enginegraphics")
 public:
 	virtual int Init() = 0;
-	virtual void Shutdown() override = 0;
+	void Shutdown() override = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
@@ -576,5 +627,12 @@ public:
 };
 
 extern IEngineGraphics *CreateEngineGraphicsThreaded();
+
+/**
+ * This function should only be used when the graphics are not initialized or when @link IGraphics::ShowMessageBox @endlink failed.
+ *
+ * @see IGraphics::ShowMessageBox
+ */
+extern std::optional<int> ShowMessageBoxWithoutGraphics(const IGraphics::CMessageBox &MessageBox);
 
 #endif

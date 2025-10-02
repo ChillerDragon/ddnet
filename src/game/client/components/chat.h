@@ -2,17 +2,20 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
-#include <vector>
-
 #include <engine/console.h>
 #include <engine/shared/config.h>
 #include <engine/shared/protocol.h>
 #include <engine/shared/ringbuffer.h>
 
+#include <generated/protocol7.h>
+
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
-#include <game/client/skin.h>
-#include <game/generated/protocol7.h>
+#include <game/client/render.h>
+
+#include <vector>
+
+constexpr auto SAVES_FILE = "ddnet-saves.txt";
 
 class CChat : public CComponent
 {
@@ -27,8 +30,13 @@ class CChat : public CComponent
 	};
 
 	CLineInputBuffered<MAX_LINE_LENGTH> m_Input;
-	struct CLine
+	class CLine
 	{
+	public:
+		CLine();
+		void Reset(CChat &This);
+
+		bool m_Initialized;
 		int64_t m_Time;
 		float m_aYOffset[2];
 		int m_ClientId;
@@ -40,35 +48,16 @@ class CChat : public CComponent
 		char m_aText[MAX_LINE_LENGTH];
 		bool m_Friend;
 		bool m_Highlighted;
+		std::optional<ColorRGBA> m_CustomColor;
 
 		STextContainerIndex m_TextContainerIndex;
 		int m_QuadContainerIndex;
 
-		char m_aSkinName[std::size(g_Config.m_ClPlayerSkin)];
-		CSkin::SSkinTextures m_RenderSkin;
-		CSkin::SSkinMetrics m_RenderSkinMetrics;
-		bool m_CustomColoredSkin;
-		ColorRGBA m_ColorBody;
-		ColorRGBA m_ColorFeet;
+		std::shared_ptr<CManagedTeeRenderInfo> m_pManagedTeeRenderInfo;
 
-		bool m_HasRenderTee;
 		float m_TextYOffset;
 
 		int m_TimesRepeated;
-
-		class CSixup
-		{
-		public:
-			IGraphics::CTextureHandle m_aTextures[protocol7::NUM_SKINPARTS];
-			IGraphics::CTextureHandle m_HatTexture;
-			IGraphics::CTextureHandle m_BotTexture;
-			int m_HatSpriteIndex;
-			ColorRGBA m_BotColor;
-			ColorRGBA m_aColors[protocol7::NUM_SKINPARTS];
-		};
-
-		// 0.7 Skin
-		CSixup m_Sixup;
 	};
 
 	bool m_PrevScoreBoardShowed;
@@ -82,11 +71,17 @@ class CChat : public CComponent
 		// client IDs for special messages
 		CLIENT_MSG = -2,
 		SERVER_MSG = -1,
+	};
 
+	enum
+	{
 		MODE_NONE = 0,
 		MODE_ALL,
 		MODE_TEAM,
+	};
 
+	enum
+	{
 		CHAT_SERVER = 0,
 		CHAT_HIGHLIGHT,
 		CHAT_CLIENT,
@@ -101,10 +96,11 @@ class CChat : public CComponent
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
 	static char ms_aDisplayText[MAX_LINE_LENGTH];
-	struct CRateablePlayer
+	class CRateablePlayer
 	{
-		int ClientId;
-		int Score;
+	public:
+		int m_ClientId;
+		int m_Score;
 	};
 	CRateablePlayer m_aPlayerCompletionList[MAX_CLIENTS];
 	int m_PlayerCompletionListLength;
@@ -128,8 +124,8 @@ class CChat : public CComponent
 		bool operator==(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) == 0; }
 	};
 
-	std::vector<CCommand> m_vCommands;
-	bool m_CommandsNeedSorting;
+	std::vector<CCommand> m_vServerCommands;
+	bool m_ServerCommandsNeedSorting;
 
 	struct CHistoryEntry
 	{
@@ -152,6 +148,7 @@ class CChat : public CComponent
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConEcho(IConsole::IResult *pResult, void *pUserData);
+	static void ConClearChat(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConchainChatOld(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainChatFontSize(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -177,7 +174,6 @@ public:
 	void OnWindowResize() override;
 	void OnConsoleInit() override;
 	void OnStateChange(int NewState, int OldState) override;
-	void OnRefreshSkins() override;
 	void OnRender() override;
 	void OnPrepareLines(float y);
 	void Reset();
@@ -187,6 +183,7 @@ public:
 	void OnInit() override;
 
 	void RebuildChat();
+	void ClearLines();
 
 	void EnsureCoherentFontSize() const;
 	void EnsureCoherentWidth() const;

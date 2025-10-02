@@ -4,8 +4,10 @@
 #define GAME_SERVER_GAMECONTROLLER_H
 
 #include <base/vmath.h>
+
 #include <engine/map.h>
 #include <engine/shared/protocol.h>
+
 #include <game/server/teams.h>
 
 struct CScoreLoadBestTimeResult;
@@ -19,7 +21,18 @@ class IGameController
 {
 	friend class CSaveTeam; // need access to GameServer() and Server()
 
-	std::vector<vec2> m_avSpawnPoints[3];
+protected:
+	enum ESpawnType
+	{
+		SPAWNTYPE_DEFAULT = 0,
+		SPAWNTYPE_RED,
+		SPAWNTYPE_BLUE,
+
+		NUM_SPAWNTYPES
+	};
+
+private:
+	std::vector<vec2> m_avSpawnPoints[NUM_SPAWNTYPES];
 
 	class CGameContext *m_pGameServer;
 	class CConfig *m_pConfig;
@@ -50,7 +63,7 @@ protected:
 	};
 
 	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos, int DDTeam);
-	void EvaluateSpawnType(CSpawnEval *pEval, int Type, int DDTeam);
+	void EvaluateSpawnType(CSpawnEval *pEval, ESpawnType SpawnType, int DDTeam);
 
 	void ResetGame();
 
@@ -64,8 +77,6 @@ protected:
 	int m_RoundCount;
 
 	int m_GameFlags;
-	int m_UnbalancedTick;
-	bool m_ForceBalanced;
 
 public:
 	const char *m_pGameType;
@@ -95,6 +106,7 @@ public:
 	virtual void OnCharacterSpawn(class CCharacter *pChr);
 
 	virtual void HandleCharacterTiles(class CCharacter *pChr, int MapIndex);
+	virtual void SetArmorProgress(CCharacter *pCharacter, int Progress){};
 
 	/*
 		Function: OnEntity
@@ -116,19 +128,15 @@ public:
 	virtual void OnReset();
 
 	// game
-	void DoWarmup(int Seconds);
+	virtual void DoWarmup(int Seconds);
 
 	void StartRound();
 	void EndRound();
 	void ChangeMap(const char *pToMap);
 
-	bool IsForceBalanced();
-
 	/*
 
 	*/
-	virtual bool CanBeMovedOnBalance(int ClientId);
-
 	virtual void Tick();
 
 	virtual void Snap(int SnappingClient);
@@ -137,17 +145,20 @@ public:
 	virtual bool CanSpawn(int Team, vec2 *pOutPos, int DDTeam);
 
 	virtual void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg = true);
+
+	int TileFlagsToPickupFlags(int TileFlags) const;
+
 	/*
 
 	*/
 	virtual const char *GetTeamName(int Team);
 	virtual int GetAutoTeam(int NotThisId);
 	virtual bool CanJoinTeam(int Team, int NotThisId, char *pErrorReason, int ErrorReasonSize);
-	int ClampTeam(int Team);
+	virtual int ClampTeam(int Team);
 
 	CClientMask GetMaskForPlayerWorldEvent(int Asker, int ExceptID = -1);
 
-	bool IsTeamPlay() { return m_GameFlags & GAMEFLAG_TEAMS; }
+	bool IsTeamPlay() const { return m_GameFlags & GAMEFLAG_TEAMS; }
 	// DDRace
 
 	float m_CurrentRecord;

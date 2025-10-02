@@ -10,11 +10,11 @@ class CEditorImage : public CImageInfo, public CEditorComponent
 {
 public:
 	explicit CEditorImage(CEditor *pEditor);
-	~CEditorImage();
+	~CEditorImage() override;
 
 	void OnInit(CEditor *pEditor) override;
 	void AnalyseTileFlags();
-	bool DataEquals(const CEditorImage &Other) const;
+	void Free();
 
 	IGraphics::CTextureHandle m_Texture;
 	int m_External = 0;

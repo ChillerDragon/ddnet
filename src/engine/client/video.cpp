@@ -25,16 +25,11 @@ using namespace std::chrono_literals;
 
 // This code is mostly stolen from https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/muxing.c
 
-#define STREAM_PIX_FMT AV_PIX_FMT_YUV420P /* default pix_fmt */
-
-#if LIBAVCODEC_VERSION_MAJOR >= 60
-#define FRAME_NUM frame_num
-#else
-#define FRAME_NUM frame_number
-#endif
-
-const size_t FORMAT_GL_NCHANNELS = 4;
-CLock g_WriteLock;
+static const enum AVColorSpace COLOR_SPACE = AVCOL_SPC_BT709;
+// AVCodecContext->colorspace is an enum AVColorSpace but sws_getCoefficients
+// wants an SWS_CS_* macro. Both sets of constants follow H.273 numbering
+// and hence agree, but we assert that they're equal here to be sure.
+static_assert(COLOR_SPACE == SWS_CS_ITU709);
 
 static LEVEL AvLevelToLogLevel(int Level)
 {
@@ -54,20 +49,26 @@ static LEVEL AvLevelToLogLevel(int Level)
 	case AV_LOG_TRACE:
 		return LEVEL_TRACE;
 	default:
-		dbg_assert(false, "invalid log level");
+		dbg_assert(false, "invalid log level: %d", Level);
 		dbg_break();
 	}
 }
 
-void AvLogCallback(void *pUser, int Level, const char *pFormat, va_list VarArgs)
-	GNUC_ATTRIBUTE((format(printf, 3, 0)));
-
-void AvLogCallback(void *pUser, int Level, const char *pFormat, va_list VarArgs)
+[[gnu::format(printf, 3, 0)]] static void AvLogCallback(void *pUser, int Level, const char *pFormat, va_list VarArgs)
 {
 	const LEVEL LogLevel = AvLevelToLogLevel(Level);
 	if(LogLevel <= LEVEL_INFO)
 	{
-		log_log_v(LogLevel, "videorecorder/libav", pFormat, VarArgs);
+		char aLog[4096]; // Longest log line length
+		int Length = str_format_v(aLog, sizeof(aLog), pFormat, VarArgs);
+		if(Length > 0)
+		{
+			if(aLog[Length - 1] == '\n')
+			{
+				aLog[Length - 1] = '\0';
+			}
+			log_log(LogLevel, "videorecorder/libav", "%s", aLog);
+		}
 	}
 }
 
@@ -146,7 +147,7 @@ bool CVideo::Start()
 
 	m_pFormat = m_pFormatContext->oformat;
 
-#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_ARM)
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_ARM) || defined(CONF_ARCH_WASM)
 	// use only the minimum of 2 threads on 32-bit to save memory
 	m_VideoThreads = 2;
 	m_AudioThreads = 2;
@@ -159,11 +160,11 @@ bool CVideo::Start()
 	m_CurVideoThreadIndex = 0;
 	m_CurAudioThreadIndex = 0;
 
-	size_t GLNVals = FORMAT_GL_NCHANNELS * m_Width * m_Height;
+	const size_t VideoBufferSize = (size_t)4 * m_Width * m_Height * sizeof(uint8_t);
 	m_vVideoBuffers.resize(m_VideoThreads);
 	for(size_t i = 0; i < m_VideoThreads; ++i)
 	{
-		m_vVideoBuffers[i].m_vBuffer.resize(GLNVals * sizeof(uint8_t));
+		m_vVideoBuffers[i].m_vBuffer.resize(VideoBufferSize);
 	}
 
 	m_vAudioBuffers.resize(m_AudioThreads);
@@ -203,7 +204,7 @@ bool CVideo::Start()
 	for(size_t i = 0; i < m_VideoThreads; ++i)
 	{
 		std::unique_lock<std::mutex> Lock(m_vpVideoThreads[i]->m_Mutex);
-		m_vpVideoThreads[i]->m_Thread = std::thread([this, i]() REQUIRES(!g_WriteLock) { RunVideoThread(i == 0 ? (m_VideoThreads - 1) : (i - 1), i); });
+		m_vpVideoThreads[i]->m_Thread = std::thread([this, i]() REQUIRES(!m_WriteLock) { RunVideoThread(i == 0 ? (m_VideoThreads - 1) : (i - 1), i); });
 		m_vpVideoThreads[i]->m_Cond.wait(Lock, [this, i]() -> bool { return m_vpVideoThreads[i]->m_Started; });
 	}
 
@@ -215,7 +216,7 @@ bool CVideo::Start()
 	for(size_t i = 0; i < m_AudioThreads; ++i)
 	{
 		std::unique_lock<std::mutex> Lock(m_vpAudioThreads[i]->m_Mutex);
-		m_vpAudioThreads[i]->m_Thread = std::thread([this, i]() REQUIRES(!g_WriteLock) { RunAudioThread(i == 0 ? (m_AudioThreads - 1) : (i - 1), i); });
+		m_vpAudioThreads[i]->m_Thread = std::thread([this, i]() REQUIRES(!m_WriteLock) { RunAudioThread(i == 0 ? (m_AudioThreads - 1) : (i - 1), i); });
 		m_vpAudioThreads[i]->m_Cond.wait(Lock, [this, i]() -> bool { return m_vpAudioThreads[i]->m_Started; });
 	}
 
@@ -253,7 +254,10 @@ bool CVideo::Start()
 				m_VideoStream.m_vpSwsContexts[i],
 				m_VideoStream.m_pCodecContext->width, m_VideoStream.m_pCodecContext->height, AV_PIX_FMT_RGBA,
 				m_VideoStream.m_pCodecContext->width, m_VideoStream.m_pCodecContext->height, AV_PIX_FMT_YUV420P,
-				0, 0, 0, 0);
+				SWS_FULL_CHR_H_INT | SWS_FULL_CHR_H_INP | SWS_ACCURATE_RND | SWS_BITEXACT, nullptr, nullptr, nullptr);
+
+			const int *pMatrixCoefficients = sws_getCoefficients(COLOR_SPACE);
+			sws_setColorspaceDetails(m_VideoStream.m_vpSwsContexts[i], pMatrixCoefficients, 0, pMatrixCoefficients, 0, 0, 1 << 16, 1 << 16);
 		}
 	}
 
@@ -283,6 +287,7 @@ void CVideo::Pause(bool Pause)
 void CVideo::Stop()
 {
 	dbg_assert(!m_Stopped, "Already stopped");
+	m_Stopped = true;
 
 	m_pGraphics->WaitForIdle();
 
@@ -341,8 +346,6 @@ void CVideo::Stop()
 	pSound->PauseAudioDevice();
 	delete ms_pCurrentVideo;
 	pSound->UnpauseAudioDevice();
-
-	m_Stopped = true;
 }
 
 void CVideo::NextVideoFrameThread()
@@ -507,7 +510,7 @@ void CVideo::RunAudioThread(size_t ParentThreadIndex, size_t ThreadIndex)
 				std::unique_lock<std::mutex> LockAudio(pThreadData->m_AudioFillMutex);
 
 				{
-					CLockScope ls(g_WriteLock);
+					CLockScope ls(m_WriteLock);
 					m_AudioStream.m_vpFrames[ThreadIndex]->pts = av_rescale_q(pThreadData->m_SampleCountStart, AVRational{1, m_AudioStream.m_pCodecContext->sample_rate}, m_AudioStream.m_pCodecContext->time_base);
 					WriteFrame(&m_AudioStream, ThreadIndex);
 				}
@@ -595,8 +598,12 @@ void CVideo::RunVideoThread(size_t ParentThreadIndex, size_t ThreadIndex)
 			{
 				std::unique_lock<std::mutex> LockVideo(pThreadData->m_VideoFillMutex);
 				{
-					CLockScope ls(g_WriteLock);
-					m_VideoStream.m_vpFrames[ThreadIndex]->pts = (int64_t)m_VideoStream.m_pCodecContext->FRAME_NUM;
+					CLockScope ls(m_WriteLock);
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+					m_VideoStream.m_vpFrames[ThreadIndex]->pts = m_VideoStream.m_pCodecContext->frame_num;
+#else
+					m_VideoStream.m_vpFrames[ThreadIndex]->pts = m_VideoStream.m_pCodecContext->frame_number;
+#endif
 					WriteFrame(&m_VideoStream, ThreadIndex);
 				}
 
@@ -625,8 +632,8 @@ void CVideo::UpdateVideoBufferFromGraphics(size_t ThreadIndex)
 	uint32_t Height;
 	CImageInfo::EImageFormat Format;
 	m_pGraphics->GetReadPresentedImageDataFuncUnsafe()(Width, Height, Format, m_vVideoBuffers[ThreadIndex].m_vBuffer);
-	dbg_assert((int)Width == m_Width && (int)Height == m_Height, "Size mismatch between video and graphics");
-	dbg_assert(Format == CImageInfo::FORMAT_RGBA, "Unexpected image format");
+	dbg_assert((int)Width == m_Width && (int)Height == m_Height, "Size mismatch between video (%d x %d) and graphics (%d x %d)", m_Width, m_Height, Width, Height);
+	dbg_assert(Format == CImageInfo::FORMAT_RGBA, "Unexpected image format %d", (int)Format);
 }
 
 AVFrame *CVideo::AllocPicture(enum AVPixelFormat PixFmt, int Width, int Height)
@@ -886,7 +893,7 @@ bool CVideo::AddStream(COutputStream *pStream, AVFormatContext *pFormatContext, 
 	}
 	pStream->m_pCodecContext = pContext;
 
-#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_ARM)
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_ARM) || defined(CONF_ARCH_WASM)
 	// use only 1 ffmpeg thread on 32-bit to save memory
 	pContext->thread_count = 1;
 #endif
@@ -894,13 +901,23 @@ bool CVideo::AddStream(COutputStream *pStream, AVFormatContext *pFormatContext, 
 	switch((*ppCodec)->type)
 	{
 	case AVMEDIA_TYPE_AUDIO:
-		pContext->sample_fmt = (*ppCodec)->sample_fmts ? (*ppCodec)->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-		if((*ppCodec)->supported_samplerates)
+	{
+		const AVSampleFormat *pSampleFormats = nullptr;
+		const int *pSampleRates = nullptr;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+		avcodec_get_supported_config(pContext, *ppCodec, AV_CODEC_CONFIG_SAMPLE_FORMAT, 0, (const void **)&pSampleFormats, nullptr);
+		avcodec_get_supported_config(pContext, *ppCodec, AV_CODEC_CONFIG_SAMPLE_RATE, 0, (const void **)&pSampleRates, nullptr);
+#else
+		pSampleFormats = (*ppCodec)->sample_fmts;
+		pSampleRates = (*ppCodec)->supported_samplerates;
+#endif
+		pContext->sample_fmt = pSampleFormats ? pSampleFormats[0] : AV_SAMPLE_FMT_FLTP;
+		if(pSampleRates)
 		{
-			pContext->sample_rate = (*ppCodec)->supported_samplerates[0];
-			for(int i = 0; (*ppCodec)->supported_samplerates[i]; i++)
+			pContext->sample_rate = pSampleRates[0];
+			for(int i = 0; pSampleRates[i]; i++)
 			{
-				if((*ppCodec)->supported_samplerates[i] == m_pSound->MixingRate())
+				if(pSampleRates[i] == m_pSound->MixingRate())
 				{
 					pContext->sample_rate = m_pSound->MixingRate();
 					break;
@@ -922,6 +939,7 @@ bool CVideo::AddStream(COutputStream *pStream, AVFormatContext *pFormatContext, 
 		pStream->m_pStream->time_base.num = 1;
 		pStream->m_pStream->time_base.den = pContext->sample_rate;
 		break;
+	}
 
 	case AVMEDIA_TYPE_VIDEO:
 		pContext->codec_id = CodecId;
@@ -939,7 +957,8 @@ bool CVideo::AddStream(COutputStream *pStream, AVFormatContext *pFormatContext, 
 		pContext->time_base = pStream->m_pStream->time_base;
 
 		pContext->gop_size = 12; /* emit one intra frame every twelve frames at most */
-		pContext->pix_fmt = STREAM_PIX_FMT;
+		pContext->pix_fmt = AV_PIX_FMT_YUV420P;
+		pContext->colorspace = COLOR_SPACE;
 		if(pContext->codec_id == AV_CODEC_ID_MPEG2VIDEO)
 		{
 			/* just for testing, we also add B-frames */
@@ -955,7 +974,7 @@ bool CVideo::AddStream(COutputStream *pStream, AVFormatContext *pFormatContext, 
 		if(CodecId == AV_CODEC_ID_H264)
 		{
 			static const char *s_apPresets[10] = {"ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow", "placebo"};
-			dbg_assert(g_Config.m_ClVideoX264Preset < (int)std::size(s_apPresets), "preset index invalid");
+			dbg_assert(g_Config.m_ClVideoX264Preset < (int)std::size(s_apPresets), "preset index invalid: %d", g_Config.m_ClVideoX264Preset);
 			dbg_assert(av_opt_set(pContext->priv_data, "preset", s_apPresets[g_Config.m_ClVideoX264Preset], 0) == 0, "invalid option");
 			dbg_assert(av_opt_set_int(pContext->priv_data, "crf", g_Config.m_ClVideoX264Crf, 0) == 0, "invalid option");
 		}
@@ -981,7 +1000,7 @@ void CVideo::WriteFrame(COutputStream *pStream, size_t ThreadIndex)
 		return;
 	}
 
-	pPacket->data = 0;
+	pPacket->data = nullptr;
 	pPacket->size = 0;
 
 	avcodec_send_frame(pStream->m_pCodecContext, pStream->m_vpFrames[ThreadIndex]);
@@ -1029,10 +1048,10 @@ void CVideo::FinishFrames(COutputStream *pStream)
 		return;
 	}
 
-	pPacket->data = 0;
+	pPacket->data = nullptr;
 	pPacket->size = 0;
 
-	avcodec_send_frame(pStream->m_pCodecContext, 0);
+	avcodec_send_frame(pStream->m_pCodecContext, nullptr);
 	int RecvResult = 0;
 	do
 	{

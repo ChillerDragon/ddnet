@@ -1,6 +1,5 @@
-#include "logger.h"
-
 #include "color.h"
+#include "logger.h"
 #include "system.h"
 
 #include <atomic>
@@ -72,11 +71,7 @@ void log_set_scope_logger(ILogger *logger)
 	}
 }
 
-// Separate declaration, as attributes are not allowed on function definitions
-void log_log_impl(LEVEL level, bool have_color, LOG_COLOR color, const char *sys, const char *fmt, va_list args)
-	GNUC_ATTRIBUTE((format(printf, 5, 0)));
-
-void log_log_impl(LEVEL level, bool have_color, LOG_COLOR color, const char *sys, const char *fmt, va_list args)
+[[gnu::format(printf, 5, 0)]] static void log_log_impl(LEVEL level, bool have_color, LOG_COLOR color, const char *sys, const char *fmt, va_list args)
 {
 	// Make sure we're not logging recursively.
 	if(in_logger)
@@ -496,6 +491,11 @@ std::unique_ptr<ILogger> log_logger_noop()
 	return std::make_unique<CLoggerNoOp>();
 }
 
+#ifdef __GNUC__
+// atomic_compare_exchange_strong_explicit is deprecated
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 void CFutureLogger::Set(std::shared_ptr<ILogger> pLogger)
 {
 	const CLockScope LockScope(m_PendingLock);
@@ -548,4 +548,43 @@ void CFutureLogger::OnFilterChange()
 	{
 		pLogger->SetFilter(m_Filter);
 	}
+}
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
+void CMemoryLogger::Log(const CLogMessage *pMessage)
+{
+	if(m_pParentLogger)
+	{
+		m_pParentLogger->Log(pMessage);
+	}
+	if(m_Filter.Filters(pMessage))
+	{
+		return;
+	}
+	const CLockScope LockScope(m_MessagesMutex);
+	m_vMessages.push_back(*pMessage);
+}
+
+std::vector<CLogMessage> CMemoryLogger::Lines()
+{
+	const CLockScope LockScope(m_MessagesMutex);
+	return m_vMessages;
+}
+
+std::string CMemoryLogger::ConcatenatedLines()
+{
+	const CLockScope LockScope(m_MessagesMutex);
+	std::string Result;
+	for(const CLogMessage &Message : m_vMessages)
+	{
+		if(!Result.empty())
+		{
+			Result += '\n';
+		}
+		Result += Message.m_aLine;
+	}
+	return Result;
 }

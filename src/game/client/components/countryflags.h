@@ -4,7 +4,9 @@
 #define GAME_CLIENT_COMPONENTS_COUNTRYFLAGS_H
 
 #include <engine/graphics.h>
+
 #include <game/client/component.h>
+
 #include <vector>
 
 class CCountryFlags : public CComponent
@@ -19,7 +21,7 @@ public:
 		bool operator<(const CCountryFlag &Other) const { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
 	};
 
-	virtual int Sizeof() const override { return sizeof(*this); }
+	int Sizeof() const override { return sizeof(*this); }
 	void OnInit() override;
 
 	size_t Num() const;

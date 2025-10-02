@@ -2,6 +2,7 @@
 #define ENGINE_SHARED_NETBAN_H
 
 #include <base/system.h>
+
 #include <engine/console.h>
 
 inline int NetComp(const NETADDR *pAddr1, const NETADDR *pAddr2)
@@ -124,14 +125,14 @@ protected:
 					return pBan;
 			}
 
-			return 0;
+			return nullptr;
 		}
 		CBan<CDataType> *Get(int Index) const;
 
 	private:
 		enum
 		{
-			MAX_BANS = 1024,
+			MAX_BANS = 2048,
 		};
 
 		CBan<CDataType> *m_aapHashList[HashCount][256];
@@ -173,7 +174,7 @@ public:
 	class IConsole *Console() const { return m_pConsole; }
 	class IStorage *Storage() const { return m_pStorage; }
 
-	virtual ~CNetBan() {}
+	virtual ~CNetBan() = default;
 	void Init(class IConsole *pConsole, class IStorage *pStorage);
 	void Update();
 
@@ -191,13 +192,14 @@ public:
 	static void ConUnbanRange(class IConsole::IResult *pResult, void *pUser);
 	static void ConUnbanAll(class IConsole::IResult *pResult, void *pUser);
 	static void ConBans(class IConsole::IResult *pResult, void *pUser);
+	static void ConBansFind(class IConsole::IResult *pResult, void *pUser);
 	static void ConBansSave(class IConsole::IResult *pResult, void *pUser);
 };
 
 template<class T>
 void CNetBan::MakeBanInfo(const CBan<T> *pBan, char *pBuf, unsigned BuffSize, int Type) const
 {
-	if(pBan == 0 || pBuf == 0)
+	if(pBan == nullptr || pBuf == nullptr)
 	{
 		if(BuffSize > 0)
 			pBuf[0] = 0;

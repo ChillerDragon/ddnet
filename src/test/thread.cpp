@@ -1,8 +1,8 @@
-#include <gtest/gtest.h>
-
 #include <base/lock.h>
 #include <base/system.h>
 #include <base/tl/threading.h>
+
+#include <gtest/gtest.h>
 
 static void Nothing(void *pUser)
 {
@@ -11,7 +11,7 @@ static void Nothing(void *pUser)
 
 TEST(Thread, Detach)
 {
-	void *pThread = thread_init(Nothing, 0, "detach");
+	void *pThread = thread_init(Nothing, nullptr, "detach");
 	thread_detach(pThread);
 }
 

@@ -1,9 +1,9 @@
 #ifndef ENGINE_SERVER_AUTHMANAGER_H
 #define ENGINE_SERVER_AUTHMANAGER_H
 
-#include <vector>
-
 #include <base/hash.h>
+
+#include <vector>
 
 #define SALT_BYTES 8
 
@@ -36,6 +36,7 @@ public:
 	int DefaultKey(int AuthLevel) const;
 	int KeyLevel(int Slot) const;
 	const char *KeyIdent(int Slot) const;
+	bool IsValidIdent(const char *pIdent) const;
 	void UpdateKeyHash(int Slot, MD5_DIGEST Hash, const unsigned char *pSalt, int AuthLevel);
 	void UpdateKey(int Slot, const char *pPw, int AuthLevel);
 	void ListKeys(FListCallback pfnListCallbac, void *pUser);

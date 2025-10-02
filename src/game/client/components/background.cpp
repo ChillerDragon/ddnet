@@ -1,3 +1,5 @@
+#include "background.h"
+
 #include <base/system.h>
 
 #include <engine/map.h>
@@ -5,13 +7,11 @@
 
 #include <game/client/components/mapimages.h>
 #include <game/client/components/maplayers.h>
-
 #include <game/client/gameclient.h>
 #include <game/layers.h>
+#include <game/localization.h>
 
-#include "background.h"
-
-CBackground::CBackground(int MapType, bool OnlineOnly) :
+CBackground::CBackground(ERenderType MapType, bool OnlineOnly) :
 	CMapLayers(MapType, OnlineOnly)
 {
 	m_pLayers = new CLayers;
@@ -38,7 +38,7 @@ void CBackground::OnInit()
 	m_pBackgroundMap = CreateBGMap();
 	m_pMap = m_pBackgroundMap;
 
-	m_pImages->m_pClient = GameClient();
+	m_pImages->OnInterfacesInit(GameClient());
 	Kernel()->RegisterInterface(m_pBackgroundMap);
 	if(g_Config.m_ClBackgroundEntities[0] != '\0' && str_comp(g_Config.m_ClBackgroundEntities, CURRENT_MAP))
 		LoadBackground();
@@ -73,16 +73,18 @@ void CBackground::LoadBackground()
 		}
 		else if(m_pMap->Load(aBuf))
 		{
-			m_pLayers->InitBackground(m_pMap);
+			m_pLayers->Init(m_pMap, true);
 			NeedImageLoading = true;
 			m_Loaded = true;
 		}
 
 		if(m_Loaded)
 		{
-			CMapLayers::OnMapLoad();
 			if(NeedImageLoading)
+			{
 				m_pImages->LoadBackground(m_pLayers, m_pMap);
+			}
+			CMapLayers::OnMapLoad();
 		}
 	}
 }

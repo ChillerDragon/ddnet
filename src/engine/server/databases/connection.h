@@ -4,6 +4,7 @@
 #include "connection_pool.h"
 
 #include <engine/shared/protocol.h>
+
 #include <memory>
 
 enum
@@ -19,7 +20,7 @@ class IDbConnection
 {
 public:
 	IDbConnection(const char *pPrefix);
-	virtual ~IDbConnection() {}
+	virtual ~IDbConnection() = default;
 	IDbConnection &operator=(const IDbConnection &) = delete;
 	virtual void Print(IConsole *pConsole, const char *pMode) = 0;
 
@@ -45,14 +46,14 @@ public:
 
 	// tries to allocate the connection from the pool established
 	//
-	// returns true on failure
+	// returns true on success
 	virtual bool Connect(char *pError, int ErrorSize) = 0;
 	// has to be called to return the connection back to the pool
 	virtual void Disconnect() = 0;
 
 	// ? for Placeholders, connection has to be established, can overwrite previous prepared statements
 	//
-	// returns true on failure
+	// returns true on success
 	virtual bool PrepareStatement(const char *pStmt, char *pError, int ErrorSize) = 0;
 
 	// PrepareStatement has to be called beforehand,
@@ -61,6 +62,7 @@ public:
 	virtual void BindInt(int Idx, int Value) = 0;
 	virtual void BindInt64(int Idx, int64_t Value) = 0;
 	virtual void BindFloat(int Idx, float Value) = 0;
+	virtual void BindNull(int Idx) = 0;
 
 	// Print expanded sql statement
 	virtual void Print() = 0;
@@ -68,11 +70,11 @@ public:
 	// executes the query and returns if a result row exists and selects it
 	// when called multiple times the next row is selected
 	//
-	// returns true on failure
+	// returns true on success
 	virtual bool Step(bool *pEnd, char *pError, int ErrorSize) = 0;
 	// executes the query and returns the number of rows affected by the update/insert/delete
 	//
-	// returns true on failure
+	// returns true on success
 	virtual bool ExecuteUpdate(int *pNumUpdated, char *pError, int ErrorSize) = 0;
 
 	virtual bool IsNull(int Col) = 0;

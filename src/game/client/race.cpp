@@ -1,11 +1,11 @@
-#include <cctype>
-#include <vector>
+#include "race.h"
 
 #include <game/client/gameclient.h>
 #include <game/collision.h>
 #include <game/mapitems.h>
 
-#include "race.h"
+#include <cctype>
+#include <vector>
 
 void CRaceHelper::Init(const CGameClient *pGameClient)
 {
@@ -56,19 +56,19 @@ int CRaceHelper::TimeFromSecondsStr(const char *pStr)
 
 int CRaceHelper::TimeFromStr(const char *pStr)
 {
-	static const char *const s_pMinutesStr = " minute(s) ";
-	static const char *const s_pSecondsStr = " second(s)";
+	static constexpr const char *MINUTES_STR = " minute(s) ";
+	static constexpr const char *SECONDS_STR = " second(s)";
 
-	const char *pSeconds = str_find(pStr, s_pSecondsStr);
+	const char *pSeconds = str_find(pStr, SECONDS_STR);
 	if(!pSeconds)
 		return -1;
 
-	const char *pMinutes = str_find(pStr, s_pMinutesStr);
+	const char *pMinutes = str_find(pStr, MINUTES_STR);
 	if(pMinutes)
 	{
 		while(*pStr == ' ') // skip leading spaces
 			pStr++;
-		int SecondsTime = TimeFromSecondsStr(pMinutes + str_length(s_pMinutesStr));
+		int SecondsTime = TimeFromSecondsStr(pMinutes + str_length(MINUTES_STR));
 		if(SecondsTime == -1 || !isdigit(*pStr))
 			return -1;
 		return str_toint(pStr) * 60 * 1000 + SecondsTime;
@@ -109,7 +109,7 @@ bool CRaceHelper::IsStart(vec2 Prev, vec2 Pos) const
 			{
 				if(m_pGameClient->Collision()->GetTileIndex(Index) == TILE_START)
 					return true;
-				if(m_pGameClient->Collision()->GetFTileIndex(Index) == TILE_START)
+				if(m_pGameClient->Collision()->GetFrontTileIndex(Index) == TILE_START)
 					return true;
 			}
 		}
@@ -118,7 +118,7 @@ bool CRaceHelper::IsStart(vec2 Prev, vec2 Pos) const
 			const int Index = m_pGameClient->Collision()->GetPureMapIndex(Pos);
 			if(m_pGameClient->Collision()->GetTileIndex(Index) == TILE_START)
 				return true;
-			if(m_pGameClient->Collision()->GetFTileIndex(Index) == TILE_START)
+			if(m_pGameClient->Collision()->GetFrontTileIndex(Index) == TILE_START)
 				return true;
 		}
 	}

@@ -34,17 +34,26 @@ enum
 	TEAM_RED,
 	TEAM_BLUE,
 	NUM_TEAMS,
+};
 
+enum
+{
 	FLAG_MISSING=-3,
 	FLAG_ATSTAND,
 	FLAG_TAKEN,
+};
 
+enum
+{
 	SPEC_FREEVIEW=0,
 	SPEC_PLAYER,
 	SPEC_FLAGRED,
 	SPEC_FLAGBLUE,
 	NUM_SPECMODES,
+};
 
+enum
+{
 	SKINPART_BODY = 0,
 	SKINPART_MARKING,
 	SKINPART_DECORATION,
@@ -166,7 +175,7 @@ Objects = [
 		NetIntRange("m_Health", 0, 10),
 		NetIntRange("m_Armor", 0, 10),
 		NetIntAny("m_AmmoCount"),
-		NetIntRange("m_Weapon", 0, 'NUM_WEAPONS-1'),
+		NetIntRange("m_Weapon", -1, 'NUM_WEAPONS-1'),
 		NetEnum("m_Emote", Emotes),
 		NetTick("m_AttackTick"),
 		NetFlag("m_TriggeredEvents", CoreEventFlags),

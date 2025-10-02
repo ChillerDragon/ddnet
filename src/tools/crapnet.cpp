@@ -5,7 +5,6 @@
 
 #include <cstdlib>
 #include <iterator> // std::size
-
 #include <thread>
 
 struct SPacket
@@ -20,8 +19,8 @@ struct SPacket
 	char m_aData[1];
 };
 
-static SPacket *g_pFirst = (SPacket *)0;
-static SPacket *g_pLast = (SPacket *)0;
+static SPacket *g_pFirst = (SPacket *)nullptr;
+static SPacket *g_pLast = (SPacket *)nullptr;
 static int g_CurrentLatency = 0;
 
 struct SPingConfig
@@ -46,7 +45,7 @@ static int g_ConfigInterval = 10; // seconds between different pingconfigs
 static int g_ConfigLog = 0;
 static int g_ConfigReorder = 0;
 
-void Run(unsigned short Port, NETADDR Dest)
+static void Run(unsigned short Port, NETADDR Dest)
 {
 	NETADDR Src = {NETTYPE_IPV4, {0, 0, 0, 0}, Port};
 	NETSOCKET Socket = net_udp_create(Src);
@@ -95,7 +94,7 @@ void Run(unsigned short Port, NETADDR Dest)
 
 			// queue packet
 			p->m_pPrev = g_pLast;
-			p->m_pNext = 0;
+			p->m_pNext = nullptr;
 			if(g_pLast)
 				g_pLast->m_pNext = p;
 			else

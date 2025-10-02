@@ -1,18 +1,19 @@
 #ifndef GAME_SERVER_SCOREWORKER_H
 #define GAME_SERVER_SCOREWORKER_H
 
+#include <engine/map.h>
+#include <engine/server/databases/connection_pool.h>
+#include <engine/shared/protocol.h>
+#include <engine/shared/uuid_manager.h>
+
+#include <game/server/save.h>
+#include <game/voting.h>
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <engine/map.h>
-#include <engine/server/databases/connection_pool.h>
-#include <engine/shared/protocol.h>
-#include <engine/shared/uuid_manager.h>
-#include <game/server/save.h>
-#include <game/voting.h>
 
 class IDbConnection;
 class IGameController;
@@ -72,9 +73,9 @@ struct CScoreLoadBestTimeResult : ISqlResult
 	float m_CurrentRecord;
 };
 
-struct CSqlLoadBestTimeData : ISqlData
+struct CSqlLoadBestTimeRequest : ISqlData
 {
-	CSqlLoadBestTimeData(std::shared_ptr<CScoreLoadBestTimeResult> pResult) :
+	CSqlLoadBestTimeRequest(std::shared_ptr<CScoreLoadBestTimeResult> pResult) :
 		ISqlData(std::move(pResult))
 	{
 	}
@@ -123,7 +124,8 @@ struct CSqlRandomMapRequest : ISqlData
 	char m_aServerType[32];
 	char m_aCurrentMap[MAX_MAP_LENGTH];
 	char m_aRequestingPlayer[MAX_NAME_LENGTH];
-	int m_Stars;
+	int m_MinStars;
+	int m_MaxStars;
 };
 
 struct CSqlScoreData : ISqlData
@@ -132,8 +134,6 @@ struct CSqlScoreData : ISqlData
 		ISqlData(std::move(pResult))
 	{
 	}
-
-	virtual ~CSqlScoreData(){};
 
 	char m_aMap[MAX_MAP_LENGTH];
 	char m_aGameUuid[UUID_MAXSTRSIZE];
@@ -188,13 +188,12 @@ struct CSqlTeamScoreData : ISqlData
 	CUuid m_TeamrankUuid;
 };
 
-struct CSqlTeamSave : ISqlData
+struct CSqlTeamSaveData : ISqlData
 {
-	CSqlTeamSave(std::shared_ptr<CScoreSaveResult> pResult) :
+	CSqlTeamSaveData(std::shared_ptr<CScoreSaveResult> pResult) :
 		ISqlData(std::move(pResult))
 	{
 	}
-	virtual ~CSqlTeamSave(){};
 
 	char m_aClientName[MAX_NAME_LENGTH];
 	char m_aMap[MAX_MAP_LENGTH];
@@ -203,18 +202,16 @@ struct CSqlTeamSave : ISqlData
 	char m_aServer[5];
 };
 
-struct CSqlTeamLoad : ISqlData
+struct CSqlTeamLoadRequest : ISqlData
 {
-	CSqlTeamLoad(std::shared_ptr<CScoreSaveResult> pResult) :
+	CSqlTeamLoadRequest(std::shared_ptr<CScoreSaveResult> pResult) :
 		ISqlData(std::move(pResult))
 	{
 	}
-	virtual ~CSqlTeamLoad(){};
 
 	char m_aCode[128];
 	char m_aMap[MAX_MAP_LENGTH];
 	char m_aRequestingPlayer[MAX_NAME_LENGTH];
-	int m_ClientId;
 	// struct holding all player names in the team or an empty string
 	char m_aClientNames[MAX_CLIENTS][MAX_NAME_LENGTH];
 	int m_aClientId[MAX_CLIENTS];
@@ -228,7 +225,6 @@ public:
 	{
 		Reset();
 	}
-	~CPlayerData() {}
 
 	void Reset()
 	{
@@ -281,6 +277,8 @@ struct CTeamrank
 	bool NextSqlResult(IDbConnection *pSqlServer, bool *pEnd, char *pError, int ErrorSize);
 
 	bool SamePlayers(const std::vector<std::string> *pvSortedNames);
+
+	static bool GetSqlTop5Team(IDbConnection *pSqlServer, bool *pEnd, char *pError, int ErrorSize, char (*paMessages)[512], int *StartLine, int Count);
 };
 
 struct CScoreWorker

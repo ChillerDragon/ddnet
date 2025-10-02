@@ -3,16 +3,18 @@
 #ifndef GAME_GAMECORE_H
 #define GAME_GAMECORE_H
 
+#include "prng.h"
+
 #include <base/vmath.h>
 
-#include <map>
+#include <engine/shared/protocol.h>
+
+#include <generated/protocol.h>
+
+#include <game/teamscore.h>
+
 #include <set>
 #include <vector>
-
-#include <engine/shared/protocol.h>
-#include <game/generated/protocol.h>
-
-#include "prng.h"
 
 class CCollision;
 class CTeamsCore;
@@ -63,6 +65,8 @@ public:
 	bool Get(const char *pName, float *pValue) const;
 	static const char *Name(int Index) { return ms_apNames[Index]; }
 	float GetWeaponFireDelay(int Weapon) const;
+
+	static const CTuningParams DEFAULT;
 };
 
 // Do not use these function unless for legacy code!
@@ -110,8 +114,8 @@ enum
 	HOOK_IDLE = 0,
 	HOOK_RETRACT_START = 1,
 	HOOK_RETRACT_END = 3,
-	HOOK_FLYING,
-	HOOK_GRABBED,
+	HOOK_FLYING = 4,
+	HOOK_GRABBED = 5,
 
 	COREEVENT_GROUND_JUMP = 0x01,
 	COREEVENT_AIR_JUMP = 0x02,
@@ -133,11 +137,11 @@ enum
 
 struct SSwitchers
 {
-	bool m_aStatus[MAX_CLIENTS];
+	bool m_aStatus[NUM_DDRACE_TEAMS];
 	bool m_Initial;
-	int m_aEndTick[MAX_CLIENTS];
-	int m_aType[MAX_CLIENTS];
-	int m_aLastUpdateTick[MAX_CLIENTS];
+	int m_aEndTick[NUM_DDRACE_TEAMS];
+	int m_aType[NUM_DDRACE_TEAMS];
+	int m_aLastUpdateTick[NUM_DDRACE_TEAMS];
 };
 
 class CWorldCore
@@ -193,8 +197,9 @@ public:
 	void SetHookedPlayer(int HookedPlayer);
 
 	int m_ActiveWeapon;
-	struct WeaponStat
+	class CWeaponStat
 	{
+	public:
 		int m_AmmoRegenStart;
 		int m_Ammo;
 		int m_Ammocost;
@@ -256,6 +261,7 @@ public:
 	bool m_ShotgunHitDisabled;
 	bool m_HookHitDisabled;
 	bool m_Super;
+	bool m_Invincible;
 	bool m_HasTelegunGun;
 	bool m_HasTelegunGrenade;
 	bool m_HasTelegunLaser;

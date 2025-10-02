@@ -3,18 +3,12 @@
 #ifndef GAME_CLIENT_COMPONENTS_MAPIMAGES_H
 #define GAME_CLIENT_COMPONENTS_MAPIMAGES_H
 
+#include <engine/console.h>
 #include <engine/graphics.h>
 
 #include <game/client/component.h>
+#include <game/map/render_interfaces.h>
 #include <game/mapitems.h>
-
-enum EMapImageEntityLayerType
-{
-	MAP_IMAGE_ENTITY_LAYER_TYPE_ALL_EXCEPT_SWITCH = 0,
-	MAP_IMAGE_ENTITY_LAYER_TYPE_SWITCH,
-
-	MAP_IMAGE_ENTITY_LAYER_TYPE_COUNT,
-};
 
 enum EMapImageModType
 {
@@ -29,39 +23,46 @@ enum EMapImageModType
 	MAP_IMAGE_MOD_TYPE_COUNT,
 };
 
-extern const char *const gs_apModEntitiesNames[];
+constexpr const char *const gs_apModEntitiesNames[] = {
+	"ddnet",
+	"ddrace",
+	"race",
+	"blockworlds",
+	"fng",
+	"vanilla",
+	"f-ddrace",
+};
 
-class CMapImages : public CComponent
+class CMapImages : public CComponent, public IMapImages
 {
 	friend class CBackground;
 	friend class CMenuBackground;
 
 	IGraphics::CTextureHandle m_aTextures[MAX_MAPIMAGES];
-	int m_aTextureUsedByTileOrQuadLayerFlag[MAX_MAPIMAGES]; // 0: nothing, 1(as flag): tile layer, 2(as flag): quad layer
 	int m_Count;
 
 	char m_aEntitiesPath[IO_MAX_PATH_LENGTH];
 
 public:
 	CMapImages();
-	CMapImages(int TextureSize);
-	virtual int Sizeof() const override { return sizeof(*this); }
+	int Sizeof() const override { return sizeof(*this); }
 
-	IGraphics::CTextureHandle Get(int Index) const { return m_aTextures[Index]; }
-	int Num() const { return m_Count; }
+	IGraphics::CTextureHandle Get(int Index) const override { return m_aTextures[Index]; }
+	int Num() const override { return m_Count; }
 
 	void OnMapLoadImpl(class CLayers *pLayers, class IMap *pMap);
-	virtual void OnMapLoad() override;
-	virtual void OnInit() override;
+	void OnMapLoad() override;
+	void OnInit() override;
+	void Unload();
 	void LoadBackground(class CLayers *pLayers, class IMap *pMap);
 
 	// DDRace
-	IGraphics::CTextureHandle GetEntities(EMapImageEntityLayerType EntityLayerType);
-	IGraphics::CTextureHandle GetSpeedupArrow();
+	IGraphics::CTextureHandle GetEntities(EMapImageEntityLayerType EntityLayerType) override;
+	IGraphics::CTextureHandle GetSpeedupArrow() override;
 
-	IGraphics::CTextureHandle GetOverlayBottom();
-	IGraphics::CTextureHandle GetOverlayTop();
-	IGraphics::CTextureHandle GetOverlayCenter();
+	IGraphics::CTextureHandle GetOverlayBottom() override;
+	IGraphics::CTextureHandle GetOverlayTop() override;
+	IGraphics::CTextureHandle GetOverlayCenter() override;
 
 	void SetTextureScale(int Scale);
 	int GetTextureScale() const;
@@ -78,6 +79,7 @@ private:
 	IGraphics::CTextureHandle m_OverlayCenterTexture;
 	int m_TextureScale;
 
+	static void ConchainClTextEntitiesSize(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void InitOverlayTextures();
 	IGraphics::CTextureHandle UploadEntityLayerText(int TextureSize, int MaxWidth, int YOffset);
 	void UpdateEntityLayerText(CImageInfo &TextImage, int TextureSize, int MaxWidth, int YOffset, int NumbersPower, int MaxNumber = -1);

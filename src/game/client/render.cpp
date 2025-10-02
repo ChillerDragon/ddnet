@@ -1,24 +1,94 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <cmath>
-
-#include <base/math.h>
+#include "render.h"
 
 #include "animstate.h"
-#include "render.h"
+
+#include <base/math.h>
 
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
-#include <game/generated/client_data.h>
-#include <game/generated/client_data7.h>
-#include <game/generated/protocol.h>
-#include <game/generated/protocol7.h>
+#include <generated/client_data.h>
+#include <generated/client_data7.h>
+#include <generated/protocol.h>
+#include <generated/protocol7.h>
 
 #include <game/mapitems.h>
 
-static float gs_SpriteWScale;
-static float gs_SpriteHScale;
+#include <cmath>
+
+CSkinDescriptor::CSkinDescriptor()
+{
+	Reset();
+}
+
+void CSkinDescriptor::Reset()
+{
+	m_Flags = 0;
+	m_aSkinName[0] = '\0';
+	for(auto &Sixup : m_aSixup)
+	{
+		Sixup.Reset();
+	}
+}
+
+bool CSkinDescriptor::IsValid() const
+{
+	return (m_Flags & (FLAG_SIX | FLAG_SEVEN)) != 0;
+}
+
+bool CSkinDescriptor::operator==(const CSkinDescriptor &Other) const
+{
+	if(m_Flags != Other.m_Flags)
+	{
+		return false;
+	}
+
+	if(m_Flags & FLAG_SIX)
+	{
+		if(str_comp(m_aSkinName, Other.m_aSkinName) != 0)
+		{
+			return false;
+		}
+	}
+
+	if(m_Flags & FLAG_SEVEN)
+	{
+		for(int Dummy = 0; Dummy < NUM_DUMMIES; Dummy++)
+		{
+			if(m_aSixup[Dummy] != Other.m_aSixup[Dummy])
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+void CSkinDescriptor::CSixup::Reset()
+{
+	for(auto &aSkinPartName : m_aaSkinPartNames)
+	{
+		aSkinPartName[0] = '\0';
+	}
+	m_BotDecoration = false;
+	m_XmasHat = false;
+}
+
+bool CSkinDescriptor::CSixup::operator==(const CSixup &Other) const
+{
+	for(int Part = 0; Part < protocol7::NUM_SKINPARTS; Part++)
+	{
+		if(str_comp(m_aaSkinPartNames[Part], Other.m_aaSkinPartNames[Part]) != 0)
+		{
+			return false;
+		}
+	}
+	return m_BotDecoration == Other.m_BotDecoration &&
+	       m_XmasHat == Other.m_XmasHat;
+}
 
 void CRenderTools::Init(IGraphics *pGraphics, ITextRender *pTextRender)
 {
@@ -28,104 +98,34 @@ void CRenderTools::Init(IGraphics *pGraphics, ITextRender *pTextRender)
 	Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f);
 
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, 64.f * 0.4f);
 
 	// Feet
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
 
 	// Mirrored Feet
 	Graphics()->QuadsSetSubsetFree(1, 0, 0, 0, 0, 1, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
 	Graphics()->QuadsSetSubsetFree(1, 0, 0, 0, 0, 1, 1, 1);
-	QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
+	Graphics()->QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
 
 	Graphics()->QuadContainerUpload(m_TeeQuadContainerIndex);
-}
-
-void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy) const
-{
-	int x = pSpr->m_X + sx;
-	int y = pSpr->m_Y + sy;
-	int w = pSpr->m_W;
-	int h = pSpr->m_H;
-	int cx = pSpr->m_pSet->m_Gridx;
-	int cy = pSpr->m_pSet->m_Gridy;
-
-	GetSpriteScaleImpl(w, h, gs_SpriteWScale, gs_SpriteHScale);
-
-	float x1 = x / (float)cx + 0.5f / (float)(cx * 32);
-	float x2 = (x + w) / (float)cx - 0.5f / (float)(cx * 32);
-	float y1 = y / (float)cy + 0.5f / (float)(cy * 32);
-	float y2 = (y + h) / (float)cy - 0.5f / (float)(cy * 32);
-
-	if(Flags & SPRITE_FLAG_FLIP_Y)
-		std::swap(y1, y2);
-
-	if(Flags & SPRITE_FLAG_FLIP_X)
-		std::swap(x1, x2);
-
-	Graphics()->QuadsSetSubset(x1, y1, x2, y2);
-}
-
-void CRenderTools::SelectSprite(int Id, int Flags, int sx, int sy) const
-{
-	if(Id < 0 || Id >= g_pData->m_NumSprites)
-		return;
-	SelectSprite(&g_pData->m_aSprites[Id], Flags, sx, sy);
-}
-
-void CRenderTools::SelectSprite7(int Id, int Flags, int sx, int sy) const
-{
-	if(Id < 0 || Id >= client_data7::g_pData->m_NumSprites)
-		return;
-	SelectSprite(&client_data7::g_pData->m_aSprites[Id], Flags, sx, sy);
-}
-
-void CRenderTools::GetSpriteScale(const CDataSprite *pSprite, float &ScaleX, float &ScaleY) const
-{
-	int w = pSprite->m_W;
-	int h = pSprite->m_H;
-	GetSpriteScaleImpl(w, h, ScaleX, ScaleY);
-}
-
-void CRenderTools::GetSpriteScale(int Id, float &ScaleX, float &ScaleY) const
-{
-	GetSpriteScale(&g_pData->m_aSprites[Id], ScaleX, ScaleY);
-}
-
-void CRenderTools::GetSpriteScaleImpl(int Width, int Height, float &ScaleX, float &ScaleY) const
-{
-	const float f = length(vec2(Width, Height));
-	ScaleX = Width / f;
-	ScaleY = Height / f;
-}
-
-void CRenderTools::DrawSprite(float x, float y, float Size) const
-{
-	IGraphics::CQuadItem QuadItem(x, y, Size * gs_SpriteWScale, Size * gs_SpriteHScale);
-	Graphics()->QuadsDraw(&QuadItem, 1);
-}
-
-void CRenderTools::DrawSprite(float x, float y, float ScaledWidth, float ScaledHeight) const
-{
-	IGraphics::CQuadItem QuadItem(x, y, ScaledWidth, ScaledHeight);
-	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
 void CRenderTools::RenderCursor(vec2 Center, float Size) const
@@ -144,36 +144,12 @@ void CRenderTools::RenderIcon(int ImageId, int SpriteId, const CUIRect *pRect, c
 {
 	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
 	Graphics()->QuadsBegin();
-	SelectSprite(SpriteId);
+	Graphics()->SelectSprite(SpriteId);
 	if(pColor)
 		Graphics()->SetColor(pColor->r * pColor->a, pColor->g * pColor->a, pColor->b * pColor->a, pColor->a);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
-}
-
-int CRenderTools::QuadContainerAddSprite(int QuadContainerIndex, float x, float y, float Size) const
-{
-	IGraphics::CQuadItem QuadItem(x, y, Size, Size);
-	return Graphics()->QuadContainerAddQuads(QuadContainerIndex, &QuadItem, 1);
-}
-
-int CRenderTools::QuadContainerAddSprite(int QuadContainerIndex, float Size) const
-{
-	IGraphics::CQuadItem QuadItem(-(Size) / 2.f, -(Size) / 2.f, (Size), (Size));
-	return Graphics()->QuadContainerAddQuads(QuadContainerIndex, &QuadItem, 1);
-}
-
-int CRenderTools::QuadContainerAddSprite(int QuadContainerIndex, float Width, float Height) const
-{
-	IGraphics::CQuadItem QuadItem(-(Width) / 2.f, -(Height) / 2.f, (Width), (Height));
-	return Graphics()->QuadContainerAddQuads(QuadContainerIndex, &QuadItem, 1);
-}
-
-int CRenderTools::QuadContainerAddSprite(int QuadContainerIndex, float X, float Y, float Width, float Height) const
-{
-	IGraphics::CQuadItem QuadItem(X, Y, Width, Height);
-	return Graphics()->QuadContainerAddQuads(QuadContainerIndex, &QuadItem, 1);
 }
 
 void CRenderTools::GetRenderTeeAnimScaleAndBaseSize(const CTeeRenderInfo *pInfo, float &AnimScale, float &BaseSize)
@@ -224,6 +200,12 @@ void CRenderTools::GetRenderTeeFeetSize(const CAnimState *pAnim, const CTeeRende
 
 void CRenderTools::GetRenderTeeOffsetToRenderedTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, vec2 &TeeOffsetToMid)
 {
+	if(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_BODY).IsValid())
+	{
+		TeeOffsetToMid = vec2(0.0f, pInfo->m_Size * 0.12f);
+		return;
+	}
+
 	float AnimScale, BaseSize;
 	GetRenderTeeAnimScaleAndBaseSize(pInfo, AnimScale, BaseSize);
 	vec2 BodyPos = vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y) * AnimScale;
@@ -272,7 +254,7 @@ void CRenderTools::GetRenderTeeOffsetToRenderedTee(const CAnimState *pAnim, cons
 
 void CRenderTools::RenderTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha) const
 {
-	if(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_BODY].IsValid())
+	if(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_BODY).IsValid())
 		RenderTee7(pAnim, pInfo, Emote, Dir, Pos, Alpha);
 	else
 		RenderTee6(pAnim, pInfo, Emote, Dir, Pos, Alpha);
@@ -285,7 +267,7 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 {
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
-	bool IsBot = false;
+	const bool IsBot = pInfo->m_aSixup[g_Config.m_ClDummy].m_BotTexture.IsValid();
 
 	// first pass we draw the outline
 	// second pass we draw the filling
@@ -301,83 +283,78 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 			{
 				vec2 BodyPos = Position + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y) * AnimScale;
 				IGraphics::CQuadItem BodyItem(BodyPos.x, BodyPos.y, BaseSize, BaseSize);
-				IGraphics::CQuadItem BotItem(BodyPos.x + (2.f / 3.f) * AnimScale, BodyPos.y + (-16 + 2.f / 3.f) * AnimScale, BaseSize, BaseSize); // x+0.66, y+0.66 to correct some rendering bug
 				IGraphics::CQuadItem Item;
 
-				// draw bot visuals (background)
 				if(IsBot && !OutLine)
 				{
+					IGraphics::CQuadItem BotItem(BodyPos.x + (2.f / 3.f) * AnimScale, BodyPos.y + (-16 + 2.f / 3.f) * AnimScale, BaseSize, BaseSize); // x+0.66, y+0.66 to correct some rendering bug
+
+					// draw bot visuals (background)
 					Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_BotTexture);
 					Graphics()->QuadsBegin();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
-					SelectSprite7(client_data7::SPRITE_TEE_BOT_BACKGROUND, 0, 0, 0);
+					Graphics()->SelectSprite7(client_data7::SPRITE_TEE_BOT_BACKGROUND);
 					Item = BotItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
-				}
 
-				// draw bot visuals (foreground)
-				if(IsBot && !OutLine)
-				{
+					// draw bot visuals (foreground)
 					Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_BotTexture);
 					Graphics()->QuadsBegin();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
-					SelectSprite7(client_data7::SPRITE_TEE_BOT_FOREGROUND, 0, 0, 0);
+					Graphics()->SelectSprite7(client_data7::SPRITE_TEE_BOT_FOREGROUND);
 					Item = BotItem;
 					Graphics()->QuadsDraw(&Item, 1);
-					ColorRGBA Color = pInfo->m_aSixup[g_Config.m_ClDummy].m_BotColor;
-					Color.a = Alpha;
-					Graphics()->SetColor(Color);
-					SelectSprite7(client_data7::SPRITE_TEE_BOT_GLOW, 0, 0, 0);
+					Graphics()->SetColor(pInfo->m_aSixup[g_Config.m_ClDummy].m_BotColor.WithAlpha(Alpha));
+					Graphics()->SelectSprite7(client_data7::SPRITE_TEE_BOT_GLOW);
 					Item = BotItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 				}
 
 				// draw decoration
-				if(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_DECORATION].IsValid())
+				const IGraphics::CTextureHandle &DecorationTexture = pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_DECORATION);
+				if(DecorationTexture.IsValid())
 				{
-					Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_DECORATION]);
+					Graphics()->TextureSet(DecorationTexture);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
-					ColorRGBA Color = pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_DECORATION];
-					Color.a = Alpha;
-					Graphics()->SetColor(Color);
-					SelectSprite7(OutLine ? client_data7::SPRITE_TEE_DECORATION_OUTLINE : client_data7::SPRITE_TEE_DECORATION, 0, 0, 0);
+					Graphics()->SetColor(pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_DECORATION].WithAlpha(Alpha));
+					Graphics()->SelectSprite7(OutLine ? client_data7::SPRITE_TEE_DECORATION_OUTLINE : client_data7::SPRITE_TEE_DECORATION);
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 				}
 
 				// draw body (behind marking)
-				Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_BODY]);
+				const IGraphics::CTextureHandle &BodyTexture = pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_BODY);
+				Graphics()->TextureSet(BodyTexture);
 				Graphics()->QuadsBegin();
 				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
 				if(OutLine)
 				{
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
-					SelectSprite7(client_data7::SPRITE_TEE_BODY_OUTLINE, 0, 0, 0);
+					Graphics()->SelectSprite7(client_data7::SPRITE_TEE_BODY_OUTLINE);
 				}
 				else
 				{
-					ColorRGBA Color = pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_BODY];
-					Color.a = Alpha;
-					Graphics()->SetColor(Color);
-					SelectSprite7(client_data7::SPRITE_TEE_BODY, 0, 0, 0);
+					Graphics()->SetColor(pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_BODY].WithAlpha(Alpha));
+					Graphics()->SelectSprite7(client_data7::SPRITE_TEE_BODY);
 				}
 				Item = BodyItem;
 				Graphics()->QuadsDraw(&Item, 1);
 				Graphics()->QuadsEnd();
 
 				// draw marking
-				if(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_MARKING].IsValid() && !OutLine)
+				const IGraphics::CTextureHandle &MarkingTexture = pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_MARKING);
+				if(MarkingTexture.IsValid() && !OutLine)
 				{
-					Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_MARKING]);
+					Graphics()->TextureSet(MarkingTexture);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
 					ColorRGBA MarkingColor = pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_MARKING];
 					Graphics()->SetColor(MarkingColor.r * MarkingColor.a, MarkingColor.g * MarkingColor.a, MarkingColor.b * MarkingColor.a, MarkingColor.a * Alpha);
-					SelectSprite7(client_data7::SPRITE_TEE_MARKING, 0, 0, 0);
+					Graphics()->SelectSprite7(client_data7::SPRITE_TEE_MARKING);
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
@@ -386,13 +363,13 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 				// draw body (in front of marking)
 				if(!OutLine)
 				{
-					Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_BODY]);
+					Graphics()->TextureSet(BodyTexture);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
 					for(int t = 0; t < 2; t++)
 					{
-						SelectSprite7(t == 0 ? client_data7::SPRITE_TEE_BODY_SHADOW : client_data7::SPRITE_TEE_BODY_UPPER_OUTLINE, 0, 0, 0);
+						Graphics()->SelectSprite7(t == 0 ? client_data7::SPRITE_TEE_BODY_SHADOW : client_data7::SPRITE_TEE_BODY_UPPER_OUTLINE);
 						Item = BodyItem;
 						Graphics()->QuadsDraw(&Item, 1);
 					}
@@ -400,40 +377,36 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 				}
 
 				// draw eyes
-				Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_EYES]);
+				Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_EYES));
 				Graphics()->QuadsBegin();
 				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
 				if(IsBot)
 				{
-					ColorRGBA Color = pInfo->m_aSixup[g_Config.m_ClDummy].m_BotColor;
-					Color.a = Alpha;
-					Graphics()->SetColor(Color);
+					Graphics()->SetColor(pInfo->m_aSixup[g_Config.m_ClDummy].m_BotColor.WithAlpha(Alpha));
 					Emote = EMOTE_SURPRISE;
 				}
 				else
 				{
-					ColorRGBA Color = pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_EYES];
-					Color.a = Alpha;
-					Graphics()->SetColor(Color);
+					Graphics()->SetColor(pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_EYES].WithAlpha(Alpha));
 				}
 				if(Pass == 1)
 				{
 					switch(Emote)
 					{
 					case EMOTE_PAIN:
-						SelectSprite7(client_data7::SPRITE_TEE_EYES_PAIN, 0, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_EYES_PAIN);
 						break;
 					case EMOTE_HAPPY:
-						SelectSprite7(client_data7::SPRITE_TEE_EYES_HAPPY, 0, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_EYES_HAPPY);
 						break;
 					case EMOTE_SURPRISE:
-						SelectSprite7(client_data7::SPRITE_TEE_EYES_SURPRISE, 0, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_EYES_SURPRISE);
 						break;
 					case EMOTE_ANGRY:
-						SelectSprite7(client_data7::SPRITE_TEE_EYES_ANGRY, 0, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_EYES_ANGRY);
 						break;
 					default:
-						SelectSprite7(client_data7::SPRITE_TEE_EYES_NORMAL, 0, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_EYES_NORMAL);
 						break;
 					}
 
@@ -452,20 +425,20 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
-					int Flag = Direction.x < 0.0f ? SPRITE_FLAG_FLIP_X : 0;
+					int Flag = Direction.x < 0.0f ? IGraphics::SPRITE_FLAG_FLIP_X : 0;
 					switch(pInfo->m_aSixup[g_Config.m_ClDummy].m_HatSpriteIndex)
 					{
 					case 0:
-						SelectSprite7(client_data7::SPRITE_TEE_HATS_TOP1, Flag, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_HATS_TOP1, Flag);
 						break;
 					case 1:
-						SelectSprite7(client_data7::SPRITE_TEE_HATS_TOP2, Flag, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_HATS_TOP2, Flag);
 						break;
 					case 2:
-						SelectSprite7(client_data7::SPRITE_TEE_HATS_SIDE1, Flag, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_HATS_SIDE1, Flag);
 						break;
 					case 3:
-						SelectSprite7(client_data7::SPRITE_TEE_HATS_SIDE2, Flag, 0, 0);
+						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_HATS_SIDE2, Flag);
 					}
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
@@ -474,7 +447,7 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 			}
 
 			// draw feet
-			Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].m_aTextures[protocol7::SKINPART_FEET]);
+			Graphics()->TextureSet(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_FEET));
 			Graphics()->QuadsBegin();
 			const CAnimKeyframe *pFoot = Filling ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
 
@@ -486,7 +459,7 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 			if(OutLine)
 			{
 				Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
-				SelectSprite7(client_data7::SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
+				Graphics()->SelectSprite7(client_data7::SPRITE_TEE_FOOT_OUTLINE);
 			}
 			else
 			{
@@ -499,7 +472,7 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 					pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_FEET].g * ColorScale,
 					pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_FEET].b * ColorScale,
 					pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_FEET].a * Alpha);
-				SelectSprite7(client_data7::SPRITE_TEE_FOOT, 0, 0, 0);
+				Graphics()->SelectSprite7(client_data7::SPRITE_TEE_FOOT);
 			}
 
 			IGraphics::CQuadItem QuadItem(Position.x + pFoot->m_X * AnimScale, Position.y + pFoot->m_Y * AnimScale, w, h);
@@ -514,7 +487,7 @@ void CRenderTools::RenderTee6(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
 
-	const CSkin::SSkinTextures *pSkinTextures = pInfo->m_CustomColoredSkin ? &pInfo->m_ColorableRenderSkin : &pInfo->m_OriginalRenderSkin;
+	const CSkin::CSkinTextures *pSkinTextures = pInfo->m_CustomColoredSkin ? &pInfo->m_ColorableRenderSkin : &pInfo->m_OriginalRenderSkin;
 
 	// first pass we draw the outline
 	// second pass we draw the filling
@@ -609,66 +582,4 @@ void CRenderTools::RenderTee6(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 			Graphics()->RenderQuadContainerAsSprite(m_TeeQuadContainerIndex, QuadOffset, Position.x + pFoot->m_X * AnimScale, Position.y + pFoot->m_Y * AnimScale, w / 64.f, h / 32.f);
 		}
 	}
-}
-
-void CRenderTools::CalcScreenParams(float Aspect, float Zoom, float *pWidth, float *pHeight)
-{
-	const float Amount = 1150 * 1000;
-	const float WMax = 1500;
-	const float HMax = 1050;
-
-	const float f = std::sqrt(Amount) / std::sqrt(Aspect);
-	*pWidth = f * Aspect;
-	*pHeight = f;
-
-	// limit the view
-	if(*pWidth > WMax)
-	{
-		*pWidth = WMax;
-		*pHeight = *pWidth / Aspect;
-	}
-
-	if(*pHeight > HMax)
-	{
-		*pHeight = HMax;
-		*pWidth = *pHeight * Aspect;
-	}
-
-	*pWidth *= Zoom;
-	*pHeight *= Zoom;
-}
-
-void CRenderTools::MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
-	float ParallaxZoom, float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints)
-{
-	float Width, Height;
-	CalcScreenParams(Aspect, Zoom, &Width, &Height);
-
-	float Scale = (ParallaxZoom * (Zoom - 1.0f) + 100.0f) / 100.0f / Zoom;
-	Width *= Scale;
-	Height *= Scale;
-
-	CenterX *= ParallaxX / 100.0f;
-	CenterY *= ParallaxY / 100.0f;
-	pPoints[0] = OffsetX + CenterX - Width / 2;
-	pPoints[1] = OffsetY + CenterY - Height / 2;
-	pPoints[2] = pPoints[0] + Width;
-	pPoints[3] = pPoints[1] + Height;
-}
-
-void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom)
-{
-	float ParallaxZoom = clamp((double)(maximum(pGroup->m_ParallaxX, pGroup->m_ParallaxY)), 0., 100.);
-	float aPoints[4];
-	MapScreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX, pGroup->m_ParallaxY, ParallaxZoom,
-		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), Zoom, aPoints);
-	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
-}
-
-void CRenderTools::MapScreenToInterface(float CenterX, float CenterY)
-{
-	float aPoints[4];
-	MapScreenToWorld(CenterX, CenterY, 100.0f, 100.0f, 100.0f,
-		0, 0, Graphics()->ScreenAspect(), 1.0f, aPoints);
-	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }

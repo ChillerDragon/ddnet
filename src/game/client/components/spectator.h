@@ -3,9 +3,11 @@
 #ifndef GAME_CLIENT_COMPONENTS_SPECTATOR_H
 #define GAME_CLIENT_COMPONENTS_SPECTATOR_H
 #include <base/vmath.h>
+
 #include <engine/console.h>
 
 #include <game/client/component.h>
+#include <game/client/ui.h>
 
 class CSpectator : public CComponent
 {
@@ -21,9 +23,11 @@ class CSpectator : public CComponent
 	int m_SelectedSpectatorId;
 	vec2 m_SelectorMouse;
 
+	CUi::CTouchState m_TouchState;
+
 	float m_MultiViewActivateDelay;
 
-	bool CanChangeSpectator();
+	bool CanChangeSpectatorId();
 	void SpectateNext(bool Reverse);
 
 	static void ConKeySpectator(IConsole::IResult *pResult, void *pUserData);
@@ -35,16 +39,19 @@ class CSpectator : public CComponent
 
 public:
 	CSpectator();
-	virtual int Sizeof() const override { return sizeof(*this); }
+	int Sizeof() const override { return sizeof(*this); }
 
-	virtual void OnConsoleInit() override;
-	virtual bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
-	virtual void OnRender() override;
-	virtual void OnRelease() override;
-	virtual void OnReset() override;
+	void OnConsoleInit() override;
+	bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
+	bool OnInput(const IInput::CEvent &Event) override;
+	void OnRender() override;
+	void OnRelease() override;
+	void OnReset() override;
 
 	void Spectate(int SpectatorId);
 	void SpectateClosest();
+
+	bool IsActive() const { return m_Active; }
 };
 
 #endif

@@ -7,6 +7,7 @@
 #include "teamscore.h"
 
 #include <base/system.h>
+
 #include <engine/shared/config.h>
 
 #include <limits>
@@ -173,6 +174,7 @@ void CCharacterCore::Reset()
 	m_ShotgunHitDisabled = false;
 	m_HookHitDisabled = false;
 	m_Super = false;
+	m_Invincible = false;
 	m_HasTelegunGun = false;
 	m_HasTelegunGrenade = false;
 	m_HasTelegunLaser = false;
@@ -189,7 +191,7 @@ void CCharacterCore::Reset()
 
 void CCharacterCore::Tick(bool UseInput, bool DoDeferredTick)
 {
-	m_MoveRestrictions = m_pCollision->GetMoveRestrictions(UseInput ? IsSwitchActiveCb : 0, this, m_Pos);
+	m_MoveRestrictions = m_pCollision->GetMoveRestrictions(UseInput ? IsSwitchActiveCb : nullptr, this, m_Pos);
 	m_TriggeredEvents = 0;
 
 	// get ground state
@@ -330,7 +332,7 @@ void CCharacterCore::Tick(bool UseInput, bool DoDeferredTick)
 		bool GoingToRetract = false;
 		bool GoingThroughTele = false;
 		int teleNr = 0;
-		int Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &NewPos, 0, &teleNr);
+		int Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &NewPos, nullptr, &teleNr);
 
 		if(Hit)
 		{
@@ -647,6 +649,7 @@ void CCharacterCore::ReadDDNet(const CNetObj_DDNetCharacter *pObjDDNet)
 	m_LaserHitDisabled = pObjDDNet->m_Flags & CHARACTERFLAG_LASER_HIT_DISABLED;
 	m_HookHitDisabled = pObjDDNet->m_Flags & CHARACTERFLAG_HOOK_HIT_DISABLED;
 	m_Super = pObjDDNet->m_Flags & CHARACTERFLAG_SUPER;
+	m_Invincible = pObjDDNet->m_Flags & CHARACTERFLAG_INVINCIBLE;
 
 	// Endless
 	m_EndlessHook = pObjDDNet->m_Flags & CHARACTERFLAG_ENDLESS_HOOK;
@@ -747,7 +750,7 @@ void CWorldCore::InitSwitchers(int HighestSwitchNumber)
 	for(auto &Switcher : m_vSwitchers)
 	{
 		Switcher.m_Initial = true;
-		for(int j = 0; j < MAX_CLIENTS; j++)
+		for(int j = 0; j < NUM_DDRACE_TEAMS; j++)
 		{
 			Switcher.m_aStatus[j] = true;
 			Switcher.m_aEndTick[j] = 0;
@@ -756,3 +759,5 @@ void CWorldCore::InitSwitchers(int HighestSwitchNumber)
 		}
 	}
 }
+
+const CTuningParams CTuningParams::DEFAULT;

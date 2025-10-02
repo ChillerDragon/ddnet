@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include "entity.h"
+
 #include "gamecontext.h"
 #include "player.h"
 
@@ -20,8 +21,8 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, vec2 Pos, int ProximityRad
 	m_MarkedForDestroy = false;
 	m_Id = Server()->SnapNewId();
 
-	m_pPrevTypeEntity = 0;
-	m_pNextTypeEntity = 0;
+	m_pPrevTypeEntity = nullptr;
+	m_pNextTypeEntity = nullptr;
 }
 
 CEntity::~CEntity()

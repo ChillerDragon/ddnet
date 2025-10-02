@@ -1,17 +1,20 @@
 #include "save.h"
 
-#include <cstdio> // sscanf
-
-#include "entities/character.h"
-#include "gamemodes/DDRace.h"
 #include "player.h"
 #include "teams.h"
+
 #include <engine/shared/config.h>
 #include <engine/shared/protocol.h>
 
+#include <game/server/entities/character.h>
+#include <game/server/gamemodes/DDRace.h>
+#include <game/team_state.h>
+
+#include <cstdio> // sscanf
+
 CSaveTee::CSaveTee() = default;
 
-void CSaveTee::Save(CCharacter *pChr)
+void CSaveTee::Save(CCharacter *pChr, bool AddPenalty)
 {
 	m_ClientId = pChr->m_pPlayer->GetCid();
 	str_copy(m_aName, pChr->Server()->ClientName(m_ClientId), sizeof(m_aName));
@@ -59,7 +62,7 @@ void CSaveTee::Save(CCharacter *pChr)
 	m_DeepFrozen = pChr->m_Core.m_DeepFrozen;
 	m_LiveFrozen = pChr->m_Core.m_LiveFrozen;
 	m_EndlessHook = pChr->m_Core.m_EndlessHook;
-	m_DDRaceState = pChr->m_DDRaceState;
+	m_DDRaceState = static_cast<int>(pChr->m_DDRaceState);
 
 	m_HitDisabledFlags = 0;
 	if(pChr->m_Core.m_HammerHitDisabled)
@@ -75,9 +78,12 @@ void CSaveTee::Save(CCharacter *pChr)
 	m_TuneZoneOld = pChr->m_TuneZoneOld;
 
 	if(pChr->m_StartTime)
-		m_Time = pChr->Server()->Tick() - pChr->m_StartTime + g_Config.m_SvSaveSwapGamesPenalty * pChr->Server()->TickSpeed();
+		m_Time = pChr->Server()->Tick() - pChr->m_StartTime;
 	else
 		m_Time = 0;
+
+	if(AddPenalty && pChr->m_StartTime)
+		m_Time += g_Config.m_SvSaveSwapGamesPenalty * pChr->Server()->TickSpeed();
 
 	m_Pos = pChr->m_Pos;
 	m_PrevPos = pChr->m_PrevPos;
@@ -128,7 +134,7 @@ void CSaveTee::Save(CCharacter *pChr)
 	FormatUuid(pChr->GameServer()->GameUuid(), m_aGameUuid, sizeof(m_aGameUuid));
 }
 
-bool CSaveTee::Load(CCharacter *pChr, int Team, bool IsSwap)
+bool CSaveTee::Load(CCharacter *pChr, std::optional<int> Team)
 {
 	bool Valid = true;
 
@@ -137,9 +143,9 @@ bool CSaveTee::Load(CCharacter *pChr, int Team, bool IsSwap)
 	pChr->m_Alive = m_Alive;
 	pChr->m_NeededFaketuning = m_NeededFaketuning;
 
-	if(!IsSwap)
+	if(Team.has_value())
 	{
-		pChr->Teams()->SetForceCharacterTeam(pChr->m_pPlayer->GetCid(), Team);
+		pChr->Teams()->SetForceCharacterTeam(pChr->m_pPlayer->GetCid(), Team.value());
 		pChr->Teams()->SetStarted(pChr->m_pPlayer->GetCid(), m_TeeStarted);
 		pChr->Teams()->SetFinished(pChr->m_pPlayer->GetCid(), m_TeeFinished);
 	}
@@ -173,7 +179,7 @@ bool CSaveTee::Load(CCharacter *pChr, int Team, bool IsSwap)
 	pChr->m_Core.m_DeepFrozen = m_DeepFrozen;
 	pChr->m_Core.m_LiveFrozen = m_LiveFrozen;
 	pChr->m_Core.m_EndlessHook = m_EndlessHook;
-	pChr->m_DDRaceState = m_DDRaceState;
+	pChr->m_DDRaceState = static_cast<ERaceState>(m_DDRaceState);
 
 	pChr->m_Core.m_HammerHitDisabled = m_HitDisabledFlags & CSaveTee::HAMMER_HIT_DISABLED;
 	pChr->m_Core.m_ShotgunHitDisabled = m_HitDisabledFlags & CSaveTee::SHOTGUN_HIT_DISABLED;
@@ -241,7 +247,7 @@ bool CSaveTee::Load(CCharacter *pChr, int Team, bool IsSwap)
 
 	pChr->SetSolo(m_IsSolo);
 
-	if(!IsSwap)
+	if(Team.has_value())
 	{
 		// Always create a rescue tee at the exact location we loaded from so that
 		// the old one gets overwritten.
@@ -479,6 +485,26 @@ bool CSaveTee::IsHooking() const
 	return m_HookState == HOOK_GRABBED || m_HookState == HOOK_FLYING;
 }
 
+void CSaveHotReloadTee::Save(CCharacter *pChr, bool AddPenalty)
+{
+	m_SaveTee.Save(pChr, AddPenalty);
+	m_Super = pChr->m_Core.m_Super;
+	m_Invincible = pChr->m_Core.m_Invincible;
+	m_SavedTeleTee = pChr->GetPlayer()->m_LastTeleTee;
+	m_LastDeath = pChr->GetPlayer()->m_LastDeath;
+}
+
+bool CSaveHotReloadTee::Load(CCharacter *pChr, int Team)
+{
+	bool Result = m_SaveTee.Load(pChr, Team);
+	pChr->SetSuper(m_Super);
+	pChr->m_Core.m_Invincible = m_Invincible;
+	pChr->GetPlayer()->m_LastTeleTee = m_SavedTeleTee;
+	pChr->GetPlayer()->m_LastDeath = m_LastDeath;
+
+	return Result;
+}
+
 CSaveTeam::CSaveTeam()
 {
 	m_aString[0] = '\0';
@@ -490,15 +516,15 @@ CSaveTeam::~CSaveTeam()
 	delete[] m_pSavedTees;
 }
 
-ESaveResult CSaveTeam::Save(CGameContext *pGameServer, int Team, bool Dry)
+ESaveResult CSaveTeam::Save(CGameContext *pGameServer, int Team, bool Dry, bool Force)
 {
-	if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && (Team <= 0 || MAX_CLIENTS <= Team))
+	if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && (Team <= 0 || MAX_CLIENTS <= Team) && !Force)
 		return ESaveResult::TEAM_FLOCK;
 
 	IGameController *pController = pGameServer->m_pController;
 	CGameTeams *pTeams = &pController->Teams();
 
-	if(pTeams->TeamFlock(Team))
+	if(pTeams->TeamFlock(Team) && !Force)
 	{
 		return ESaveResult::TEAM_0_MODE;
 	}
@@ -511,7 +537,7 @@ ESaveResult CSaveTeam::Save(CGameContext *pGameServer, int Team, bool Dry)
 
 	m_TeamState = pTeams->GetTeamState(Team);
 
-	if(m_TeamState != CGameTeams::TEAMSTATE_STARTED)
+	if(m_TeamState != ETeamState::STARTED && !Force)
 	{
 		return ESaveResult::NOT_STARTED;
 	}
@@ -528,16 +554,16 @@ ESaveResult CSaveTeam::Save(CGameContext *pGameServer, int Team, bool Dry)
 	{
 		if(pTeams->m_Core.Team(p->GetPlayer()->GetCid()) != Team)
 			continue;
-		if(m_MembersCount == j)
+		if(m_MembersCount == j && !Force)
 			return ESaveResult::CHAR_NOT_FOUND;
 		ESaveResult Result = pGameServer->m_World.BlocksSave(p->GetPlayer()->GetCid());
-		if(Result != ESaveResult::SUCCESS)
+		if(Result != ESaveResult::SUCCESS && !Force)
 			return Result;
 		m_pSavedTees[j].Save(p);
 		aPlayerCids[j] = p->GetPlayer()->GetCid();
 		j++;
 	}
-	if(m_MembersCount != j)
+	if(m_MembersCount != j && !Force)
 		return ESaveResult::CHAR_NOT_FOUND;
 
 	if(pGameServer->Collision()->m_HighestSwitchNumber)
@@ -589,7 +615,7 @@ bool CSaveTeam::HandleSaveError(ESaveResult Result, int ClientId, CGameContext *
 	return true;
 }
 
-bool CSaveTeam::Load(CGameContext *pGameServer, int Team, bool KeepCurrentWeakStrong)
+bool CSaveTeam::Load(CGameContext *pGameServer, int Team, bool KeepCurrentWeakStrong, bool IgnorePlayers)
 {
 	IGameController *pController = pGameServer->m_pController;
 	CGameTeams *pTeams = &pController->Teams();
@@ -600,14 +626,18 @@ bool CSaveTeam::Load(CGameContext *pGameServer, int Team, bool KeepCurrentWeakSt
 
 	bool ContainsInvalidPlayer = false;
 	int aPlayerCids[MAX_CLIENTS];
-	for(int i = m_MembersCount; i-- > 0;)
+
+	if(!IgnorePlayers)
 	{
-		int ClientId = m_pSavedTees[i].GetClientId();
-		aPlayerCids[i] = ClientId;
-		if(pGameServer->m_apPlayers[ClientId] && pTeams->m_Core.Team(ClientId) == Team)
+		for(int i = m_MembersCount; i-- > 0;)
 		{
-			CCharacter *pChr = MatchCharacter(pGameServer, m_pSavedTees[i].GetClientId(), i, KeepCurrentWeakStrong);
-			ContainsInvalidPlayer |= !m_pSavedTees[i].Load(pChr, Team);
+			int ClientId = m_pSavedTees[i].GetClientId();
+			aPlayerCids[i] = ClientId;
+			if(pGameServer->m_apPlayers[ClientId] && pTeams->m_Core.Team(ClientId) == Team)
+			{
+				CCharacter *pChr = MatchCharacter(pGameServer, m_pSavedTees[i].GetClientId(), i, KeepCurrentWeakStrong);
+				ContainsInvalidPlayer |= !m_pSavedTees[i].Load(pChr, Team);
+			}
 		}
 	}
 
@@ -622,7 +652,8 @@ bool CSaveTeam::Load(CGameContext *pGameServer, int Team, bool KeepCurrentWeakSt
 		}
 	}
 	// remove projectiles and laser
-	pGameServer->m_World.RemoveEntitiesFromPlayers(aPlayerCids, m_MembersCount);
+	if(!IgnorePlayers)
+		pGameServer->m_World.RemoveEntitiesFromPlayers(aPlayerCids, m_MembersCount);
 
 	return !ContainsInvalidPlayer;
 }
@@ -640,7 +671,7 @@ CCharacter *CSaveTeam::MatchCharacter(CGameContext *pGameServer, int ClientId, i
 
 char *CSaveTeam::GetString()
 {
-	str_format(m_aString, sizeof(m_aString), "%d\t%d\t%d\t%d\t%d", m_TeamState, m_MembersCount, m_HighestSwitchNumber, m_TeamLocked, m_Practice);
+	str_format(m_aString, sizeof(m_aString), "%d\t%d\t%d\t%d\t%d", static_cast<int>(m_TeamState), m_MembersCount, m_HighestSwitchNumber, m_TeamLocked, m_Practice);
 
 	for(int i = 0; i < m_MembersCount; i++)
 	{
@@ -695,7 +726,9 @@ int CSaveTeam::FromString(const char *pString)
 	if(StrSize < sizeof(aTeamStats))
 	{
 		str_copy(aTeamStats, pCopyPos, StrSize);
-		int Num = sscanf(aTeamStats, "%d\t%d\t%d\t%d\t%d", &m_TeamState, &m_MembersCount, &m_HighestSwitchNumber, &m_TeamLocked, &m_Practice);
+		int TeamState;
+		int Num = sscanf(aTeamStats, "%d\t%d\t%d\t%d\t%d", &TeamState, &m_MembersCount, &m_HighestSwitchNumber, &m_TeamLocked, &m_Practice);
+		m_TeamState = static_cast<ETeamState>(TeamState);
 		switch(Num) // Don't forget to update this when you save / load more / less.
 		{
 		case 4:
@@ -718,7 +751,7 @@ int CSaveTeam::FromString(const char *pString)
 	if(m_pSavedTees)
 	{
 		delete[] m_pSavedTees;
-		m_pSavedTees = 0;
+		m_pSavedTees = nullptr;
 	}
 
 	if(m_MembersCount > 64)
@@ -771,7 +804,7 @@ int CSaveTeam::FromString(const char *pString)
 	if(m_pSwitchers)
 	{
 		delete[] m_pSwitchers;
-		m_pSwitchers = 0;
+		m_pSwitchers = nullptr;
 	}
 
 	if(m_HighestSwitchNumber)

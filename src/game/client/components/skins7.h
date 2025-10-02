@@ -2,15 +2,21 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_SKINS7_H
 #define GAME_CLIENT_COMPONENTS_SKINS7_H
+
 #include <base/color.h>
 #include <base/vmath.h>
+
 #include <engine/client/enums.h>
 #include <engine/graphics.h>
-#include <game/client/component.h>
-#include <vector>
 
-#include <game/generated/protocol.h>
-#include <game/generated/protocol7.h>
+#include <generated/protocol.h>
+#include <generated/protocol7.h>
+
+#include <game/client/component.h>
+#include <game/client/render.h>
+
+#include <chrono>
+#include <vector>
 
 class CSkins7 : public CComponent
 {
@@ -26,75 +32,93 @@ public:
 		HAT_OFFSET_SIDE = 2,
 	};
 
-	static constexpr float DARKEST_COLOR_LGT = 61.0f / 255.0f;
+	typedef std::function<void()> TSkinLoadedCallback;
 
-	struct CSkinPart
+	class CSkinPart
 	{
+	public:
+		int m_Type;
 		int m_Flags;
 		char m_aName[24];
-		IGraphics::CTextureHandle m_OrgTexture;
-		IGraphics::CTextureHandle m_ColorTexture;
+		IGraphics::CTextureHandle m_OriginalTexture;
+		IGraphics::CTextureHandle m_ColorableTexture;
 		ColorRGBA m_BloodColor;
 
-		bool operator<(const CSkinPart &Other) { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
+		void ApplyTo(CTeeRenderInfo::CSixup &SixupRenderInfo) const;
+
+		bool operator<(const CSkinPart &Other) const;
 	};
 
-	struct CSkin
+	class CSkin
 	{
+	public:
 		int m_Flags;
 		char m_aName[24];
 		const CSkinPart *m_apParts[protocol7::NUM_SKINPARTS];
-		int m_aPartColors[protocol7::NUM_SKINPARTS];
 		int m_aUseCustomColors[protocol7::NUM_SKINPARTS];
+		unsigned m_aPartColors[protocol7::NUM_SKINPARTS];
 
-		bool operator<(const CSkin &Other) const { return str_comp_nocase(m_aName, Other.m_aName) < 0; }
-		bool operator==(const CSkin &Other) const { return !str_comp(m_aName, Other.m_aName); }
+		bool operator<(const CSkin &Other) const;
+		bool operator==(const CSkin &Other) const;
 	};
 
 	static const char *const ms_apSkinPartNames[protocol7::NUM_SKINPARTS];
+	static const char *const ms_apSkinPartNamesLocalized[protocol7::NUM_SKINPARTS];
 	static const char *const ms_apColorComponents[NUM_COLOR_COMPONENTS];
 
+	static char *ms_apSkinNameVariables[NUM_DUMMIES];
 	static char *ms_apSkinVariables[NUM_DUMMIES][protocol7::NUM_SKINPARTS];
 	static int *ms_apUCCVariables[NUM_DUMMIES][protocol7::NUM_SKINPARTS]; // use custom color
-	static unsigned int *ms_apColorVariables[NUM_DUMMIES][protocol7::NUM_SKINPARTS];
-	IGraphics::CTextureHandle m_XmasHatTexture;
-	IGraphics::CTextureHandle m_BotTexture;
+	static unsigned *ms_apColorVariables[NUM_DUMMIES][protocol7::NUM_SKINPARTS];
 
-	int GetInitAmount() const;
+	int Sizeof() const override { return sizeof(*this); }
 	void OnInit() override;
 
-	void AddSkin(const char *pSkinName, int Dummy);
-	bool RemoveSkin(const CSkin *pSkin);
+	void Refresh(TSkinLoadedCallback &&SkinLoadedCallback);
+	std::chrono::nanoseconds LastRefreshTime() const { return m_LastRefreshTime; }
 
-	int Num();
-	int NumSkinPart(int Part);
-	const CSkin *Get(int Index);
-	int Find(const char *pName, bool AllowSpecialSkin);
-	const CSkinPart *GetSkinPart(int Part, int Index);
-	int FindSkinPart(int Part, const char *pName, bool AllowSpecialPart);
-	void RandomizeSkin(int Dummy);
+	const std::vector<CSkin> &GetSkins() const;
+	const std::vector<CSkinPart> &GetSkinParts(int Part) const;
+	const CSkinPart *FindSkinPartOrNullptr(int Part, const char *pName, bool AllowSpecialPart) const;
+	const CSkinPart *FindDefaultSkinPart(int Part) const;
+	const CSkinPart *FindSkinPart(int Part, const char *pName, bool AllowSpecialPart) const;
+	void RandomizeSkin(int Dummy) const;
 
 	ColorRGBA GetColor(int Value, bool UseAlpha) const;
+	void ApplyColorTo(CTeeRenderInfo::CSixup &SixupRenderInfo, bool UseCustomColors, int Value, int Part) const;
 	ColorRGBA GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
 
 	// returns true if everything was valid and nothing changed
 	bool ValidateSkinParts(char *apPartNames[protocol7::NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const;
 
-	bool SaveSkinfile(const char *pSaveSkinName, int Dummy);
+	bool SaveSkinfile(const char *pName, int Dummy);
+	bool RemoveSkin(const CSkin *pSkin);
 
-	virtual int Sizeof() const override { return sizeof(*this); }
+	IGraphics::CTextureHandle XmasHatTexture() const { return m_XmasHatTexture; }
+	IGraphics::CTextureHandle BotDecorationTexture() const { return m_BotTexture; }
+
+	static bool IsSpecialSkin(const char *pName);
 
 private:
-	int m_ScanningPart;
+	std::chrono::nanoseconds m_LastRefreshTime;
+
 	std::vector<CSkinPart> m_avSkinParts[protocol7::NUM_SKINPARTS];
+	CSkinPart m_aPlaceholderSkinParts[protocol7::NUM_SKINPARTS];
 	std::vector<CSkin> m_vSkins;
-	CSkin m_DummySkin;
+
+	IGraphics::CTextureHandle m_XmasHatTexture;
+	IGraphics::CTextureHandle m_BotTexture;
 
 	static int SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser);
+	bool LoadSkinPart(int PartType, const char *pName, int DirType);
 	static int SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
+	bool LoadSkin(const char *pName, int DirType);
 
+	void InitPlaceholderSkinParts();
 	void LoadXmasHat();
 	void LoadBotDecoration();
+
+	void AddSkinFromConfigVariables(const char *pName, int Dummy);
 };
 
 #endif

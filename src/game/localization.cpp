@@ -4,6 +4,7 @@
 #include "localization.h"
 
 #include <base/log.h>
+#include <base/system.h>
 
 #include <engine/console.h>
 #include <engine/shared/linereader.h>
@@ -132,7 +133,7 @@ void CLocalizationDatabase::SelectDefaultLanguage(IConsole *pConsole, char *pFil
 					str_copy(pFilename, Language.m_FileName.c_str(), Length);
 					return;
 				}
-				else if(LanguageCode.rfind(aLocaleStr, 0) == 0)
+				else if(LanguageCode.starts_with(aLocaleStr))
 				{
 					// Locale is prefix of language code, e.g. locale is "en" and current language is "en-US"
 					pPrefixMatch = &Language;
@@ -247,7 +248,7 @@ const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHas
 	CString String;
 	String.m_Hash = Hash;
 	String.m_ContextHash = ContextHash;
-	String.m_pReplacement = 0x0;
+	String.m_pReplacement = nullptr;
 	auto Range1 = std::equal_range(m_vStrings.begin(), m_vStrings.end(), String);
 	if(std::distance(Range1.first, Range1.second) == 1)
 		return Range1.first->m_pReplacement;

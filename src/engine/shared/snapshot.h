@@ -3,11 +3,11 @@
 #ifndef ENGINE_SHARED_SNAPSHOT_H
 #define ENGINE_SHARED_SNAPSHOT_H
 
+#include <generated/protocol.h>
+#include <generated/protocol7.h>
+
 #include <cstddef>
 #include <cstdint>
-
-#include <game/generated/protocol.h>
-#include <game/generated/protocol7.h>
 
 // CSnapshot
 
@@ -53,6 +53,7 @@ public:
 	};
 
 	int NumItems() const { return m_NumItems; }
+	int DataSize() const { return m_DataSize; }
 	const CSnapshotItem *GetItem(int Index) const;
 	int GetItemSize(int Index) const;
 	int GetItemIndex(int Key) const;
@@ -62,6 +63,9 @@ public:
 	const void *FindItem(int Type, int Id) const;
 
 	unsigned Crc() const;
+	// Prints the raw snapshot data showing item and int boundaries.
+	// See also `CNetObjHandler::DebugDumpSnapshot(const CSnapshot *pSnap)`
+	// For more detailed annotations of the data.
 	void DebugDump() const;
 	bool IsValid(size_t ActualSize) const;
 
@@ -89,18 +93,18 @@ private:
 	};
 	short m_aItemSizes[MAX_NETOBJSIZES];
 	short m_aItemSizes7[MAX_NETOBJSIZES];
-	int m_aSnapshotDataRate[CSnapshot::MAX_TYPE + 1];
-	int m_aSnapshotDataUpdates[CSnapshot::MAX_TYPE + 1];
+	uint64_t m_aSnapshotDataRate[CSnapshot::MAX_TYPE + 1];
+	uint64_t m_aSnapshotDataUpdates[CSnapshot::MAX_TYPE + 1];
 	CData m_Empty;
 
-	static void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, int *pDataRate);
+	static void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, uint64_t *pDataRate);
 
 public:
 	static int DiffItem(const int *pPast, const int *pCurrent, int *pOut, int Size);
 	CSnapshotDelta();
 	CSnapshotDelta(const CSnapshotDelta &Old);
-	int GetDataRate(int Index) const { return m_aSnapshotDataRate[Index]; }
-	int GetDataUpdates(int Index) const { return m_aSnapshotDataUpdates[Index]; }
+	uint64_t GetDataRate(int Index) const { return m_aSnapshotDataRate[Index]; }
+	uint64_t GetDataUpdates(int Index) const { return m_aSnapshotDataUpdates[Index]; }
 	void SetStaticsize(int ItemType, size_t Size);
 	void SetStaticsize7(int ItemType, size_t Size);
 	const CData *EmptyDelta() const;
@@ -158,7 +162,7 @@ class CSnapshotBuilder
 	int m_aExtendedItemTypes[MAX_EXTENDED_ITEM_TYPES];
 	int m_NumExtendedItemTypes;
 
-	void AddExtendedItemType(int Index);
+	bool AddExtendedItemType(int Index);
 	int GetExtendedItemTypeIndex(int TypeId);
 	int GetTypeFromIndex(int Index) const;
 

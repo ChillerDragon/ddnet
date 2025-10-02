@@ -1,8 +1,10 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "huffman.h"
-#include <algorithm>
+
 #include <base/system.h>
+
+#include <algorithm>
 
 const unsigned CHuffman::ms_aFreqTable[HUFFMAN_MAX_SYMBOLS] = {
 	1 << 30, 4545, 2657, 431, 1950, 919, 444, 482, 2244, 617, 838, 542, 715, 1814, 304, 240, 754, 212, 647, 186,
@@ -25,7 +27,7 @@ struct CHuffmanConstructNode
 	int m_Frequency;
 };
 
-bool CompareNodesByFrequencyDesc(const CHuffmanConstructNode *pNode1, const CHuffmanConstructNode *pNode2)
+static bool CompareNodesByFrequencyDesc(const CHuffmanConstructNode *pNode1, const CHuffmanConstructNode *pNode2)
 {
 	return pNode2->m_Frequency < pNode1->m_Frequency;
 }
@@ -95,7 +97,7 @@ void CHuffman::Init(const unsigned *pFrequencies)
 	// make sure to cleanout every thing
 	mem_zero(m_aNodes, sizeof(m_aNodes));
 	mem_zero(m_apDecodeLut, sizeof(m_apDecodeLut));
-	m_pStartNode = 0x0;
+	m_pStartNode = nullptr;
 	m_NumNodes = 0;
 
 	// construct the tree
@@ -217,7 +219,7 @@ int CHuffman::Decompress(const void *pInput, int InputSize, void *pOutput, int O
 	while(true)
 	{
 		// {A} try to load a node now, this will reduce dependency at location {D}
-		const CNode *pNode = 0;
+		const CNode *pNode = nullptr;
 		if(Bitcount >= HUFFMAN_LUTBITS)
 			pNode = m_apDecodeLut[Bits & HUFFMAN_LUTMASK];
 

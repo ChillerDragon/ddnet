@@ -8,11 +8,12 @@ class CGameControllerDDRace : public IGameController
 {
 public:
 	CGameControllerDDRace(class CGameContext *pGameServer);
-	~CGameControllerDDRace();
+	~CGameControllerDDRace() override;
 
 	CScore *Score();
 
 	void HandleCharacterTiles(class CCharacter *pChr, int MapIndex) override;
+	void SetArmorProgress(CCharacter *pCharacter, int Progress) override;
 
 	void OnPlayerConnect(class CPlayer *pPlayer) override;
 	void OnPlayerDisconnect(class CPlayer *pPlayer, const char *pReason) override;

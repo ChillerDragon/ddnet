@@ -9,6 +9,8 @@
 
 #include <game/gamecore.h>
 
+#include <memory>
+
 static const char *TOOL_NAME = "demo_extract_chat";
 
 class CClientSnapshotHandler
@@ -98,7 +100,7 @@ public:
 				if(ClientId < MAX_CLIENTS)
 				{
 					CClientData *pClient = &m_aClients[ClientId];
-					IntsToStr(&pInfo->m_Name0, 4, pClient->m_aName, sizeof(pClient->m_aName));
+					IntsToStr(pInfo->m_aName, std::size(pInfo->m_aName), pClient->m_aName, sizeof(pClient->m_aName));
 				}
 			}
 		}
@@ -195,8 +197,8 @@ public:
 
 static int ExtractDemoChat(const char *pDemoFilePath, IStorage *pStorage)
 {
-	CSnapshotDelta DemoSnapshotDelta;
-	CDemoPlayer DemoPlayer(&DemoSnapshotDelta, false);
+	std::unique_ptr<CSnapshotDelta> pDemoSnapshotDelta = std::make_unique<CSnapshotDelta>();
+	CDemoPlayer DemoPlayer(pDemoSnapshotDelta.get(), false);
 
 	if(DemoPlayer.Load(pStorage, nullptr, pDemoFilePath, IStorage::TYPE_ALL_OR_ABSOLUTE) == -1)
 	{
@@ -229,7 +231,7 @@ static int ExtractDemoChat(const char *pDemoFilePath, IStorage *pStorage)
 int main(int argc, const char *argv[])
 {
 	// Create storage before setting logger to avoid log messages from storage creation
-	IStorage *pStorage = CreateLocalStorage();
+	std::unique_ptr<IStorage> pStorage = CreateLocalStorage();
 
 	CCmdlineFix CmdlineFix(&argc, &argv);
 	log_set_global_logger_default();
@@ -246,5 +248,5 @@ int main(int argc, const char *argv[])
 		return -1;
 	}
 
-	return ExtractDemoChat(argv[1], pStorage);
+	return ExtractDemoChat(argv[1], pStorage.get());
 }

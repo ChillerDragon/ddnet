@@ -3,10 +3,11 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
-#include <deque>
-#include <memory>
+#include "graph.h"
+#include "smooth_time.h"
 
 #include <base/hash.h>
+#include <base/types.h>
 
 #include <engine/client.h>
 #include <engine/client/checksum.h>
@@ -24,8 +25,10 @@
 #include <engine/textrender.h>
 #include <engine/warning.h>
 
-#include "graph.h"
-#include "smooth_time.h"
+#include <chrono>
+#include <deque>
+#include <memory>
+#include <mutex>
 
 class CDemoEdit;
 class IDemoRecorder;
@@ -43,9 +46,6 @@ class ISteam;
 class INotifications;
 class IStorage;
 class IUpdater;
-
-#define CONNECTLINK_DOUBLE_SLASH "ddnet://"
-#define CONNECTLINK_NO_SLASH "ddnet:"
 
 class CServerCapabilities
 {
@@ -115,13 +115,16 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	int m_aAckGameTick[NUM_DUMMIES] = {-1, -1};
 	int m_aCurrentRecvTick[NUM_DUMMIES] = {0, 0};
 	int m_aRconAuthed[NUM_DUMMIES] = {0, 0};
-	char m_aRconUsername[32] = "";
+	char m_aRconUsername[64] = "";
 	char m_aRconPassword[sizeof(g_Config.m_SvRconPassword)] = "";
 	int m_UseTempRconCommands = 0;
 	int m_ExpectedRconCommands = -1;
 	int m_GotRconCommands = 0;
 	char m_aPassword[sizeof(g_Config.m_Password)] = "";
 	bool m_SendPassword = false;
+
+	int m_ExpectedMaplistEntries = -1;
+	std::vector<std::string> m_vMaplistEntries;
 
 	// version-checking
 	char m_aVersionStr[10] = "0";
@@ -146,7 +149,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	char m_aMapdownloadFilename[256] = "";
 	char m_aMapdownloadFilenameTemp[256] = "";
 	char m_aMapdownloadName[256] = "";
-	IOHANDLE m_MapdownloadFileTemp = 0;
+	IOHANDLE m_MapdownloadFileTemp = nullptr;
 	int m_MapdownloadChunk = 0;
 	int m_MapdownloadCrc = 0;
 	int m_MapdownloadAmount = -1;
@@ -160,6 +163,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	SHA256_DIGEST m_MapDetailsSha256 = SHA256_ZEROED;
 	char m_aMapDetailsUrl[256] = "";
 
+	EInfoState m_InfoState = EInfoState::ERROR;
 	std::shared_ptr<CHttpRequest> m_pDDNetInfoTask = nullptr;
 
 	// time
@@ -182,10 +186,12 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	bool m_DummyConnecting = false;
 	bool m_DummyConnected = false;
 	float m_LastDummyConnectTime = 0.0f;
+	bool m_DummyReconnectOnReload = false;
+	bool m_DummyDeactivateOnReconnect = false;
 
 	// graphs
 	CGraph m_InputtimeMarginGraph;
-	CGraph m_GametimeMarginGraph;
+	CGraph m_aGametimeMarginGraphs[NUM_DUMMIES];
 	CGraph m_FpsGraph;
 
 	// the game snapshots are modifiable by the game
@@ -233,17 +239,18 @@ class CClient : public IClient, public CDemoPlayer::IListener
 		int m_State = STATE_INIT;
 	} m_VersionInfo;
 
+	std::mutex m_WarningsMutex;
 	std::vector<SWarning> m_vWarnings;
 	std::vector<SWarning> m_vQuittingWarnings;
 
 	CFifo m_Fifo;
 
-	IOHANDLE m_BenchmarkFile = 0;
+	IOHANDLE m_BenchmarkFile = nullptr;
 	int64_t m_BenchmarkStopTime = 0;
 
 	CChecksum m_Checksum;
-	int m_OwnExecutableSize = 0;
-	IOHANDLE m_OwnExecutable = 0;
+	int64_t m_OwnExecutableSize = 0;
+	IOHANDLE m_OwnExecutable = nullptr;
 
 	// favorite command handling
 	bool m_FavoritesGroup = false;
@@ -257,6 +264,11 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	std::shared_ptr<ILogger> m_pFileLogger = nullptr;
 	std::shared_ptr<ILogger> m_pStdoutLogger = nullptr;
+
+	// For RenderDebug function
+	NETSTATS m_NetstatsPrev = {};
+	NETSTATS m_NetstatsCurrent = {};
+	std::chrono::nanoseconds m_NetstatsLastUpdate = std::chrono::nanoseconds(0);
 
 	// For DummyName function
 	char m_aAutomaticDummyName[MAX_NAME_LENGTH];
@@ -291,10 +303,13 @@ public:
 
 	bool RconAuthed() const override { return m_aRconAuthed[g_Config.m_ClDummy] != 0; }
 	bool UseTempRconCommands() const override { return m_UseTempRconCommands != 0; }
-	void RconAuth(const char *pName, const char *pPassword) override;
+	void RconAuth(const char *pName, const char *pPassword, bool Dummy = g_Config.m_ClDummy) override;
 	void Rcon(const char *pCmd) override;
 	bool ReceivingRconCommands() const override { return m_ExpectedRconCommands > 0; }
 	float GotRconCommandsPercentage() const override;
+	bool ReceivingMaplist() const override { return m_ExpectedMaplistEntries > 0; }
+	float GotMaplistPercentage() const override;
+	const std::vector<std::string> &MaplistEntries() const override { return m_vMaplistEntries; }
 
 	bool ConnectionProblems() const override;
 
@@ -334,13 +349,15 @@ public:
 
 	int GetPredictionTime() override;
 	CSnapItem SnapGetItem(int SnapId, int Index) const override;
+	int GetPredictionTick() override;
 	const void *SnapFindItem(int SnapId, int Type, int Id) const override;
 	int SnapNumItems(int SnapId) const override;
 	void SnapSetStaticsize(int ItemType, int Size) override;
 	void SnapSetStaticsize7(int ItemType, int Size) override;
 
 	void Render();
-	void DebugRender();
+	void RenderDebug();
+	void RenderGraphs();
 
 	void Restart() override;
 	void Quit() override;
@@ -354,18 +371,19 @@ public:
 
 	int TranslateSysMsg(int *pMsgId, bool System, CUnpacker *pUnpacker, CPacker *pPacker, CNetChunk *pPacket, bool *pIsExMsg);
 
+	void PreprocessConnlessPacket7(CNetChunk *pPacket);
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerInfo(int Type, NETADDR *pFrom, const void *pData, int DataSize);
 	void ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy);
 
 	int UnpackAndValidateSnapshot(CSnapshot *pFrom, CSnapshot *pTo);
 
-	void ResetMapDownload();
+	void ResetMapDownload(bool ResetActive);
 	void FinishMapDownload();
 
+	EInfoState InfoState() const override { return m_InfoState; }
 	void RequestDDNetInfo() override;
 	void ResetDDNetInfoTask();
-	void FinishDDNetInfo();
 	void LoadDDNetInfo();
 
 	bool IsSixup() const override { return m_Sixup; }
@@ -435,6 +453,7 @@ public:
 	static void ConchainTimeoutSeed(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainPassword(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainReplays(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainInputFifo(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainLoglevel(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainStdoutOutputLevel(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
@@ -471,9 +490,6 @@ public:
 	virtual int HandleChecksum(int Conn, CUuid Uuid, CUnpacker *pUnpacker);
 
 	// gfx
-	void SwitchWindowScreen(int Index) override;
-	void SetWindowParams(int FullscreenMode, bool IsBorderless) override;
-	void ToggleWindowVSync() override;
 	void Notify(const char *pTitle, const char *pMessage) override;
 	void OnWindowResize() override;
 	void BenchmarkQuit(int Seconds, const char *pFilename);
@@ -484,8 +500,6 @@ public:
 
 	void GenerateTimeoutSeed() override;
 	void GenerateTimeoutCodes(const NETADDR *pAddrs, int NumAddrs);
-
-	int GetCurrentRaceTime() override;
 
 	const char *GetCurrentMap() const override;
 	const char *GetCurrentMapPath() const override;
@@ -508,7 +522,7 @@ public:
 	void GetSmoothTick(int *pSmoothTick, float *pSmoothIntraTick, float MixAmount) override;
 
 	void AddWarning(const SWarning &Warning) override;
-	SWarning *GetCurWarning() override;
+	std::optional<SWarning> CurrentWarning() override;
 	std::vector<SWarning> &&QuittingWarnings() { return std::move(m_vQuittingWarnings); }
 
 	CChecksumData *ChecksumData() override { return &m_Checksum.m_Data; }
@@ -522,8 +536,8 @@ public:
 	void ShellUnregister() override;
 #endif
 
-	void ShowMessageBox(const char *pTitle, const char *pMessage, EMessageBoxType Type = MESSAGE_BOX_TYPE_ERROR) override;
-	void GetGpuInfoString(char (&aGpuInfo)[256]) override;
+	std::optional<int> ShowMessageBox(const IGraphics::CMessageBox &MessageBox) override;
+	void GetGpuInfoString(char (&aGpuInfo)[512]) override;
 	void SetLoggers(std::shared_ptr<ILogger> &&pFileLogger, std::shared_ptr<ILogger> &&pStdoutLogger);
 };
 

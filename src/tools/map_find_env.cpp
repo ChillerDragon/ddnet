@@ -1,22 +1,30 @@
 #include <base/logger.h>
 #include <base/system.h>
+
 #include <engine/shared/datafile.h>
 #include <engine/storage.h>
+
 #include <game/mapitems.h>
 
-struct EnvelopedQuad
+class CEnvelopedQuad
 {
+public:
 	int m_GroupId;
 	int m_LayerId;
 	int m_TilePosX;
 	int m_TilePosY;
 };
 
-bool OpenMap(const char pMapName[64], CDataFileReader &InputMap)
+static bool OpenMap(const char pMapName[64], CDataFileReader &InputMap)
 {
-	IStorage *pStorage = CreateLocalStorage();
+	std::unique_ptr<IStorage> pStorage = CreateLocalStorage();
+	if(!pStorage)
+	{
+		log_error("map_find_env", "Error creating local storage");
+		return false;
+	}
 
-	if(!InputMap.Open(pStorage, pMapName, IStorage::TYPE_ABSOLUTE))
+	if(!InputMap.Open(pStorage.get(), pMapName, IStorage::TYPE_ABSOLUTE))
 	{
 		dbg_msg("map_find_env", "ERROR: unable to open map '%s'", pMapName);
 		return false;
@@ -24,7 +32,7 @@ bool OpenMap(const char pMapName[64], CDataFileReader &InputMap)
 	return true;
 }
 
-bool GetLayerGroupIds(CDataFileReader &InputMap, const int LayerNumber, int &GroupId, int &LayerRelativeId)
+static bool GetLayerGroupIds(CDataFileReader &InputMap, const int LayerNumber, int &GroupId, int &LayerRelativeId)
 {
 	int Start, Num;
 	InputMap.GetType(MAPITEMTYPE_GROUP, &Start, &Num);
@@ -43,12 +51,12 @@ bool GetLayerGroupIds(CDataFileReader &InputMap, const int LayerNumber, int &Gro
 	return false;
 }
 
-int FxToTilePos(const int FxPos)
+static int FxToTilePos(const int FxPos)
 {
 	return std::floor(fx2f(FxPos) / 32);
 }
 
-bool GetEnvelopedQuads(const CQuad *pQuads, const int NumQuads, const int EnvId, const int GroupId, const int LayerId, int &QuadsCounter, EnvelopedQuad pEnvQuads[1024])
+static bool GetEnvelopedQuads(const CQuad *pQuads, const int NumQuads, const int EnvId, const int GroupId, const int LayerId, int &QuadsCounter, CEnvelopedQuad pEnvQuads[1024])
 {
 	bool Found = false;
 	for(int i = 0; i < NumQuads; i++)
@@ -68,7 +76,7 @@ bool GetEnvelopedQuads(const CQuad *pQuads, const int NumQuads, const int EnvId,
 	return Found;
 }
 
-void PrintEnvelopedQuads(const EnvelopedQuad pEnvQuads[1024], const int EnvId, const int QuadsCounter)
+static void PrintEnvelopedQuads(const CEnvelopedQuad pEnvQuads[1024], const int EnvId, const int QuadsCounter)
 {
 	if(!QuadsCounter)
 	{
@@ -81,7 +89,7 @@ void PrintEnvelopedQuads(const EnvelopedQuad pEnvQuads[1024], const int EnvId, c
 		dbg_msg("map_find_env", "%*d. Group: #%d - Layer: #%d - Pos: %d,%d", (int)(std::log10(absolute(QuadsCounter))) + 1, i + 1, pEnvQuads[i].m_GroupId, pEnvQuads[i].m_LayerId, pEnvQuads[i].m_TilePosX, pEnvQuads[i].m_TilePosY);
 }
 
-bool FindEnv(const char aFilename[64], const int EnvId)
+static bool FindEnv(const char aFilename[64], const int EnvId)
 {
 	CDataFileReader InputMap;
 	if(!OpenMap(aFilename, InputMap))
@@ -89,7 +97,7 @@ bool FindEnv(const char aFilename[64], const int EnvId)
 
 	int LayersStart, LayersCount, QuadsCounter = 0;
 	InputMap.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersCount);
-	EnvelopedQuad pEnvQuads[1024];
+	CEnvelopedQuad pEnvQuads[1024];
 
 	for(int i = 0; i < LayersCount; i++)
 	{

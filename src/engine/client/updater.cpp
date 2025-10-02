@@ -1,6 +1,7 @@
+#include "updater.h"
+
 #include <base/system.h>
 
-#include "updater.h"
 #include <engine/client.h>
 #include <engine/engine.h>
 #include <engine/external/json-parser/json.h>
@@ -60,7 +61,7 @@ void CUpdaterFetchTask::OnProgress()
 
 void CUpdaterFetchTask::OnCompletion(EHttpState State)
 {
-	const char *pFileName = 0;
+	const char *pFileName = nullptr;
 	for(const char *pPath = Dest(); *pPath; pPath++)
 		if(*pPath == '/')
 			pFileName = pPath + 1;

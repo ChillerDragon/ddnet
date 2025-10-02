@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <base/system.h>
+
+#include <gtest/gtest.h>
 
 TEST(NetAddr, FromUrlStringInvalid)
 {
@@ -134,13 +134,44 @@ TEST(NetAddr, FromStrInvalid)
 	EXPECT_TRUE(net_addr_from_str(&Addr, "[::]:c"));
 }
 
-TEST(NetAddr, StrInvalid)
+TEST(NetAddrDeathTest, StrInvalid1)
 {
-	NETADDR Addr = {0};
-	char aBuf1[NETADDR_MAXSTRSIZE];
-	char aBuf2[NETADDR_MAXSTRSIZE];
-	net_addr_str(&Addr, aBuf1, sizeof(aBuf1), true);
-	EXPECT_STREQ(aBuf1, "unknown type 0");
-	net_addr_str(&Addr, aBuf2, sizeof(aBuf2), false);
-	EXPECT_STREQ(aBuf2, "unknown type 0");
+	ASSERT_DEATH({
+		NETADDR Addr = {0};
+		char aBuf[NETADDR_MAXSTRSIZE];
+		net_addr_str(&Addr, aBuf, sizeof(aBuf), true);
+	},
+		"");
+}
+
+TEST(NetAddrDeathTest, StrInvalid2)
+{
+	ASSERT_DEATH({
+		NETADDR Addr = {0};
+		char aBuf[NETADDR_MAXSTRSIZE];
+		net_addr_str(&Addr, aBuf, sizeof(aBuf), false);
+	},
+		"");
+}
+
+TEST(NetAddr, IsLocal)
+{
+	NETADDR Addr;
+	net_addr_from_str(&Addr, "127.0.0.1");
+	EXPECT_TRUE(net_addr_is_local(&Addr));
+
+	net_addr_from_str(&Addr, "[::1]");
+	EXPECT_TRUE(net_addr_is_local(&Addr));
+
+	net_addr_from_str(&Addr, "192.168.1.1");
+	EXPECT_TRUE(net_addr_is_local(&Addr));
+
+	net_addr_from_str(&Addr, "10.0.0.1");
+	EXPECT_TRUE(net_addr_is_local(&Addr));
+
+	net_addr_from_str(&Addr, "8.8.8.8");
+	EXPECT_FALSE(net_addr_is_local(&Addr));
+
+	net_addr_from_str(&Addr, "[2001:db8::1]");
+	EXPECT_FALSE(net_addr_is_local(&Addr));
 }

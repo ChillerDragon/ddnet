@@ -1,14 +1,17 @@
-#include <algorithm>
 #include <base/logger.h>
 #include <base/system.h>
-#include <cstdint>
+
 #include <engine/gfx/image_manipulation.h>
 #include <engine/shared/datafile.h>
 #include <engine/storage.h>
+
 #include <game/mapitems.h>
+
+#include <algorithm>
+#include <cstdint>
 #include <vector>
 
-void ClearTransparentPixels(uint8_t *pImg, int Width, int Height)
+static void ClearTransparentPixels(uint8_t *pImg, int Width, int Height)
 {
 	for(int y = 0; y < Height; ++y)
 	{
@@ -25,7 +28,7 @@ void ClearTransparentPixels(uint8_t *pImg, int Width, int Height)
 	}
 }
 
-void CopyOpaquePixels(uint8_t *pDestImg, uint8_t *pSrcImg, int Width, int Height)
+static void CopyOpaquePixels(uint8_t *pDestImg, uint8_t *pSrcImg, int Width, int Height)
 {
 	for(int y = 0; y < Height; ++y)
 	{
@@ -40,7 +43,7 @@ void CopyOpaquePixels(uint8_t *pDestImg, uint8_t *pSrcImg, int Width, int Height
 	}
 }
 
-void ClearPixelsTile(uint8_t *pImg, int Width, int Height, int TileIndex)
+static void ClearPixelsTile(uint8_t *pImg, int Width, int Height, int TileIndex)
 {
 	int WTile = Width / 16;
 	int HTile = Height / 16;
@@ -60,7 +63,7 @@ void ClearPixelsTile(uint8_t *pImg, int Width, int Height, int TileIndex)
 	}
 }
 
-void GetImageSHA256(uint8_t *pImgBuff, int ImgSize, int Width, int Height, char *pSHA256Str, size_t SHA256StrSize)
+static void GetImageSHA256(uint8_t *pImgBuff, int ImgSize, int Width, int Height, char *pSHA256Str, size_t SHA256StrSize)
 {
 	uint8_t *pNewImgBuff = (uint8_t *)malloc(ImgSize);
 
@@ -78,10 +81,14 @@ int main(int argc, const char **argv)
 	CCmdlineFix CmdlineFix(&argc, &argv);
 	log_set_global_logger_default();
 
-	IStorage *pStorage = CreateStorage(IStorage::STORAGETYPE_BASIC, argc, argv);
-	if(!pStorage || argc <= 1 || argc > 3)
+	std::unique_ptr<IStorage> pStorage = std::unique_ptr<IStorage>(CreateStorage(IStorage::EInitializationType::BASIC, argc, argv));
+	if(!pStorage)
 	{
-		dbg_msg("map_optimize", "Invalid parameters or other unknown error.");
+		log_error("map_optimize", "Error creating basic storage");
+		return -1;
+	}
+	if(argc <= 1 || argc > 3)
+	{
 		dbg_msg("map_optimize", "Usage: map_optimize <source map filepath> [<dest map filepath>]");
 		return -1;
 	}
@@ -102,14 +109,14 @@ int main(int argc, const char **argv)
 	}
 
 	CDataFileReader Reader;
-	if(!Reader.Open(pStorage, argv[1], IStorage::TYPE_ABSOLUTE))
+	if(!Reader.Open(pStorage.get(), argv[1], IStorage::TYPE_ABSOLUTE))
 	{
 		dbg_msg("map_optimize", "Failed to open source file.");
 		return -1;
 	}
 
 	CDataFileWriter Writer;
-	if(!Writer.Open(pStorage, aFileName, IStorage::TYPE_ABSOLUTE))
+	if(!Writer.Open(pStorage.get(), aFileName, IStorage::TYPE_ABSOLUTE))
 	{
 		dbg_msg("map_optimize", "Failed to open target file.");
 		return -1;
@@ -190,7 +197,7 @@ int main(int argc, const char **argv)
 		else if(Type == MAPITEMTYPE_IMAGE)
 		{
 			CMapItemImage_v2 *pImg = (CMapItemImage_v2 *)pPtr;
-			if(!pImg->m_External && pImg->m_Version < CMapItemImage_v2::CURRENT_VERSION)
+			if(!pImg->m_External && pImg->m_Version < 2)
 			{
 				SMapOptimizeItem Item;
 				Item.m_pImage = pImg;

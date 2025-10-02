@@ -22,7 +22,10 @@ class CRegister : public IRegister
 		STATUS_NEEDCHALLENGE,
 		STATUS_NEEDINFO,
 		STATUS_ERROR,
+	};
 
+	enum
+	{
 		PROTOCOL_TW6_IPV6 = 0,
 		PROTOCOL_TW6_IPV4,
 		PROTOCOL_TW7_IPV6,
@@ -132,7 +135,7 @@ class CRegister : public IRegister
 	CUuid m_Secret = RandomUuid();
 	CUuid m_ChallengeSecret = RandomUuid();
 	bool m_GotServerInfo = false;
-	char m_aServerInfo[16384];
+	char m_aServerInfo[32768];
 
 public:
 	CRegister(CConfig *pConfig, IConsole *pConsole, IEngine *pEngine, IHttp *pHttp, int ServerPort, unsigned SixupSecurityToken);
@@ -465,9 +468,16 @@ void CRegister::CProtocol::CJob::Run()
 	}
 	{
 		CLockScope ls(m_pShared->m_Lock);
-		if(Status != STATUS_OK || Status != m_pShared->m_LatestResponseStatus)
+		if(Status != m_pShared->m_LatestResponseStatus)
 		{
-			log_debug(ProtocolToSystem(m_Protocol), "status: %s", (const char *)StatusString);
+			if(Status != STATUS_OK)
+			{
+				log_debug(ProtocolToSystem(m_Protocol), "status: %s", (const char *)StatusString);
+			}
+			else
+			{
+				log_info(ProtocolToSystem(m_Protocol), "successfully registered");
+			}
 		}
 		if(Status == m_pShared->m_LatestResponseStatus && Status == STATUS_NEEDCHALLENGE)
 		{

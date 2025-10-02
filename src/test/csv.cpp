@@ -1,8 +1,10 @@
 #include "test.h"
-#include <gtest/gtest.h>
 
 #include <base/system.h>
+
 #include <engine/shared/csv.h>
+
+#include <gtest/gtest.h>
 
 static void Expect(int NumColumns, const char *const *ppColumns, const char *pExpected)
 {
@@ -49,7 +51,7 @@ TEST(Csv, Simple)
 	Expect(3, apCols3, "я,,й");
 	const char *apCols4[] = {""};
 	Expect(1, apCols4, "");
-	const char *apCols5[] = {0};
+	const char *apCols5[] = {nullptr};
 	Expect(0, apCols5, "");
 }
 

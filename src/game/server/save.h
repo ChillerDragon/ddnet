@@ -4,7 +4,12 @@
 #include <base/vmath.h>
 
 #include <engine/shared/protocol.h>
-#include <game/generated/protocol.h>
+
+#include <generated/protocol.h>
+
+#include <game/team_state.h>
+
+#include <optional>
 
 class IGameController;
 class CGameContext;
@@ -35,8 +40,8 @@ class CSaveTee
 public:
 	CSaveTee();
 	~CSaveTee() = default;
-	void Save(CCharacter *pchr);
-	bool Load(CCharacter *pchr, int Team, bool IsSwap = false);
+	void Save(CCharacter *pchr, bool AddPenalty = true);
+	bool Load(CCharacter *pchr, std::optional<int> Team = std::nullopt);
 	char *GetString(const CSaveTeam *pTeam);
 	int FromString(const char *pString);
 	void LoadHookedPlayer(const CSaveTeam *pTeam);
@@ -70,8 +75,9 @@ private:
 	int m_TeeFinished;
 	int m_IsSolo;
 
-	struct WeaponStat
+	class CWeaponStat
 	{
+	public:
 		int m_AmmoRegenStart;
 		int m_Ammo;
 		int m_Ammocost;
@@ -148,6 +154,22 @@ private:
 	char m_aGameUuid[UUID_MAXSTRSIZE];
 };
 
+class CSaveHotReloadTee
+{
+public:
+	CSaveHotReloadTee() = default;
+	~CSaveHotReloadTee() = default;
+	void Save(CCharacter *pChr, bool AddPenalty = true);
+	bool Load(CCharacter *pChr, int Team);
+
+private:
+	CSaveTee m_SaveTee;
+	bool m_Super;
+	bool m_Invincible;
+	CSaveTee m_SavedTeleTee;
+	std::optional<CSaveTee> m_LastDeath;
+};
+
 class CSaveTeam
 {
 public:
@@ -159,8 +181,8 @@ public:
 	int FromString(const char *pString);
 	// returns true if a team can load, otherwise writes a nice error Message in pMessage
 	bool MatchPlayers(const char (*paNames)[MAX_NAME_LENGTH], const int *pClientId, int NumPlayer, char *pMessage, int MessageLen) const;
-	ESaveResult Save(CGameContext *pGameServer, int Team, bool Dry = false);
-	bool Load(CGameContext *pGameServer, int Team, bool KeepCurrentWeakStrong);
+	ESaveResult Save(CGameContext *pGameServer, int Team, bool Dry = false, bool Force = false);
+	bool Load(CGameContext *pGameServer, int Team, bool KeepCurrentWeakStrong, bool IgnorePlayers = false);
 
 	CSaveTee *m_pSavedTees = nullptr;
 
@@ -180,7 +202,7 @@ private:
 	};
 	SSimpleSwitchers *m_pSwitchers = nullptr;
 
-	int m_TeamState = 0;
+	ETeamState m_TeamState = ETeamState::EMPTY;
 	int m_MembersCount = 0;
 	int m_HighestSwitchNumber = 0;
 	int m_TeamLocked = 0;

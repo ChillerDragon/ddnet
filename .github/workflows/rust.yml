@@ -13,7 +13,8 @@ jobs:
     env:
       CARGO_HTTP_MULTIPLEXING: false
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Cache Rust dependencies
       uses: Swatinem/rust-cache@v2
     - name: Run Rustdoc
@@ -22,8 +23,18 @@ jobs:
 
   rustfmt:
     runs-on: ubuntu-latest
+    env:
+      CARGO_HTTP_MULTIPLEXING: false
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+           workspaces: |
+               src/mastersrv
+               src/masterping
+               ./
     - name: Run Rustfmt
       run:
         cargo fmt -- --check
@@ -37,13 +48,17 @@ jobs:
         checks:
           - advisories
           - bans licenses sources
-
     continue-on-error: ${{ matrix.checks == 'advisories' }}
-
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     - name: Cache Rust dependencies
       uses: Swatinem/rust-cache@v2
+      with:
+          workspaces:  |
+              src/mastersrv
+              src/masterping
+              ./
     - uses: EmbarkStudios/cargo-deny-action@v1
       with:
         command: check ${{ matrix.checks }}

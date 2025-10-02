@@ -4,6 +4,7 @@
 #define GAME_CLIENT_COMPONENTS_PARTICLES_H
 #include <base/color.h>
 #include <base/vmath.h>
+
 #include <game/client/component.h>
 
 // particles
@@ -68,6 +69,7 @@ public:
 	enum
 	{
 		GROUP_PROJECTILE_TRAIL = 0,
+		GROUP_TRAIL_EXTRA,
 		GROUP_EXPLOSIONS,
 		GROUP_EXTRA,
 		GROUP_GENERAL,
@@ -75,13 +77,13 @@ public:
 	};
 
 	CParticles();
-	virtual int Sizeof() const override { return sizeof(*this); }
+	int Sizeof() const override { return sizeof(*this); }
 
 	void Add(int Group, CParticle *pPart, float TimePassed = 0.f);
 
-	virtual void OnReset() override;
-	virtual void OnRender() override;
-	virtual void OnInit() override;
+	void OnReset() override;
+	void OnRender() override;
+	void OnInit() override;
 
 private:
 	int m_ParticleQuadContainerIndex;
@@ -107,11 +109,14 @@ private:
 	{
 	public:
 		CParticles *m_pParts;
-		virtual int Sizeof() const override { return sizeof(*this); }
-		virtual void OnRender() override { m_pParts->RenderGroup(TGROUP); }
+		int Sizeof() const override { return sizeof(*this); }
+		void OnRender() override { m_pParts->RenderGroup(TGROUP); }
 	};
 
+	// behind players
 	CRenderGroup<GROUP_PROJECTILE_TRAIL> m_RenderTrail;
+	CRenderGroup<GROUP_TRAIL_EXTRA> m_RenderTrailExtra;
+	// in front of players
 	CRenderGroup<GROUP_EXPLOSIONS> m_RenderExplosions;
 	CRenderGroup<GROUP_EXTRA> m_RenderExtra;
 	CRenderGroup<GROUP_GENERAL> m_RenderGeneral;

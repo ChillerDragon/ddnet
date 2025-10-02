@@ -1,8 +1,11 @@
 #include "authmanager.h"
+
 #include <base/hash_ctxt.h>
 #include <base/system.h>
+
 #include <engine/shared/config.h>
-#include <game/generated/protocol.h>
+
+#include <generated/protocol.h>
 
 #define ADMIN_IDENT "default_admin"
 #define MOD_IDENT "default_mod"
@@ -35,6 +38,11 @@ void CAuthManager::Init()
 		NumDefaultKeys++;
 	if(g_Config.m_SvRconHelperPassword[0])
 		NumDefaultKeys++;
+
+	auto It = std::find_if(m_vKeys.begin(), m_vKeys.end(), [](CKey Key) { return str_comp(Key.m_aIdent, DEFAULT_SAVED_RCON_USER) == 0; });
+	if(It != m_vKeys.end())
+		NumDefaultKeys++;
+
 	if(m_vKeys.size() == NumDefaultKeys && !g_Config.m_SvRconPassword[0])
 	{
 		secure_random_password(g_Config.m_SvRconPassword, sizeof(g_Config.m_SvRconPassword), 6);
@@ -116,8 +124,13 @@ int CAuthManager::KeyLevel(int Slot) const
 const char *CAuthManager::KeyIdent(int Slot) const
 {
 	if(Slot < 0 || Slot >= (int)m_vKeys.size())
-		return NULL;
+		return nullptr;
 	return m_vKeys[Slot].m_aIdent;
+}
+
+bool CAuthManager::IsValidIdent(const char *pIdent) const
+{
+	return str_length(pIdent) < (int)sizeof(CKey().m_aIdent);
 }
 
 void CAuthManager::UpdateKeyHash(int Slot, MD5_DIGEST Hash, const unsigned char *pSalt, int AuthLevel)
@@ -167,6 +180,8 @@ bool CAuthManager::IsGenerated() const
 
 int CAuthManager::NumNonDefaultKeys() const
 {
-	int DefaultCount = (m_aDefault[0] >= 0) + (m_aDefault[1] >= 0) + (m_aDefault[2] >= 0);
+	int DefaultCount = std::count_if(std::begin(m_aDefault), std::end(m_aDefault), [](int Slot) {
+		return Slot >= 0;
+	});
 	return m_vKeys.size() - DefaultCount;
 }

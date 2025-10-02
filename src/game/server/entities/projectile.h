@@ -25,11 +25,11 @@ public:
 	vec2 GetPos(float Time);
 	void FillInfo(CNetObj_Projectile *pProj);
 
-	virtual void Reset() override;
-	virtual void Tick() override;
-	virtual void TickPaused() override;
-	virtual void Snap(int SnappingClient) override;
-	virtual void SwapClients(int Client1, int Client2) override;
+	void Reset() override;
+	void Tick() override;
+	void TickPaused() override;
+	void Snap(int SnappingClient) override;
+	void SwapClients(int Client1, int Client2) override;
 
 private:
 	vec2 m_Direction;
@@ -47,6 +47,8 @@ private:
 	bool m_Freeze;
 	int m_TuneZone;
 	bool m_BelongsToPracticeTeam;
+	int m_DDRaceTeam;
+	bool m_IsSolo;
 	vec2 m_InitDir;
 
 public:
@@ -54,7 +56,8 @@ public:
 	bool FillExtraInfoLegacy(CNetObj_DDRaceProjectile *pProj);
 	void FillExtraInfo(CNetObj_DDNetProjectile *pProj);
 
-	virtual int GetOwnerId() const override { return m_Owner; }
+	bool CanCollide(int ClientId) override;
+	int GetOwnerId() const override { return m_Owner; }
 };
 
 #endif

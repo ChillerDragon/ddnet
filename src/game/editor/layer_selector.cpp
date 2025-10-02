@@ -1,6 +1,8 @@
+#include "layer_selector.h"
+
 #include "editor.h"
 
-#include "layer_selector.h"
+#include <engine/shared/config.h>
 
 void CLayerSelector::OnInit(CEditor *pEditor)
 {
@@ -11,18 +13,24 @@ void CLayerSelector::OnInit(CEditor *pEditor)
 
 bool CLayerSelector::SelectByTile()
 {
-	// ctrl+rightclick a map index to select the layer that has a tile there
+	// ctrl+right click a map index to select the layer that has a tile there
 	if(Ui()->HotItem() != &Editor()->m_MapEditorId)
 		return false;
 	if(!Input()->ModifierIsPressed() || !Ui()->MouseButtonClicked(1))
+		return false;
+	if(!g_Config.m_EdLayerSelector)
 		return false;
 
 	int MatchedGroup = -1;
 	int MatchedLayer = -1;
 	int Matches = 0;
 	bool IsFound = false;
-	for(auto HoverTile : Editor()->HoverTiles())
+	for(const auto &HoverTile : Editor()->HoverTiles())
 	{
+		if(!Editor()->m_Map.m_vpGroups[HoverTile.m_Group]->m_Visible ||
+			!Editor()->m_Map.m_vpGroups[HoverTile.m_Group]->m_vpLayers[HoverTile.m_Layer]->m_Visible)
+			continue;
+
 		if(MatchedGroup == -1)
 		{
 			MatchedGroup = HoverTile.m_Group;

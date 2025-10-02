@@ -1,10 +1,13 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "pickup.h"
+
 #include "character.h"
+
+#include <generated/protocol.h>
+
 #include <game/client/pickup_data.h>
 #include <game/collision.h>
-#include <game/generated/protocol.h>
 #include <game/mapitems.h>
 
 static constexpr int gs_PickupPhysSize = 14;
@@ -29,7 +32,9 @@ void CPickup::Tick()
 			switch(m_Type)
 			{
 			case POWERUP_HEALTH:
-				//pChr->Freeze();
+				if(!GameWorld()->m_WorldConfig.m_PredictDDRace)
+					continue;
+				pChr->Freeze();
 				break;
 
 			case POWERUP_ARMOR:
@@ -133,12 +138,9 @@ void CPickup::Move()
 {
 	if(GameWorld()->GameTick() % (int)(GameWorld()->GameTickSpeed() * 0.15f) == 0)
 	{
-		int Flags;
-		int index = Collision()->IsMover(m_Pos.x, m_Pos.y, &Flags);
-		if(index)
+		if(Collision()->MoverSpeed(m_Pos.x, m_Pos.y, &m_Core))
 		{
 			m_IsCoreActive = true;
-			m_Core = Collision()->CpSpeed(index, Flags);
 		}
 		m_Pos += m_Core;
 	}
@@ -155,6 +157,7 @@ CPickup::CPickup(CGameWorld *pGameWorld, int Id, const CPickupData *pPickup) :
 	m_Id = Id;
 	m_Number = pPickup->m_SwitchNumber;
 	m_Layer = m_Number > 0 ? LAYER_SWITCH : LAYER_GAME;
+	m_Flags = pPickup->m_Flags;
 }
 
 void CPickup::FillInfo(CNetObj_Pickup *pPickup)
