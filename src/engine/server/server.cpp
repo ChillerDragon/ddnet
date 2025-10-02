@@ -7,6 +7,7 @@
 #include "databases/connection_pool.h"
 #include "register.h"
 
+#include <base/log.h>
 #include <base/logger.h>
 #include <base/math.h>
 #include <base/system.h>
@@ -1855,8 +1856,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			int Size = Unpacker.GetInt();
 			if(Unpacker.Error() || Size / 4 > MAX_INPUT_SIZE || IntendedTick < MIN_TICK || IntendedTick >= MAX_TICK)
 			{
+				log_error("network_in", "DROPPED INVALID INPUT MESSAGE!!! Size=%d IntendedTick=%d", Size, IntendedTick);
 				return;
 			}
+
+			log_info("network_in", "got msg input intended_tick=%d", IntendedTick);
 
 			m_aClients[ClientId].m_LastAckedSnapshot = LastAckedSnapshot;
 			if(m_aClients[ClientId].m_LastAckedSnapshot > 0)
