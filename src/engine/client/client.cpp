@@ -1935,9 +1935,21 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				PartSize = Unpacker.GetInt();
 			}
 
+			const char *pSnapName = "snap_unknown";
+			if(Msg == NETMSG_SNAPEMPTY)
+				pSnapName = "snap_empty";
+			else if(Msg == NETMSG_SNAPSINGLE)
+				pSnapName = "snap_single";
+			else if(Msg == NETMSG_SNAP)
+				pSnapName = "snap";
+
+			log_info("client", "got %s deltatick=%d", pSnapName, DeltaTick);
+
 			const char *pData = (const char *)Unpacker.GetRaw(PartSize);
 			if(Unpacker.Error() || NumParts < 1 || NumParts > CSnapshot::MAX_PARTS || Part < 0 || Part >= NumParts || PartSize < 0 || PartSize > MAX_SNAPSHOT_PACKSIZE)
 			{
+				if(Msg == NETMSG_SNAPEMPTY)
+					log_info("client", " drop empty snap deltatick=%d", DeltaTick);
 				return;
 			}
 
@@ -1973,6 +1985,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					const CSnapshot *pDeltaShot = CSnapshot::EmptySnapshot();
 					if(DeltaTick >= 0)
 					{
+						log_info("client", " load delta shot from storage at deltatick=%d", DeltaTick);
 						int DeltashotSize = m_aSnapshotStorage[Conn].Get(DeltaTick, nullptr, &pDeltaShot, nullptr);
 
 						if(DeltashotSize < 0)
@@ -2006,6 +2019,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 						DeltaSize = IntSize;
 					}
 
+					log_info("client", " unpacking delta deltatick=%d", DeltaTick);
+
 					// unpack delta
 					const int SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize, IsSixup());
 					if(SnapSize < 0)
@@ -2021,7 +2036,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 
 					if(Msg != NETMSG_SNAPEMPTY && pTmpBuffer3->Crc() != Crc)
 					{
-						log_error("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
+						log_error("client", " snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
 							m_SnapCrcErrors, GameTick, Crc, pTmpBuffer3->Crc(), m_aSnapshotIncomingDataSize[Conn], DeltaTick);
 
 						m_SnapCrcErrors++;
@@ -2067,11 +2082,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 
 					if(AltSnapSize < 0)
 					{
-						dbg_msg("client", "unpack snapshot and validate failed. error=%d", AltSnapSize);
+						dbg_msg("client", " unpack snapshot and validate failed. error=%d", AltSnapSize);
 						return;
 					}
 
 					// add new
+					log_info("client", " store snapshot in storage at gametick=%d (deltatick=%d)", GameTick, DeltaTick);
 					m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, AltSnapSize, pAltSnapBuffer);
 
 					if(!Dummy)
@@ -3645,7 +3661,7 @@ void CClient::StartVideo(const char *pFilename, bool WithTimestamp)
 	{
 		IVideo::Current()->Pause(true);
 	}
-	log_info("videorecorder", "Recording to '%s'", aFilename);
+	// log_info("videorecorder", "Recording to '%s'", aFilename);
 }
 
 void CClient::Con_StopVideo(IConsole::IResult *pResult, void *pUserData)
@@ -3657,7 +3673,7 @@ void CClient::Con_StopVideo(IConsole::IResult *pResult, void *pUserData)
 	}
 
 	IVideo::Current()->Stop();
-	log_info("videorecorder", "Stopped recording.");
+	// log_info("videorecorder", "Stopped recording.");
 }
 
 #endif
@@ -3744,7 +3760,7 @@ void CClient::Con_AddFavorite(IConsole::IResult *pResult, void *pUserData)
 	}
 	else
 	{
-		log_info("client", "adding %s to favorites", aAddr);
+		// log_info("client", "adding %s to favorites", aAddr);
 		pSelf->m_pFavorites->Add(&Addr, 1);
 		if(AllowPing)
 		{

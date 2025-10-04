@@ -1443,7 +1443,7 @@ bool CServerBrowser::ParseCommunityServers(CCommunity *pCommunity, const json_va
 			const json_value &Addresses = *Types.u.object.values[TypeIndex].value;
 			if(Addresses.type != json_array)
 			{
-				log_error("serverbrowser", "invalid addresses (ServerIndex=%u, TypeIndex=%u)", ServerIndex, TypeIndex);
+				// log_error("serverbrowser", "invalid addresses (ServerIndex=%u, TypeIndex=%u)", ServerIndex, TypeIndex);
 				return false;
 			}
 			if(Addresses.u.array.length == 0)
@@ -1466,13 +1466,13 @@ bool CServerBrowser::ParseCommunityServers(CCommunity *pCommunity, const json_va
 				const json_value &Address = Addresses[AddressIndex];
 				if(Address.type != json_string)
 				{
-					log_error("serverbrowser", "invalid address (ServerIndex=%u, TypeIndex=%u, AddressIndex=%u)", ServerIndex, TypeIndex, AddressIndex);
+					// log_error("serverbrowser", "invalid address (ServerIndex=%u, TypeIndex=%u, AddressIndex=%u)", ServerIndex, TypeIndex, AddressIndex);
 					return false;
 				}
 				NETADDR NetAddr;
 				if(net_addr_from_str(&NetAddr, Address.u.string.ptr))
 				{
-					log_error("serverbrowser", "invalid address (ServerIndex=%u, TypeIndex=%u, AddressIndex=%u)", ServerIndex, TypeIndex, AddressIndex);
+					// log_error("serverbrowser", "invalid address (ServerIndex=%u, TypeIndex=%u, AddressIndex=%u)", ServerIndex, TypeIndex, AddressIndex);
 					continue;
 				}
 				pCountry->m_vServers.emplace_back(NetAddr, pTypeName);

@@ -2469,18 +2469,6 @@ int CGraphics_Threaded::Init()
 		dbg_assert(m_NullTexture.IsNullTexture(), "Null texture invalid");
 	}
 
-	ColorRGBA GPUInfoPrintColor{0.6f, 0.5f, 1.0f, 1.0f};
-
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "GPU vendor: %s", GetVendorString());
-	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gfx", aBuf, GPUInfoPrintColor);
-
-	str_format(aBuf, sizeof(aBuf), "GPU renderer: %s", GetRendererString());
-	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gfx", aBuf, GPUInfoPrintColor);
-
-	str_format(aBuf, sizeof(aBuf), "GPU version: %s", GetVersionString());
-	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gfx", aBuf, GPUInfoPrintColor);
-
 	AdjustViewport(true);
 
 	return 0;

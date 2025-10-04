@@ -268,7 +268,7 @@ void CChooseMaster::CJob::Run()
 			continue;
 		}
 		int AgeS = SanitizeAge(pGet->ResultAgeSeconds());
-		log_info("serverbrowser_http", "found master, url='%s' time=%dms age=%ds", pUrl, (int)Time.count(), AgeS);
+		// log_info("serverbrowser_http", "found master, url='%s' time=%dms age=%ds", pUrl, (int)Time.count(), AgeS);
 
 		aTimeMs[i] = Time.count();
 		aAgeS[i] = AgeS;

@@ -197,12 +197,12 @@ public:
 			if(m_aUserdir[0])
 			{
 				str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserdir);
-				log_info("storage", "added path '$USERDIR' ('%s')", m_aUserdir);
+				// log_info("storage", "added path '$USERDIR' ('%s')", m_aUserdir);
 				return true;
 			}
 			else
 			{
-				log_error("storage", "cannot add path '$USERDIR' because it could not be determined");
+				// log_error("storage", "cannot add path '$USERDIR' because it could not be determined");
 				return false;
 			}
 		}
@@ -211,19 +211,19 @@ public:
 			if(m_aDatadir[0])
 			{
 				str_copy(m_aaStoragePaths[m_NumPaths++], m_aDatadir);
-				log_info("storage", "added path '$DATADIR' ('%s')", m_aDatadir);
+				// log_info("storage", "added path '$DATADIR' ('%s')", m_aDatadir);
 				return true;
 			}
 			else
 			{
-				log_error("storage", "cannot add path '$DATADIR' because it could not be determined");
+				// log_error("storage", "cannot add path '$DATADIR' because it could not be determined");
 				return false;
 			}
 		}
 		else if(!str_comp(pPath, "$CURRENTDIR"))
 		{
 			m_aaStoragePaths[m_NumPaths++][0] = '\0';
-			log_info("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentdir);
+			// log_info("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentdir);
 			return true;
 		}
 		else if(str_utf8_check(pPath))
@@ -231,18 +231,18 @@ public:
 			if(fs_is_dir(pPath))
 			{
 				str_copy(m_aaStoragePaths[m_NumPaths++], pPath);
-				log_info("storage", "added path '%s'", pPath);
+				// log_info("storage", "added path '%s'", pPath);
 				return true;
 			}
 			else
 			{
-				log_error("storage", "cannot add path '%s', which is not a directory", pPath);
+				// log_error("storage", "cannot add path '%s', which is not a directory", pPath);
 				return false;
 			}
 		}
 		else
 		{
-			log_error("storage", "cannot add path containing invalid UTF-8");
+			// log_error("storage", "cannot add path containing invalid UTF-8");
 			return false;
 		}
 	}
