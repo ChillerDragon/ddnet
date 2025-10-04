@@ -1948,8 +1948,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 			const char *pData = (const char *)Unpacker.GetRaw(PartSize);
 			if(Unpacker.Error() || NumParts < 1 || NumParts > CSnapshot::MAX_PARTS || Part < 0 || Part >= NumParts || PartSize < 0 || PartSize > MAX_SNAPSHOT_PACKSIZE)
 			{
-				if(Msg == NETMSG_SNAPEMPTY)
-					log_info("client", " drop empty snap deltatick=%d", DeltaTick);
+				// btw this does NOT drop snap empty
+				// because partsize 0 is NOT dropped
 				return;
 			}
 
