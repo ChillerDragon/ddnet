@@ -547,6 +547,30 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 	dst[dst_index] = '\0';
 }
 
+void str_unhex(const char *src, int src_size, void *dst, int dst_size)
+{
+	static const char hex[] = "0123456789ABCDEF";
+	int src_index = 0;
+	int dst_index = 0;
+	while(src_index < src_size && dst_index < dst_size)
+	{
+		// Find first hex digit
+		char c1 = src[src_index];
+		char c2 = src[src_index + 1];
+		if(src_index + 1 >= src_size)
+			break;
+		int v1 = -1, v2 = -1;
+		for(int i = 0; i < 16; i++) {
+			if(hex[i] == c1) v1 = i;
+			if(hex[i] == c2) v2 = i;
+		}
+		if(v1 == -1 || v2 == -1)
+			break; // Invalid hex
+		((unsigned char *)dst)[dst_index++] = (v1 << 4) | v2;
+		src_index += 3; // skip space
+	}
+}
+
 void str_hex_cstyle(char *dst, int dst_size, const void *data, int data_size, int bytes_per_line)
 {
 	static const char hex[] = "0123456789ABCDEF";

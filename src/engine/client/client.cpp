@@ -4,6 +4,7 @@
 #include "client.h"
 
 #include "demoedit.h"
+#include "engine/client.h"
 #include "friends.h"
 #include "serverbrowser.h"
 
@@ -3019,7 +3020,7 @@ void CClient::InitInterfaces()
 	m_GhostLoader.Init();
 }
 
-void CClient::Run()
+void CClient::Run(unsigned char *pDumpData, size_t DumpDataSize, bool DumpDataSixup)
 {
 	m_LocalStartTime = m_GlobalStartTime = time_get();
 #if defined(CONF_VIDEORECORDER)
@@ -3164,6 +3165,17 @@ void CClient::Run()
 	while(true)
 	{
 		set_new_tick();
+
+		if(DumpDataSize > 0)
+		{
+			m_aNetClient[CONN_MAIN].DumpTraffic(
+				pDumpData,
+				DumpDataSize,
+				DumpDataSixup
+			);
+			SetState(EClientState::STATE_QUITTING);
+			break;
+		}
 
 		// handle pending connects
 		if(m_aCmdConnect[0])
@@ -4950,7 +4962,30 @@ int main(int argc, const char **argv)
 
 	// run the client
 	log_trace("client", "initialization finished after %.2fms, starting...", (time_get() - MainStart) * 1000.0f / (float)time_freq());
-	pClient->Run();
+
+	unsigned char aDumpData[NET_MAX_PACKETSIZE * 2] = {};
+	size_t DumpDataSize = 0;
+	bool DumpDataSixup = true;
+	for(int i = 1; i < argc; i++)
+	{
+		if(str_comp("--dump", argv[i]) == 0)
+		{
+			i++;
+			if(i >= argc)
+			{
+				log_error("client", "missing dump data! Example usage ./DDNet --dump '04 0a 00 cf 2e de 1d 04'");
+				exit(1);
+			}
+			const char *pDumpStr = argv[i];
+			log_info("client", "got dump data: %s", pDumpStr);
+			str_unhex(pDumpStr, str_length(pDumpStr), aDumpData, );
+
+			char aHex[512];
+			str_hex(aHex, sizeof(aHex), aDumpData,
+		}
+	}
+
+	pClient->Run(aDumpData, DumpDataSize, DumpDataSixup);
 
 	const bool Restarting = pClient->State() == CClient::STATE_RESTARTING;
 #if !defined(CONF_PLATFORM_ANDROID)

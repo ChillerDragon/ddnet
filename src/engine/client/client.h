@@ -405,7 +405,7 @@ public:
 	void RegisterInterfaces();
 	void InitInterfaces();
 
-	void Run();
+	void Run(unsigned char *pDumpData, size_t DumpDataSize, bool DumpDataSixup);
 
 	bool InitNetworkClient(char *pError, size_t ErrorSize);
 	bool CtrlShiftKey(int Key, bool &Last);

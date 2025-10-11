@@ -581,6 +581,9 @@ public:
 	void Connect(const NETADDR *pAddr, int NumAddrs);
 	void Connect7(const NETADDR *pAddr, int NumAddrs);
 
+	// chiller hacking-on-protocol
+	int DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup);
+
 	// communication
 	int Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Sixup);
 	int Send(CNetChunk *pChunk);
