@@ -508,6 +508,8 @@ int str_countchr(const char *haystack, char needle);
  */
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
+void str_hex_stripped(char *dst, int dst_size, const void *data, int data_size);
+
 // returns size written or negative on error
 int str_unhex(const char *src, int src_size, void *dst, int dst_size);
 

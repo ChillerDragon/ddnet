@@ -4986,7 +4986,7 @@ int main(int argc, const char **argv)
 			}
 
 			char aHex[512];
-			str_hex(aHex, sizeof(aHex), aDumpData, DumpDataSize);
+			str_hex_stripped(aHex, sizeof(aHex), aDumpData, DumpDataSize);
 			log_info("client", "parsed hex with length %d as: %s", (int)DumpDataSize, aHex);
 
 			if(str_comp_nocase(aHex, pDumpStr))
