@@ -75,9 +75,9 @@ int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup)
 {
 	m_RecvUnpacker.Clear();
 
-	CNetChunk Chunk;
+	CNetChunk Chunk = {};
 	CNetChunk *pChunk = &Chunk;
-	NETADDR Addr;
+	NETADDR Addr = {};
 	SECURITY_TOKEN Token;
 	SECURITY_TOKEN ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
 	SECURITY_TOKEN *pResponseToken = &ResponseToken;
