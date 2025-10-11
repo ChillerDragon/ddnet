@@ -3020,7 +3020,7 @@ void CClient::InitInterfaces()
 	m_GhostLoader.Init();
 }
 
-void CClient::Run(unsigned char *pDumpData, size_t DumpDataSize, bool DumpDataSixup)
+void CClient::Run(unsigned char *pDumpData, int DumpDataSize, bool DumpDataSixup)
 {
 	m_LocalStartTime = m_GlobalStartTime = time_get();
 #if defined(CONF_VIDEORECORDER)
@@ -3171,8 +3171,7 @@ void CClient::Run(unsigned char *pDumpData, size_t DumpDataSize, bool DumpDataSi
 			m_aNetClient[CONN_MAIN].DumpTraffic(
 				pDumpData,
 				DumpDataSize,
-				DumpDataSixup
-			);
+				DumpDataSixup);
 			SetState(EClientState::STATE_QUITTING);
 			break;
 		}
@@ -4964,7 +4963,7 @@ int main(int argc, const char **argv)
 	log_trace("client", "initialization finished after %.2fms, starting...", (time_get() - MainStart) * 1000.0f / (float)time_freq());
 
 	unsigned char aDumpData[NET_MAX_PACKETSIZE * 2] = {};
-	size_t DumpDataSize = 0;
+	int DumpDataSize = 0;
 	bool DumpDataSixup = true;
 	for(int i = 1; i < argc; i++)
 	{
@@ -4978,10 +4977,23 @@ int main(int argc, const char **argv)
 			}
 			const char *pDumpStr = argv[i];
 			log_info("client", "got dump data: %s", pDumpStr);
-			str_unhex(pDumpStr, str_length(pDumpStr), aDumpData, );
+			DumpDataSize = str_unhex(pDumpStr, str_length(pDumpStr), aDumpData, sizeof(aDumpData));
+
+			if(DumpDataSize < 0)
+			{
+				log_error("client", "invalid hex passed as --dump");
+				exit(1);
+			}
 
 			char aHex[512];
-			str_hex(aHex, sizeof(aHex), aDumpData,
+			str_hex(aHex, sizeof(aHex), aDumpData, DumpDataSize);
+			log_info("client", "parsed hex with length %d as: %s", (int)DumpDataSize, aHex);
+
+			if(str_comp_nocase(aHex, pDumpStr))
+			{
+				log_error("client", "failed to convert hex. expected='%s' got='%s'", pDumpStr, aHex);
+				exit(1);
+			}
 		}
 	}
 

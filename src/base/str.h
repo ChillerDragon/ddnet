@@ -508,7 +508,8 @@ int str_countchr(const char *haystack, char needle);
  */
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
-void str_unhex(const char *src, int src_size, void *dst, int dst_size);
+// returns size written or negative on error
+int str_unhex(const char *src, int src_size, void *dst, int dst_size);
 
 /**
  * Takes a datablock and generates a hex string of it, in the C style array format,
