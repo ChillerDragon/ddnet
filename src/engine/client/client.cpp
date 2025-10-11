@@ -3176,10 +3176,23 @@ void CClient::Run(unsigned char *pDumpData, int DumpDataSize, bool DumpDataSixup
 
 		if(DumpDataSize > 0)
 		{
+			CNetChunk *apChunks[512] = {};
+			int NumChunks = 0;
+
 			m_aNetClient[CONN_MAIN].DumpTraffic(
 				pDumpData,
 				DumpDataSize,
-				DumpDataSixup);
+				DumpDataSixup,
+				OnDump
+				OnDump
+				apChunks,
+				&NumChunks);
+
+			for(int i = 0; i < NumChunks; i++)
+			{
+				log_info("client", "got chunk");
+			}
+
 			SetState(EClientState::STATE_QUITTING);
 			break;
 		}

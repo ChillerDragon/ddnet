@@ -5,6 +5,7 @@
 #include "config.h"
 #include "huffman.h"
 
+#include <base/log.h>
 #include <base/system.h>
 #include <base/types.h>
 
@@ -49,6 +50,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		// check for old data to unpack
 		if(!m_Valid || m_CurrentChunk >= m_Data.m_NumChunks)
 		{
+			log_info("chunk", "clear old data valid=%d current_chunk=%d num_chunks=%d", m_Valid, m_CurrentChunk, m_Data.m_NumChunks);
 			Clear();
 			return 0;
 		}
@@ -60,18 +62,25 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 			pData += Header.m_Size;
 		}
 
+		char aHex[512];
+		str_hex(aHex, sizeof(aHex), pData, pEnd - pData);
+		log_info("client", "chunk header data: %s", aHex);
+
 		// unpack the header
 		pData = Header.Unpack(pData, (m_pConnection && m_pConnection->m_Sixup) ? 6 : 4);
 		m_CurrentChunk++;
 
+		log_info("client", "sixup=%d header.size=%d current_chunk=%d", m_pConnection->m_Sixup, Header.m_Size, m_CurrentChunk);
+
 		if(pData + Header.m_Size > pEnd)
 		{
+			log_info("chunk", "EOF");
 			Clear();
 			return 0;
 		}
 
 		// handle sequence stuff
-		if(m_pConnection && (Header.m_Flags & NET_CHUNKFLAG_VITAL))
+		if(m_pConnection && (Header.m_Flags & NET_CHUNKFLAG_VITAL) && g_Config.m_NetSecurity)
 		{
 			// anti spoof: ignore unknown sequence
 			if(Header.m_Sequence == (m_pConnection->m_Ack + 1) % NET_MAX_SEQUENCE || m_pConnection->m_UnknownSeq)

@@ -2,9 +2,12 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "network.h"
 
+#include <base/log.h>
 #include <base/system.h>
 #include <base/types.h>
 
+#include <engine/client.h>
+#include <engine/shared/config.h>
 #include <engine/shared/protocol7.h>
 
 bool CNetClient::Open(NETADDR BindAddr)
@@ -71,9 +74,21 @@ void CNetClient::ResetErrorString()
 	m_Connection.ResetErrorString();
 }
 
-int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup)
+
+void CNetClient::OnDumpChunkCallback(CNetChunk *pChunk, void *pContext)
+{
+	CNetClient *pSelf = (CNetClient *)pContext;
+	pSelf->OnDumpChunk(pChunk);
+}
+
+void CNetClient::OnDumpChunk(CNetChunk *pChunk)
+{
+}
+
+int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FOnDumpChunk pfnOnChunk)
 {
 	m_RecvUnpacker.Clear();
+	m_Connection.m_Sixup = Sixup;
 
 	CNetChunk Chunk = {};
 	CNetChunk *pChunk = &Chunk;
@@ -81,52 +96,62 @@ int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup)
 	SECURITY_TOKEN Token;
 	SECURITY_TOKEN ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
 	SECURITY_TOKEN *pResponseToken = &ResponseToken;
-	if(CNetBase::UnpackPacket(pData, DataLen, &m_RecvUnpacker.m_Data, Sixup, &Token, &ResponseToken) == 0)
+	if(CNetBase::UnpackPacket(pData, DataLen, &m_RecvUnpacker.m_Data, Sixup, &Token, &ResponseToken) != 0)
 	{
-		if(Sixup)
-		{
-			Addr.type |= NETTYPE_TW7;
-		}
-		if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
-		{
-			pChunk->m_Flags = NETSENDFLAG_CONNLESS;
-			pChunk->m_ClientId = -1;
-			pChunk->m_Address = Addr;
-			pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
-			pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
-			if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_EXTENDED)
-			{
-				pChunk->m_Flags |= NETSENDFLAG_EXTENDED;
-				mem_copy(pChunk->m_aExtraData, m_RecvUnpacker.m_Data.m_aExtraData, sizeof(pChunk->m_aExtraData));
-			}
-			return 1;
-		}
-		else
-		{
-			if(Sixup &&
-				(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONTROL) != 0 &&
-				m_RecvUnpacker.m_Data.m_DataSize >= 1 + (int)sizeof(SECURITY_TOKEN) &&
-				m_RecvUnpacker.m_Data.m_aChunkData[0] == protocol7::NET_CTRLMSG_TOKEN)
-			{
-				m_TokenCache.AddToken(&Addr, *pResponseToken);
-			}
-			if(m_Connection.State() != CNetConnection::EState::OFFLINE &&
-				m_Connection.State() != CNetConnection::EState::ERROR &&
-				m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr, Token, *pResponseToken))
-			{
-				m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
-			}
-		}
-
-		// TODO: this hangs
-
-		// while(true)
-		// {
-		// 	// check for a chunk
-		// 	if(m_RecvUnpacker.FetchChunk(pChunk))
-		// 		return 1;
-		// }
+		log_error("client", "failed to unpack");
+		return -1;
 	}
+
+	if(Sixup)
+	{
+		Addr.type |= NETTYPE_TW7;
+	}
+	if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONNLESS)
+	{
+		pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+		pChunk->m_ClientId = -1;
+		pChunk->m_Address = Addr;
+		pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
+		pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
+		if(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_EXTENDED)
+		{
+			pChunk->m_Flags |= NETSENDFLAG_EXTENDED;
+			mem_copy(pChunk->m_aExtraData, m_RecvUnpacker.m_Data.m_aExtraData, sizeof(pChunk->m_aExtraData));
+		}
+		return 1;
+	}
+	else
+	{
+		if(Sixup &&
+			(m_RecvUnpacker.m_Data.m_Flags & NET_PACKETFLAG_CONTROL) != 0 &&
+			m_RecvUnpacker.m_Data.m_DataSize >= 1 + (int)sizeof(SECURITY_TOKEN) &&
+			m_RecvUnpacker.m_Data.m_aChunkData[0] == protocol7::NET_CTRLMSG_TOKEN)
+		{
+			m_TokenCache.AddToken(&Addr, *pResponseToken);
+		}
+		bool FeedOk = m_Connection.State() != CNetConnection::EState::OFFLINE &&
+			m_Connection.State() != CNetConnection::EState::ERROR &&
+			m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr, Token, *pResponseToken);
+
+		if(FeedOk || !g_Config.m_NetSecurity)
+		{
+			m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
+		}
+
+		char aHex[2048];
+		str_hex(aHex, sizeof(aHex), m_RecvUnpacker.m_Data.m_aChunkData, m_RecvUnpacker.m_Data.m_DataSize);
+		log_info("dump", "got connection oriented with payload: %s", aHex);
+
+		// check for a chunk
+		while(m_RecvUnpacker.FetchChunk(pChunk))
+		{
+			log_info("client", "got chunk with size=%d flags=%d", pChunk->m_DataSize, pChunk->m_Flags);
+			pfnOnChunk(pChunk);
+		}
+	}
+
+
+
 	return 0;
 }
 

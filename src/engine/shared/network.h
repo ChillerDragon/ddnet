@@ -581,8 +581,12 @@ public:
 	void Connect(const NETADDR *pAddr, int NumAddrs);
 	void Connect7(const NETADDR *pAddr, int NumAddrs);
 
+	typedef void (*FOnDumpChunk)(CNetChunk *pChunk, void *pContext);
+
 	// chiller hacking-on-protocol
-	int DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup);
+	static void OnDumpChunkCallback(CNetChunk *pChunk, void *pContext);
+	void OnDumpChunk(CNetChunk *pChunk);
+	int DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FOnDumpChunk pfnOnChunk);
 
 	// communication
 	int Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Sixup);
