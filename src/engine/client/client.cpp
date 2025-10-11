@@ -4,7 +4,6 @@
 #include "client.h"
 
 #include "demoedit.h"
-#include "engine/client.h"
 #include "friends.h"
 #include "serverbrowser.h"
 
@@ -15,6 +14,7 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/client.h>
 #include <engine/config.h>
 #include <engine/console.h>
 #include <engine/discord.h>
