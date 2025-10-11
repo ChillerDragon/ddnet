@@ -100,8 +100,14 @@ float CPlayers::GetPlayerTargetAngle(
 {
 	if(GameClient()->m_Snap.m_LocalClientId == ClientId && !GameClient()->m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		// just use the direct input if it's the local player we are rendering
-		return angle(GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy]);
+		// calculate what would be sent to the server from our current input
+		vec2 Direction = normalize(vec2((int)GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy].x, (int)GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy].y));
+
+		// fix direction if mouse is exactly in the center
+		if(Direction == vec2(0.0f, 0.0f))
+			Direction = vec2(1.0f, 0.0f);
+
+		return angle(Direction);
 	}
 
 	// using unpredicted angle when rendering other players in-game
@@ -188,15 +194,6 @@ void CPlayers::RenderHookCollLine(
 	if(!AlwaysRenderHookColl && !RenderHookCollPlayer)
 		return;
 
-	if(Local && !GameClient()->m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-	{
-		Direction = normalize(vec2((int)GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy].x, (int)GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy].y));
-
-		// fix direction if mouse is exactly in the center
-		if(!(int)GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy].x && !(int)GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy].y)
-			Direction = vec2(1.0f, 0.0f);
-	}
-
 	static constexpr float HOOK_START_DISTANCE = CCharacterCore::PhysicalSize() * 1.5f;
 	float HookLength = (float)GameClient()->m_aClients[ClientId].m_Predicted.m_Tuning.m_HookLength;
 	float HookFireSpeed = (float)GameClient()->m_aClients[ClientId].m_Predicted.m_Tuning.m_HookFireSpeed;
@@ -205,12 +202,7 @@ void CPlayers::RenderHookCollLine(
 	if(HookLength < HOOK_START_DISTANCE || HookFireSpeed <= 0.0f)
 		return;
 
-	// pre calculate quantization
-	vec2 QuantizedPos = Position + Direction * HookFireSpeed;
-	QuantizedPos.x = round_to_int(QuantizedPos.x);
-	QuantizedPos.y = round_to_int(QuantizedPos.y);
-	vec2 QuantizedDirection = normalize(QuantizedPos - Position);
-
+	vec2 QuantizedDirection = Direction;
 	vec2 StartOffset = Direction * HOOK_START_DISTANCE;
 	vec2 BasePos = Position;
 	vec2 LineStartPos = BasePos + StartOffset;
@@ -254,6 +246,13 @@ void CPlayers::RenderHookCollLine(
 			SegmentStartPos = SegmentEndPos;
 			SegmentStartPos.x = round_to_int(SegmentStartPos.x);
 			SegmentStartPos.y = round_to_int(SegmentStartPos.y);
+
+			// direction is always the same after the first tick quantization
+			if(HookTick == 0)
+			{
+				QuantizedDirection.x = round_to_int(QuantizedDirection.x * 256.0f) / 256.0f;
+				QuantizedDirection.y = round_to_int(QuantizedDirection.y * 256.0f) / 256.0f;
+			}
 			continue;
 		}
 
@@ -287,7 +286,16 @@ void CPlayers::RenderHookCollLine(
 		// go through one teleout, update positions and continue
 		BasePos = vTeleOuts[0];
 		LineStartPos = BasePos; // make the line start in the teleporter to prevent a gap
-		SegmentStartPos = BasePos + QuantizedDirection * HOOK_START_DISTANCE;
+		SegmentStartPos = BasePos + Direction * HOOK_START_DISTANCE;
+		SegmentStartPos.x = round_to_int(SegmentStartPos.x);
+		SegmentStartPos.y = round_to_int(SegmentStartPos.y);
+
+		// direction is always the same after the first tick quantization
+		if(HookTick == 0)
+		{
+			QuantizedDirection.x = round_to_int(QuantizedDirection.x * 256.0f) / 256.0f;
+			QuantizedDirection.y = round_to_int(QuantizedDirection.y * 256.0f) / 256.0f;
+		}
 	}
 
 	// The hook line is too expensive to calculate and didn't hit anything before, just set a straight line
