@@ -70,7 +70,8 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		pData = Header.Unpack(pData, (m_pConnection && m_pConnection->m_Sixup) ? 6 : 4);
 		m_CurrentChunk++;
 
-		log_info("client", "sixup=%d header.size=%d current_chunk=%d", m_pConnection->m_Sixup, Header.m_Size, m_CurrentChunk);
+		bool Sixup = m_pConnection && m_pConnection->m_Sixup;
+		log_info("client", "sixup=%d header.size=%d current_chunk=%d", Sixup, Header.m_Size, m_CurrentChunk);
 
 		if(pData + Header.m_Size > pEnd)
 		{
