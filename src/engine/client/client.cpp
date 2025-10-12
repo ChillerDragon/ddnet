@@ -1920,6 +1920,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 
 			log_info("client", "got snapshot!!!!!!!!!");
 
+			CUnpacker DumpUnpacker;
+			DumpUnpacker.Reset(Unpacker.CompleteData(), Unpacker.CompleteSize());
+			DumpSnapshotStateless();
+
 			int GameTick = Unpacker.GetInt();
 			int DeltaTick = GameTick - Unpacker.GetInt();
 
@@ -3078,6 +3082,10 @@ void CClient::OnDumpChunk(CNetChunk *pChunk)
 	}
 
 	ProcessServerPacket(&Packet, CONN_MAIN, g_Config.m_ClDummy ^ CONN_MAIN);
+}
+
+void CClient::DumpSnapshotStateless()
+{
 }
 
 void CClient::Run(unsigned char *pDumpData, int DumpDataSize, bool DumpDataSixup)
