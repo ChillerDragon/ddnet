@@ -1475,6 +1475,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 	int Result = UnpackMessageId(&Msg, &Sys, &Uuid, &Unpacker, &Packer);
 	if(Result == UNPACKMESSAGE_ERROR)
 	{
+		log_error("network_in", "unpack message error");
 		return;
 	}
 	else if(Result == UNPACKMESSAGE_ANSWER)
@@ -1913,8 +1914,11 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 			// we are not allowed to process snapshot yet
 			if(State() < IClient::STATE_LOADING && g_Config.m_NetSecurity)
 			{
+				log_error("network_in", "drop snap because we are in state loading");
 				return;
 			}
+
+			log_info("client", "got snapshot!!!!!!!!!");
 
 			int GameTick = Unpacker.GetInt();
 			int DeltaTick = GameTick - Unpacker.GetInt();
@@ -1938,8 +1942,25 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 			const char *pData = (const char *)Unpacker.GetRaw(PartSize);
 			if(Unpacker.Error() || NumParts < 1 || NumParts > CSnapshot::MAX_PARTS || Part < 0 || Part >= NumParts || PartSize < 0 || PartSize > MAX_SNAPSHOT_PACKSIZE)
 			{
+				log_error("network_in", "dropping invalid snapshot");
+				if(Unpacker.Error())
+					log_error("network_in", " because unpacker error");
+				if(NumParts < 1)
+					log_error("network_in", " because numparts < 1 (%d)", NumParts);
+				if(NumParts > CSnapshot::MAX_PARTS)
+					log_error("network_in", " because numparts > max (%d)", NumParts);
+				if(Part < 0)
+					log_error("network_in", " because part < 0 (%d)", Part);
+				if(Part >= NumParts)
+					log_error("network_in", " because part >= NumParts (%d >= %d)", Part, NumParts);
+				if(PartSize < 0)
+					log_error("network_in", " because part size < 0 (%d)", PartSize);
+				if(PartSize > MAX_SNAPSHOT_PACKSIZE)
+					log_error("network_in", " because part size > max (%d)", PartSize);
 				return;
 			}
+
+			log_info("network_in", "got snapshot with gametick=%d", GameTick);
 
 			// Check m_aAckGameTick to see if we already got a snapshot for that tick
 			if(GameTick >= m_aCurrentRecvTick[Conn] && GameTick > m_aAckGameTick[Conn])
@@ -3028,6 +3049,37 @@ void CClient::InitInterfaces()
 	m_GhostLoader.Init();
 }
 
+void CClient::OnDumpChunkCallback(CNetChunk *pChunk, void *pContext)
+{
+	CClient *pSelf = (CClient *)pContext;
+	pSelf->OnDumpChunk(pChunk);
+}
+
+void CClient::OnDumpChunk(CNetChunk *pChunk)
+{
+	log_info(
+		"client",
+		"got chunk in callback size=%d cid=%d sixup=%d",
+		pChunk->m_DataSize,
+		pChunk->m_ClientId,
+		IsSixup());
+
+	// process packets
+	CNetChunk Packet = *pChunk;
+	if(Packet.m_ClientId == -1)
+	{
+		// TODO: not sure if this condition is correct
+		//       ddnet checks the token being set here instead
+		//       but i did not test connless anyways
+		if(IsSixup())
+			PreprocessConnlessPacket7(&Packet);
+		ProcessConnlessPacket(&Packet);
+		return;
+	}
+
+	ProcessServerPacket(&Packet, CONN_MAIN, g_Config.m_ClDummy ^ CONN_MAIN);
+}
+
 void CClient::Run(unsigned char *pDumpData, int DumpDataSize, bool DumpDataSixup)
 {
 	m_LocalStartTime = m_GlobalStartTime = time_get();
@@ -3176,23 +3228,13 @@ void CClient::Run(unsigned char *pDumpData, int DumpDataSize, bool DumpDataSixup
 
 		if(DumpDataSize > 0)
 		{
-			CNetChunk *apChunks[512] = {};
-			int NumChunks = 0;
-
+			m_Sixup = DumpDataSixup;
 			m_aNetClient[CONN_MAIN].DumpTraffic(
 				pDumpData,
 				DumpDataSize,
 				DumpDataSixup,
-				OnDump
-				OnDump
-				apChunks,
-				&NumChunks);
-
-			for(int i = 0; i < NumChunks; i++)
-			{
-				log_info("client", "got chunk");
-			}
-
+				OnDumpChunkCallback,
+				this);
 			SetState(EClientState::STATE_QUITTING);
 			break;
 		}

@@ -407,6 +407,9 @@ public:
 
 	void Run(unsigned char *pDumpData, int DumpDataSize, bool DumpDataSixup);
 
+	static void OnDumpChunkCallback(CNetChunk *pChunk, void *pContext);
+	void OnDumpChunk(CNetChunk *pChunk);
+
 	bool InitNetworkClient(char *pError, size_t ErrorSize);
 	bool CtrlShiftKey(int Key, bool &Last);
 

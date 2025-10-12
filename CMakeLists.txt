@@ -2073,6 +2073,7 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   datafile.h
   demo.cpp
   demo.h
+  dump_traffic.h
   econ.cpp
   econ.h
   engine.cpp

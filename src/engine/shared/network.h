@@ -8,6 +8,8 @@
 
 #include <base/types.h>
 
+#include <engine/shared/dump_traffic.h>
+
 #include <array>
 #include <optional>
 
@@ -581,12 +583,8 @@ public:
 	void Connect(const NETADDR *pAddr, int NumAddrs);
 	void Connect7(const NETADDR *pAddr, int NumAddrs);
 
-	typedef void (*FOnDumpChunk)(CNetChunk *pChunk, void *pContext);
-
 	// chiller hacking-on-protocol
-	static void OnDumpChunkCallback(CNetChunk *pChunk, void *pContext);
-	void OnDumpChunk(CNetChunk *pChunk);
-	int DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FOnDumpChunk pfnOnChunk);
+	int DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FOnDumpChunk pfnOnChunk, void *pCallbackContext);
 
 	// communication
 	int Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Sixup);

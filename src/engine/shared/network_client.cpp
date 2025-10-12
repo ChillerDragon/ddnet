@@ -74,18 +74,7 @@ void CNetClient::ResetErrorString()
 	m_Connection.ResetErrorString();
 }
 
-
-void CNetClient::OnDumpChunkCallback(CNetChunk *pChunk, void *pContext)
-{
-	CNetClient *pSelf = (CNetClient *)pContext;
-	pSelf->OnDumpChunk(pChunk);
-}
-
-void CNetClient::OnDumpChunk(CNetChunk *pChunk)
-{
-}
-
-int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FOnDumpChunk pfnOnChunk)
+int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FOnDumpChunk pfnOnChunk, void *pCallbackContext)
 {
 	m_RecvUnpacker.Clear();
 	m_Connection.m_Sixup = Sixup;
@@ -130,8 +119,8 @@ int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FO
 			m_TokenCache.AddToken(&Addr, *pResponseToken);
 		}
 		bool FeedOk = m_Connection.State() != CNetConnection::EState::OFFLINE &&
-			m_Connection.State() != CNetConnection::EState::ERROR &&
-			m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr, Token, *pResponseToken);
+			      m_Connection.State() != CNetConnection::EState::ERROR &&
+			      m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr, Token, *pResponseToken);
 
 		if(FeedOk || !g_Config.m_NetSecurity)
 		{
@@ -146,11 +135,9 @@ int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FO
 		while(m_RecvUnpacker.FetchChunk(pChunk))
 		{
 			log_info("client", "got chunk with size=%d flags=%d", pChunk->m_DataSize, pChunk->m_Flags);
-			pfnOnChunk(pChunk);
+			pfnOnChunk(pChunk, pCallbackContext);
 		}
 	}
-
-
 
 	return 0;
 }
