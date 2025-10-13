@@ -1988,8 +1988,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 			log_info("client", "got snapshot!!!!!!!!!");
 
 			CUnpacker DumpUnpacker;
-			DumpUnpacker.Reset(Unpacker.CompleteData(), Unpacker.CompleteSize());
-			DumpSnapshotStateless();
+			DumpUnpacker.Reset(Unpacker.RemainingData(), Unpacker.RemainingSize());
+			DumpSnapshotStateless(DumpUnpacker, Msg);
 
 			int GameTick = Unpacker.GetInt();
 			int DeltaTick = GameTick - Unpacker.GetInt();
@@ -3089,8 +3089,299 @@ void CClient::OnDumpChunk(CNetChunk *pChunk)
 	ProcessServerPacket(&Packet, CONN_MAIN, g_Config.m_ClDummy ^ CONN_MAIN);
 }
 
-void CClient::DumpSnapshotStateless()
+void CClient::DumpSnapshotStateless(CUnpacker &Unpacker, int Msg)
 {
+	int Conn = CONN_MAIN;
+	bool Dummy = false;
+
+	int GameTick = Unpacker.GetInt();
+	int DeltaTick = GameTick - Unpacker.GetInt();
+
+	int NumParts = 1;
+	int Part = 0;
+	if(Msg == NETMSG_SNAP)
+	{
+		NumParts = Unpacker.GetInt();
+		Part = Unpacker.GetInt();
+	}
+
+	unsigned int Crc = 0;
+	int PartSize = 0;
+	if(Msg != NETMSG_SNAPEMPTY)
+	{
+		Crc = Unpacker.GetInt();
+		PartSize = Unpacker.GetInt();
+	}
+
+	const char *pData = (const char *)Unpacker.GetRaw(PartSize);
+	if(Unpacker.Error() || NumParts < 1 || NumParts > CSnapshot::MAX_PARTS || Part < 0 || Part >= NumParts || PartSize < 0 || PartSize > MAX_SNAPSHOT_PACKSIZE)
+	{
+		log_error("network_in", "dropping invalid snapshot");
+		if(Unpacker.Error())
+			log_error("network_in", " because unpacker error");
+		if(NumParts < 1)
+			log_error("network_in", " because numparts < 1 (%d)", NumParts);
+		if(NumParts > CSnapshot::MAX_PARTS)
+			log_error("network_in", " because numparts > max (%d)", NumParts);
+		if(Part < 0)
+			log_error("network_in", " because part < 0 (%d)", Part);
+		if(Part >= NumParts)
+			log_error("network_in", " because part >= NumParts (%d >= %d)", Part, NumParts);
+		if(PartSize < 0)
+			log_error("network_in", " because part size < 0 (%d)", PartSize);
+		if(PartSize > MAX_SNAPSHOT_PACKSIZE)
+			log_error("network_in", " because part size > max (%d)", PartSize);
+		return;
+	}
+
+	log_info("network_in", "got snapshot with gametick=%d", GameTick);
+
+	if(GameTick < m_aCurrentRecvTick[Conn])
+	{
+		log_error("network_in", "drop snap tick=%d < current_recv_tick=%d", GameTick, m_aCurrentRecvTick[Conn]);
+		return;
+	}
+	if(GameTick <= m_aAckGameTick[Conn])
+	{
+		log_error("network_in", "drop snap tick=%d <= ack_game_tick=%d", GameTick, m_aAckGameTick[Conn]);
+		return;
+	}
+
+	// Check m_aAckGameTick to see if we already got a snapshot for that tick
+	if(GameTick >= m_aCurrentRecvTick[Conn] && GameTick > m_aAckGameTick[Conn])
+	{
+		if(GameTick != m_aCurrentRecvTick[Conn])
+		{
+			m_aSnapshotParts[Conn] = 0;
+			m_aCurrentRecvTick[Conn] = GameTick;
+			m_aSnapshotIncomingDataSize[Conn] = 0;
+		}
+
+		mem_copy((char *)m_aaSnapshotIncomingData[Conn] + Part * MAX_SNAPSHOT_PACKSIZE, pData, std::clamp(PartSize, 0, (int)sizeof(m_aaSnapshotIncomingData[Conn]) - Part * MAX_SNAPSHOT_PACKSIZE));
+		m_aSnapshotParts[Conn] |= (uint64_t)(1) << Part;
+
+		if(Part == NumParts - 1)
+		{
+			m_aSnapshotIncomingDataSize[Conn] = (NumParts - 1) * MAX_SNAPSHOT_PACKSIZE + PartSize;
+		}
+
+		if((NumParts < CSnapshot::MAX_PARTS && m_aSnapshotParts[Conn] == (((uint64_t)(1) << NumParts) - 1)) ||
+			(NumParts == CSnapshot::MAX_PARTS && m_aSnapshotParts[Conn] == std::numeric_limits<uint64_t>::max()))
+		{
+			unsigned char aTmpBuffer2[CSnapshot::MAX_SIZE];
+			unsigned char aTmpBuffer3[CSnapshot::MAX_SIZE];
+			CSnapshot *pTmpBuffer3 = (CSnapshot *)aTmpBuffer3; // Fix compiler warning for strict-aliasing
+
+			// reset snapshoting
+			m_aSnapshotParts[Conn] = 0;
+
+			bool UseFallbackDelta = false;
+
+			// find snapshot that we should use as delta
+			const CSnapshot *pDeltaShot = CSnapshot::EmptySnapshot();
+			if(DeltaTick >= 0)
+			{
+				int DeltashotSize = m_aSnapshotStorage[Conn].Get(DeltaTick, nullptr, &pDeltaShot, nullptr);
+
+				if(DeltashotSize < 0)
+				{
+					log_error("client", "error, couldn't find the delta snapshot");
+					log_warn("client", " falling back to empty delta! this makes little sense for real gameplay");
+					log_warn("client", " but helps with --dump if we miss the pior snap");
+
+					UseFallbackDelta = true;
+
+					// ack snapshot
+					m_aAckGameTick[Conn] = -1;
+				}
+			}
+
+			// decompress snapshot
+			const void *pDeltaData = m_SnapshotDelta.EmptyDelta();
+			int DeltaSize = sizeof(int) * 3;
+
+			if(m_aSnapshotIncomingDataSize[Conn])
+			{
+				int IntSize = CVariableInt::Decompress(m_aaSnapshotIncomingData[Conn], m_aSnapshotIncomingDataSize[Conn], aTmpBuffer2, sizeof(aTmpBuffer2));
+
+				if(IntSize < 0) // failure during decompression
+					return;
+
+				pDeltaData = aTmpBuffer2;
+				DeltaSize = IntSize;
+			}
+
+			// unpack delta
+			const int SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize, IsSixup());
+			if(SnapSize < 0)
+			{
+				dbg_msg("client", "delta unpack failed. error=%d", SnapSize);
+				return;
+			}
+			if(!pTmpBuffer3->IsValid(SnapSize))
+			{
+				dbg_msg("client", "snapshot invalid. SnapSize=%d, DeltaSize=%d", SnapSize, DeltaSize);
+				return;
+			}
+
+			if(Msg != NETMSG_SNAPEMPTY && pTmpBuffer3->Crc() != Crc)
+			{
+				if(UseFallbackDelta)
+					log_info("client", "snapshot crc error wantedcrc=%d gotcrc=%d (expected error because fallback snap was used)",
+						Crc, pTmpBuffer3->Crc());
+				else
+					log_error("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
+						m_SnapCrcErrors, GameTick, Crc, pTmpBuffer3->Crc(), m_aSnapshotIncomingDataSize[Conn], DeltaTick);
+
+				m_SnapCrcErrors++;
+				if(m_SnapCrcErrors > 10)
+				{
+					// to many errors, send reset
+					m_aAckGameTick[Conn] = -1;
+					SendInput();
+					m_SnapCrcErrors = 0;
+				}
+
+				if(!UseFallbackDelta)
+					return;
+			}
+			else
+			{
+				if(m_SnapCrcErrors)
+					m_SnapCrcErrors--;
+			}
+
+			// purge old snapshots
+			int PurgeTick = DeltaTick;
+			if(m_aapSnapshots[Conn][SNAP_PREV] && m_aapSnapshots[Conn][SNAP_PREV]->m_Tick < PurgeTick)
+				PurgeTick = m_aapSnapshots[Conn][SNAP_PREV]->m_Tick;
+			if(m_aapSnapshots[Conn][SNAP_CURRENT] && m_aapSnapshots[Conn][SNAP_CURRENT]->m_Tick < PurgeTick)
+				PurgeTick = m_aapSnapshots[Conn][SNAP_CURRENT]->m_Tick;
+			m_aSnapshotStorage[Conn].PurgeUntil(PurgeTick);
+
+			// create a verified and unpacked snapshot
+			int AltSnapSize = -1;
+			unsigned char aAltSnapBuffer[CSnapshot::MAX_SIZE];
+			CSnapshot *pAltSnapBuffer = (CSnapshot *)aAltSnapBuffer;
+
+			if(IsSixup())
+			{
+				unsigned char aTmpTransSnapBuffer[CSnapshot::MAX_SIZE];
+				CSnapshot *pTmpTransSnapBuffer = (CSnapshot *)aTmpTransSnapBuffer;
+				mem_copy(pTmpTransSnapBuffer, pTmpBuffer3, CSnapshot::MAX_SIZE);
+				AltSnapSize = GameClient()->TranslateSnap(pAltSnapBuffer, pTmpTransSnapBuffer, Conn, Dummy);
+			}
+			else
+			{
+				AltSnapSize = UnpackAndValidateSnapshot(pTmpBuffer3, pAltSnapBuffer);
+			}
+
+			if(AltSnapSize < 0)
+			{
+				dbg_msg("client", "unpack snapshot and validate failed. error=%d", AltSnapSize);
+				return;
+			}
+
+			if(g_Config.m_DbgSnap)
+			{
+				if(IsSixup())
+					GameClient()->GetNetObjHandler7()->DebugDumpSnapshot(pTmpBuffer3);
+				else
+					GameClient()->GetNetObjHandler()->DebugDumpSnapshot(pTmpBuffer3);
+			}
+
+			// add new
+			m_aSnapshotStorage[Conn].Add(GameTick, time_get(), SnapSize, pTmpBuffer3, AltSnapSize, pAltSnapBuffer);
+
+			if(!Dummy)
+			{
+				GameClient()->ProcessDemoSnapshot(pTmpBuffer3);
+
+				unsigned char aSnapSeven[CSnapshot::MAX_SIZE];
+				CSnapshot *pSnapSeven = (CSnapshot *)aSnapSeven;
+				int DemoSnapSize = SnapSize;
+				if(IsSixup())
+				{
+					DemoSnapSize = GameClient()->OnDemoRecSnap7(pTmpBuffer3, pSnapSeven, Conn);
+					if(DemoSnapSize < 0)
+					{
+						dbg_msg("sixup", "demo snapshot failed. error=%d", DemoSnapSize);
+					}
+				}
+
+				if(DemoSnapSize >= 0)
+				{
+					// add snapshot to demo
+					for(auto &DemoRecorder : m_aDemoRecorder)
+					{
+						if(DemoRecorder.IsRecording())
+						{
+							// write snapshot
+							DemoRecorder.RecordSnapshot(GameTick, IsSixup() ? pSnapSeven : pTmpBuffer3, DemoSnapSize);
+						}
+					}
+				}
+			}
+
+			// apply snapshot, cycle pointers
+			m_aReceivedSnapshots[Conn]++;
+
+			// we got two snapshots until we see us self as connected
+			if(m_aReceivedSnapshots[Conn] == 2)
+			{
+				// start at 200ms and work from there
+				if(!Dummy)
+				{
+					m_PredictedTime.Init(GameTick * time_freq() / GameTickSpeed());
+					m_PredictedTime.SetAdjustSpeed(CSmoothTime::ADJUSTDIRECTION_UP, 1000.0f);
+					m_PredictedTime.UpdateMargin(PredictionMargin() * time_freq() / 1000);
+				}
+				m_aGameTime[Conn].Init((GameTick - 1) * time_freq() / GameTickSpeed());
+				m_aapSnapshots[Conn][SNAP_PREV] = m_aSnapshotStorage[Conn].m_pFirst;
+				m_aapSnapshots[Conn][SNAP_CURRENT] = m_aSnapshotStorage[Conn].m_pLast;
+				m_aPrevGameTick[Conn] = m_aapSnapshots[Conn][SNAP_PREV]->m_Tick;
+				m_aCurGameTick[Conn] = m_aapSnapshots[Conn][SNAP_CURRENT]->m_Tick;
+				if(Conn == CONN_MAIN)
+				{
+					m_LocalStartTime = time_get();
+#if defined(CONF_VIDEORECORDER)
+					IVideo::SetLocalStartTime(m_LocalStartTime);
+#endif
+				}
+				if(!Dummy)
+				{
+					GameClient()->OnNewSnapshot();
+				}
+				SetState(IClient::STATE_ONLINE);
+				if(!Dummy)
+				{
+					DemoRecorder_HandleAutoStart();
+				}
+			}
+
+			// adjust game time
+			if(m_aReceivedSnapshots[Conn] > 2)
+			{
+				int64_t Now = m_aGameTime[Conn].Get(time_get());
+				int64_t TickStart = GameTick * time_freq() / GameTickSpeed();
+				int64_t TimeLeft = (TickStart - Now) * 1000 / time_freq();
+				m_aGameTime[Conn].Update(&m_aGametimeMarginGraphs[Conn], (GameTick - 1) * time_freq() / GameTickSpeed(), TimeLeft, CSmoothTime::ADJUSTDIRECTION_DOWN);
+			}
+
+			if(m_aReceivedSnapshots[Conn] > GameTickSpeed() && !m_aDidPostConnect[Conn])
+			{
+				OnPostConnect(Conn, Dummy);
+				m_aDidPostConnect[Conn] = true;
+			}
+
+			// ack snapshot
+			m_aAckGameTick[Conn] = GameTick;
+		}
+		else
+		{
+			log_error("network_in", "drop snap NumParts=%d aSnapParts=%lu", NumParts, m_aSnapshotParts[Conn]);
+		}
+	}
 }
 
 void CClient::Run(unsigned char *pDumpData, int DumpDataSize, bool DumpDataSixup)

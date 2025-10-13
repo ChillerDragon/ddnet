@@ -412,7 +412,7 @@ public:
 
 	static void OnDumpChunkCallback(CNetChunk *pChunk, void *pContext);
 	void OnDumpChunk(CNetChunk *pChunk);
-	void DumpSnapshotStateless();
+	void DumpSnapshotStateless(CUnpacker &Unpacker, int Msg);
 
 	bool InitNetworkClient(char *pError, size_t ErrorSize);
 	bool CtrlShiftKey(int Key, bool &Last);

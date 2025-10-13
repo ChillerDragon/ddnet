@@ -76,6 +76,10 @@ public:
 
 	int CompleteSize() const { return m_pEnd - m_pStart; }
 	const unsigned char *CompleteData() const { return m_pStart; }
+
+	// chiller
+	int RemainingSize() const { return m_pEnd - m_pCurrent; }
+	const unsigned char *RemainingData() const { return m_pCurrent; }
 };
 
 #endif
