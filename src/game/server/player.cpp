@@ -466,9 +466,9 @@ void CPlayer::Snap(int SnappingClient)
 		return;
 
 	if((SnappingClient >= 0 && Server()->IsRconAuthed(SnappingClient)) || !Server()->HasAuthHidden(m_ClientId))
-		pDDNetPlayer->m_AuthLevel = std::clamp(Server()->GetAuthRank(m_ClientId), (int)AUTHED_NO, (int)AUTHED_ADMIN);
+		pDDNetPlayer->m_AuthLevel = AUTHED_HELPER; // TODO: lmao wat the flipphone
 	else
-		pDDNetPlayer->m_AuthLevel = RoleRank::NONE;
+		pDDNetPlayer->m_AuthLevel = AUTHED_NO;
 
 	pDDNetPlayer->m_Flags = 0;
 	if(m_Afk)

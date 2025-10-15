@@ -1988,28 +1988,28 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				return;
 			}
 
-			int AuthLevel = -1;
 			int KeySlot = -1;
+			CRconRole *pRole = nullptr;
 
 			if(!pName[0])
 			{
 				if(m_AuthManager.CheckKey((KeySlot = m_AuthManager.DefaultKey(RoleName::ADMIN)), pPw))
-					AuthLevel = AUTHED_ADMIN;
+					pRole = m_AuthManager.FindRole(RoleName::ADMIN);
 				else if(m_AuthManager.CheckKey((KeySlot = m_AuthManager.DefaultKey(RoleName::MODERATOR)), pPw))
-					AuthLevel = AUTHED_MOD;
+					pRole = m_AuthManager.FindRole(RoleName::MODERATOR);
 				else if(m_AuthManager.CheckKey((KeySlot = m_AuthManager.DefaultKey(RoleName::HELPER)), pPw))
-					AuthLevel = AUTHED_HELPER;
+					pRole = m_AuthManager.FindRole(RoleName::HELPER);
 			}
 			else
 			{
 				KeySlot = m_AuthManager.FindKey(pName);
 				if(m_AuthManager.CheckKey(KeySlot, pPw))
-					AuthLevel = m_AuthManager.KeyLevel(KeySlot);
+					pRole = m_AuthManager.KeyRole(KeySlot);
 			}
 
-			if(AuthLevel != -1)
+			if(pRole != nullptr)
 			{
-				if(GetAuthRank(ClientId) != AuthLevel)
+				if(RoleOrNullptr(ClientId) != pRole)
 				{
 					if(!IsSixup(ClientId))
 					{
@@ -2049,7 +2049,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					log_info("server", "ClientId=%d authed with key=%s (%s)", ClientId, pIdent, pRole->Name());
 
 					// DDRace
-					GameServer()->OnSetAuthed(ClientId, AuthLevel);
+					GameServer()->OnSetAuthed(ClientId, pRole->Name());
 				}
 			}
 			else if(Config()->m_SvRconMaxTries)
