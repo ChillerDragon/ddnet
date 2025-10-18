@@ -50,7 +50,6 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		// check for old data to unpack
 		if(!m_Valid || m_CurrentChunk >= m_Data.m_NumChunks)
 		{
-			log_info("chunk", "clear old data valid=%d current_chunk=%d num_chunks=%d", m_Valid, m_CurrentChunk, m_Data.m_NumChunks);
 			Clear();
 			return 0;
 		}
@@ -62,16 +61,16 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 			pData += Header.m_Size;
 		}
 
-		char aHex[512];
-		str_hex(aHex, sizeof(aHex), pData, pEnd - pData);
-		log_info("client", "chunk header data: %s", aHex);
+		// char aHex[512];
+		// str_hex(aHex, sizeof(aHex), pData, pEnd - pData);
+		// log_info("client", "chunk header data: %s", aHex);
 
 		// unpack the header
 		pData = Header.Unpack(pData, (m_pConnection && m_pConnection->m_Sixup) ? 6 : 4);
 		m_CurrentChunk++;
 
-		bool Sixup = m_pConnection && m_pConnection->m_Sixup;
-		log_info("client", "sixup=%d header.size=%d current_chunk=%d", Sixup, Header.m_Size, m_CurrentChunk);
+		// bool Sixup = m_pConnection && m_pConnection->m_Sixup;
+		// log_info("client", "sixup=%d header.size=%d current_chunk=%d", Sixup, Header.m_Size, m_CurrentChunk);
 
 		if(pData + Header.m_Size > pEnd)
 		{
@@ -287,7 +286,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 
 	if(pPacket->m_Flags & NET_PACKETFLAG_CONNLESS)
 	{
-		dbg_msg("network_in", "got connless");
+		// dbg_msg("network_in", "got connless");
 		Sixup = (pBuffer[0] & 0x3) == 1;
 		if(Sixup && (pSecurityToken == nullptr || pResponseToken == nullptr))
 			return -1;
@@ -318,7 +317,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 	else
 	{
-		dbg_msg("network_in", "got connection oriented");
+		// dbg_msg("network_in", "got connection oriented");
 
 		if(pPacket->m_Flags & NET_PACKETFLAG_UNUSED)
 			Sixup = true;
@@ -342,7 +341,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		{
 			pPacket->m_Flags = PacketFlags_SevenToSix(pPacket->m_Flags);
 			*pSecurityToken = ToSecurityToken(pBuffer + 3);
-			dbg_msg("network_in", "set sixup token %x", *pSecurityToken);
+			// dbg_msg("network_in", "set sixup token %x", *pSecurityToken);
 		}
 
 		if(!IsValidConnectionOrientedPacket(pPacket))
@@ -389,7 +388,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		io_flush(ms_DataLogRecv);
 	}
 
-	dbg_msg("network_in", "success");
+	// dbg_msg("network_in", "success");
 	// return success
 	return 0;
 }

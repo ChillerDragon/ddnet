@@ -1985,8 +1985,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				return;
 			}
 
-			log_info("client", "got snapshot!!!!!!!!!");
-
 			CUnpacker DumpUnpacker;
 			DumpUnpacker.Reset(Unpacker.RemainingData(), Unpacker.RemainingSize());
 			DumpSnapshotStateless(DumpUnpacker, Msg);
@@ -2031,7 +2029,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				return;
 			}
 
-			log_info("network_in", "got snapshot with gametick=%d", GameTick);
+			if(g_Config.m_DbgSnap)
+				log_info("network_in", "got snapshot with gametick=%d", GameTick);
 
 			// Check m_aAckGameTick to see if we already got a snapshot for that tick
 			if(GameTick >= m_aCurrentRecvTick[Conn] && GameTick > m_aAckGameTick[Conn])
@@ -3133,8 +3132,6 @@ void CClient::DumpSnapshotStateless(CUnpacker &Unpacker, int Msg)
 			log_error("network_in", " because part size > max (%d)", PartSize);
 		return;
 	}
-
-	log_info("network_in", "got snapshot with gametick=%d", GameTick);
 
 	if(GameTick < m_aCurrentRecvTick[Conn])
 	{

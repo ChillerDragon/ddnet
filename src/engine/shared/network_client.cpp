@@ -127,9 +127,9 @@ int CNetClient::DumpTraffic(unsigned char *pData, size_t DataLen, bool Sixup, FO
 			m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
 		}
 
-		char aHex[2048];
-		str_hex(aHex, sizeof(aHex), m_RecvUnpacker.m_Data.m_aChunkData, m_RecvUnpacker.m_Data.m_DataSize);
-		log_info("dump", "got connection oriented with payload: %s", aHex);
+		// char aHex[2048];
+		// str_hex(aHex, sizeof(aHex), m_RecvUnpacker.m_Data.m_aChunkData, m_RecvUnpacker.m_Data.m_DataSize);
+		// log_info("dump", "got connection oriented with payload: %s", aHex);
 
 		// check for a chunk
 		while(m_RecvUnpacker.FetchChunk(pChunk))
