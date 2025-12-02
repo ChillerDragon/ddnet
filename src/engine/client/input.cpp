@@ -630,6 +630,11 @@ static int TranslateKeyEventKey(const SDL_KeyboardEvent &KeyEvent)
 	}
 #endif
 
+	if (g_Config.m_ClReplaceEscapeKey && Key == g_Config.m_ClReplaceEscapeKey)
+	{
+		Key = KEY_ESCAPE;
+	}
+
 	return Key;
 }
 
