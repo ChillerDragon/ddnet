@@ -751,6 +751,7 @@ MACRO_CONFIG_INT(ClConfirmKillTime, cl_confirm_kill_time, 60, -1, 14400, CFGFLAG
 MACRO_CONFIG_INT(ClDuckFilter, cl_duck_filter, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Replace all skins with a duck skin")
 MACRO_CONFIG_INT(ClChatInputBackground, cl_chat_input_background, 1, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Whether to add a background for the input when chatting")
 MACRO_CONFIG_INT(ClReplaceEscapeKey, cl_replace_escape_key, 0, 0, 512, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Which key (as integer) to map to KEY_ESC. 0 to disable")
+MACRO_CONFIG_INT(ClParticleLimit, cl_particle_limit, 8192, 0, 8192, CFGFLAG_SAVE | CFGFLAG_CLIENT, "What the limit on the amount of particles should be")
 
 MACRO_CONFIG_INT(ClWeatherSnow, cl_weather_snow, 0, 0, 1, CFGFLAG_CLIENT, "Whether to spawn snow")
 MACRO_CONFIG_INT(ClUIWidth, cl_ui_width, 600, 400, 1000, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Size of UI (low values may break some UI, might need restart)")

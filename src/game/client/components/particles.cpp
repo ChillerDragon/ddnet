@@ -24,14 +24,14 @@ CParticles::CParticles()
 void CParticles::OnReset()
 {
 	// reset particles
-	for(int i = 0; i < MAX_PARTICLES; i++)
+	for(int i = 0; i < g_Config.m_ClParticleLimit; i++)
 	{
 		m_aParticles[i].m_PrevPart = i - 1;
 		m_aParticles[i].m_NextPart = i + 1;
 	}
 
 	m_aParticles[0].m_PrevPart = 0;
-	m_aParticles[MAX_PARTICLES - 1].m_NextPart = -1;
+	m_aParticles[g_Config.m_ClParticleLimit - 1].m_NextPart = -1;
 	m_FirstFree = 0;
 
 	for(int &FirstPart : m_aFirstPart)
@@ -40,6 +40,9 @@ void CParticles::OnReset()
 
 void CParticles::Add(int Group, CParticle *pPart, float TimePassed)
 {
+	if (g_Config.m_ClParticleLimit == 0)
+		return;
+		
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
