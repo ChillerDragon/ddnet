@@ -932,9 +932,14 @@ void CGameClient::OnRender()
 	UpdateManagedTeeRenderInfos();
 
 	if (g_Config.m_ClWeatherSnow) {
-		if (WasNewTick) {
-			for (int i = 0; i < 10; i++)
-				m_Effects.Snow(m_LocalCharacterPos);
+		static int snowTick = 1;
+		if (Client()->PredGameTick(0)/2 > snowTick || Client()->PredGameTick(0)/2 < snowTick - 50) {
+			snowTick = Client()->PredGameTick(0)/2;
+			if (g_Config.m_ClWeatherSnow >= 3 
+				|| (g_Config.m_ClWeatherSnow == 2 && snowTick % 2 == 0) 
+				|| (g_Config.m_ClWeatherSnow == 1 && snowTick % 4 == 0))
+				for (int i = 0; i < maximum(1, g_Config.m_ClWeatherSnow - 2); i++)
+					m_Effects.Snow(m_LocalCharacterPos);
 		}
 	}
 }

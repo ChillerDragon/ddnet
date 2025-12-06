@@ -753,7 +753,7 @@ MACRO_CONFIG_INT(ClChatInputBackground, cl_chat_input_background, 1, 0, 1, CFGFL
 MACRO_CONFIG_INT(ClReplaceEscapeKey, cl_replace_escape_key, 0, 0, 512, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Which key (as integer) to map to KEY_ESC. 0 to disable")
 MACRO_CONFIG_INT(ClParticleLimit, cl_particle_limit, 8192, 0, 8192, CFGFLAG_SAVE | CFGFLAG_CLIENT, "What the limit on the amount of particles should be")
 
-MACRO_CONFIG_INT(ClWeatherSnow, cl_weather_snow, 0, 0, 1, CFGFLAG_CLIENT, "Whether to spawn snow")
+MACRO_CONFIG_INT(ClWeatherSnow, cl_weather_snow, 0, 0, 15, CFGFLAG_CLIENT, "Whether to spawn snow")
 MACRO_CONFIG_INT(ClUIWidth, cl_ui_width, 600, 400, 1000, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Size of UI (low values may break some UI, might need restart)")
 //
 MACRO_CONFIG_INT(ClHammerRotatesWithCursor, tc_hammer_rotates_with_cursor, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Allow your hammer to rotate like other weapons")
