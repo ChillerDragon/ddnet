@@ -257,8 +257,6 @@ public:
 	static bool IsSpecialSkin(const char *pName);
 
 private:
-	static bool IsVanillaSkin(const char *pName);
-
 	/**
 	 * Names of all vanilla and special skins.
 	 *
