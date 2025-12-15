@@ -672,8 +672,8 @@ bool CMysqlConnection::AddPoints(const char *pPlayer, int Points, char *pError, 
 	BindString(1, pPlayer);
 	BindInt(2, Points);
 	BindInt(3, Points);
-	int NumUpdated;
-	return ExecuteUpdate(&NumUpdated, pError, ErrorSize);
+	bool End;
+	return Step(&End, pError, ErrorSize);
 }
 
 std::unique_ptr<IDbConnection> CreateMysqlConnection(CMysqlConfig Config)
