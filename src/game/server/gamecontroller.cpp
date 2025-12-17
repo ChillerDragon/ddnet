@@ -12,6 +12,8 @@
 #include "gamecontext.h"
 #include "player.h"
 
+#include <base/log.h>
+
 #include <engine/shared/config.h>
 #include <engine/shared/protocolglue.h>
 
@@ -19,6 +21,7 @@
 
 #include <game/mapitems.h>
 #include <game/server/score.h>
+#include <game/server/scoreworker.h>
 #include <game/teamscore.h>
 
 IGameController::IGameController(class CGameContext *pGameServer) :
@@ -565,6 +568,7 @@ void IGameController::Tick()
 		if(m_pLoadBestTimeResult->m_Success)
 		{
 			m_CurrentRecord = m_pLoadBestTimeResult->m_CurrentRecord;
+			log_info("gamecontroller", "got best time %.2f", m_CurrentRecord.value_or(0.0f));
 
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
@@ -576,6 +580,27 @@ void IGameController::Tick()
 		}
 		m_pLoadBestTimeResult = nullptr;
 	}
+
+	// holy fuck c++
+	// iterates all pending sql worker thread results
+	// all completed ones get processed here
+	// and then deleted from the vector
+	m_vpGenericResults.erase(
+		std::remove_if(
+			m_vpGenericResults.begin(),
+			m_vpGenericResults.end(),
+			[this](std::shared_ptr<CGenericSqlResult> pResult) {
+				// this should not be null ever anyways?
+				if(!pResult)
+					return true;
+				if(!pResult->m_Completed)
+					return false;
+
+				pResult->m_OkCallback(GameServer(), pResult->m_pOutput.get());
+				pResult = nullptr;
+				return true;
+			}),
+		m_vpGenericResults.end());
 
 	DoActivityCheck();
 }

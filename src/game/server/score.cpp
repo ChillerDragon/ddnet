@@ -4,8 +4,11 @@
 #include "save.h"
 #include "scoreworker.h"
 
+#include <base/log.h>
 #include <base/system.h>
 
+#include <engine/server.h>
+#include <engine/server/databases/connection.h>
 #include <engine/server/databases/connection_pool.h>
 #include <engine/shared/config.h>
 #include <engine/shared/console.h>
@@ -17,6 +20,7 @@
 #include <game/server/gamemodes/DDRace.h>
 #include <game/team_state.h>
 
+#include <functional>
 #include <memory>
 
 class IDbConnection;
@@ -111,16 +115,122 @@ CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool) :
 
 void CScore::LoadBestTime()
 {
-	if(m_pGameServer->m_pController->m_pLoadBestTimeResult)
-		return; // already in progress
+	class CMyInput
+	{
+	public:
+		char m_aMap[512];
+	};
 
-	auto LoadBestTimeResult = std::make_shared<CScoreLoadBestTimeResult>();
-	m_pGameServer->m_pController->m_pLoadBestTimeResult = LoadBestTimeResult;
+	class CMyOutput
+	{
+	public:
+		std::optional<float> m_CurrentRecord;
+	};
 
-	auto Tmp = std::make_unique<CSqlLoadBestTimeRequest>(LoadBestTimeResult);
-	str_copy(Tmp->m_aMap, Server()->GetMapName(), sizeof(Tmp->m_aMap));
-	m_pPool->Execute(CScoreWorker::LoadBestTime, std::move(Tmp), "load best time");
+	auto MyOkCallback = [](IGameServer *pGameServer, void *pUserOutput) {
+		log_info("owo", "hello from ok callback ...");
+
+		auto *pOutput = static_cast<CMyOutput *>(pUserOutput);
+		// pGameServer->m_pController->m_CurrentRecord = pOutput->m_CurrentRecord;
+		log_info("gamecontroller", "got best time in callback %.2f", pOutput->m_CurrentRecord.value_or(0.0f));
+	};
+
+	auto MyErrorCallback = [](IGameServer *pGameServer) {
+		log_error("owo", "hello from error callback ...");
+	};
+
+	auto MyFunc = [](IDbConnection *pSqlServer, const ISqlData *pGameData, char *pError, int ErrorSize) {
+		log_info("uwu", "loading best time ...");
+		const auto *pGenericData = dynamic_cast<const CGenericSqlRequest*>(pGameData);
+		const auto *const pInput = static_cast<const CMyInput*>(pGenericData->m_pInput.get());
+		auto *pGenericResult = dynamic_cast<CGenericSqlResult*>(pGameData->m_pResult.get());
+		auto *pOutput = static_cast<CMyOutput*>(pGenericResult->m_pOutput.get());
+
+		char aBuf[512];
+		// get the best time
+		str_format(aBuf, sizeof(aBuf),
+			"SELECT Time FROM %s_race WHERE Map=? ORDER BY `Time` ASC LIMIT 1",
+			pSqlServer->GetPrefix());
+		if(!pSqlServer->PrepareStatement(aBuf, pError, ErrorSize))
+		{
+			return false;
+		}
+		pSqlServer->BindString(1, pInput->m_aMap);
+
+		bool End;
+		if(!pSqlServer->Step(&End, pError, ErrorSize))
+		{
+			return false;
+		}
+		if(!End)
+		{
+			pOutput->m_CurrentRecord = pSqlServer->GetFloat(1);
+		}
+		return true;
+	};
+
+
+
+
+	auto Input = std::make_unique<CMyInput>();
+	str_copy(Input->m_aMap, Server()->GetMapName());
+	auto Output = std::make_shared<CMyOutput>();
+	auto GenericResult = std::make_shared<CGenericSqlResult>(
+		Output,
+		MyOkCallback,
+		MyErrorCallback
+	);
+	auto Tmp = std::make_unique<CGenericSqlRequest>(
+		GenericResult,
+		Input
+	);
+	GameServer()->m_pController->m_vpGenericResults.emplace_back(GenericResult);
+	m_pPool->Execute(MyFunc, std::move(Tmp), "rcon cmd");
 }
+
+// void CScore::LoadBestTime()
+// {
+// 	if(m_pGameServer->m_pController->m_pLoadBestTimeResult)
+// 		return; // already in progress
+// 
+// 	auto LoadBestTimeResult = std::make_shared<CScoreLoadBestTimeResult>();
+// 	m_pGameServer->m_pController->m_pLoadBestTimeResult = LoadBestTimeResult;
+// 
+// 	auto Tmp = std::make_unique<CSqlLoadBestTimeRequest>(LoadBestTimeResult);
+// 	str_copy(Tmp->m_aMap, Server()->GetMapName(), sizeof(Tmp->m_aMap));
+// 	// m_pPool->Execute(LoadBestTime2, std::move(Tmp), "load best time");
+// 
+// 	auto MyFunc = [](IDbConnection *pSqlServer, const ISqlData *pGameData, char *pError, int ErrorSize) {
+// 		log_info("uwu", "loading best time ...");
+// 		const auto *pData = dynamic_cast<const CSqlLoadBestTimeRequest *>(pGameData);
+// 		auto *pResult = dynamic_cast<CScoreLoadBestTimeResult *>(pGameData->m_pResult.get());
+// 
+// 		char aBuf[512];
+// 		// get the best time
+// 		str_format(aBuf, sizeof(aBuf),
+// 			"SELECT Time FROM %s_race WHERE Map=? ORDER BY `Time` ASC LIMIT 1",
+// 			pSqlServer->GetPrefix());
+// 		if(!pSqlServer->PrepareStatement(aBuf, pError, ErrorSize))
+// 		{
+// 			return false;
+// 		}
+// 		pSqlServer->BindString(1, pData->m_aMap);
+// 
+// 		bool End;
+// 		if(!pSqlServer->Step(&End, pError, ErrorSize))
+// 		{
+// 			return false;
+// 		}
+// 		if(!End)
+// 		{
+// 			pResult->m_CurrentRecord = pSqlServer->GetFloat(1);
+// 		}
+// 
+// 		return true;
+// 	};
+// 
+// 	m_pPool->Execute(MyFunc, std::move(Tmp), "load best time");
+// }
 
 void CScore::LoadPlayerData(int ClientId, const char *pName)
 {

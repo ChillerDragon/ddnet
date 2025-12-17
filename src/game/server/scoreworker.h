@@ -1,6 +1,7 @@
 #ifndef GAME_SERVER_SCOREWORKER_H
 #define GAME_SERVER_SCOREWORKER_H
 
+#include <base/log.h>
 #include <engine/map.h>
 #include <engine/server/databases/connection_pool.h>
 #include <engine/shared/protocol.h>
@@ -9,6 +10,7 @@
 #include <game/server/save.h>
 #include <game/voting.h>
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -67,6 +69,44 @@ struct CScorePlayerResult : ISqlResult
 struct CScoreLoadBestTimeResult : ISqlResult
 {
 	std::optional<float> m_CurrentRecord = std::nullopt;
+};
+
+
+struct CGenericSqlResult : ISqlResult
+{
+	CGenericSqlResult(
+		std::shared_ptr<void> pOutput,
+		std::function<void (class IGameServer *pGameServer, void *pOutput)> OkCallback,
+		std::function<void (class IGameServer *pGameServer)> ErrorCallback
+	)
+	{
+		m_pOutput = std::move(pOutput);
+		m_OkCallback = std::move(OkCallback);
+		m_ErrorCallback = std::move(ErrorCallback);
+	}
+
+	std::optional<float> m_CurrentRecord = std::nullopt;
+
+	std::function<void (class IGameServer *pGameServer, void *pOutput)> m_OkCallback;
+	std::function<void (class IGameServer *pGameServer)> m_ErrorCallback;
+	mutable std::shared_ptr<void> m_pInput;
+	mutable std::shared_ptr<void> m_pOutput;
+};
+
+struct CGenericSqlRequest : ISqlData
+{
+	CGenericSqlRequest(
+		std::shared_ptr<CGenericSqlResult> pResult,
+		std::unique_ptr<void> pInput
+	)
+	: ISqlData(std::move(pResult))
+	{
+		m_pInput = std::move(pInput);
+	}
+
+	std::optional<float> m_CurrentRecord = std::nullopt;
+
+	mutable std::shared_ptr<void> m_pInput;
 };
 
 struct CSqlLoadBestTimeRequest : ISqlData

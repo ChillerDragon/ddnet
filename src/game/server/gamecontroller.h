@@ -8,9 +8,12 @@
 #include <engine/map.h>
 #include <engine/shared/protocol.h>
 
+#include <game/server/scoreworker.h>
 #include <game/server/teams.h>
+#include <vector>
 
 struct CScoreLoadBestTimeResult;
+struct CGenericResult;
 
 /*
 	Class: Game Controller
@@ -164,6 +167,7 @@ public:
 	std::optional<float> m_CurrentRecord;
 	CGameTeams &Teams() { return m_Teams; }
 	std::shared_ptr<CScoreLoadBestTimeResult> m_pLoadBestTimeResult;
+	std::vector<std::shared_ptr<CGenericSqlResult>> m_vpGenericResults;
 };
 
 #endif
