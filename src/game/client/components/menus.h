@@ -45,6 +45,7 @@ public:
 class CMenus : public CComponent
 {
 	static ColorRGBA ms_GuiColor;
+	static ColorRGBA ms_GuiColorButtons;
 	static ColorRGBA ms_ColorTabbarInactiveOutgame;
 	static ColorRGBA ms_ColorTabbarActiveOutgame;
 	static ColorRGBA ms_ColorTabbarHoverOutgame;

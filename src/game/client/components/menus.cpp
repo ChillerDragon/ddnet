@@ -42,6 +42,7 @@ using namespace FontIcons;
 using namespace std::chrono_literals;
 
 ColorRGBA CMenus::ms_GuiColor;
+ColorRGBA CMenus::ms_GuiColorButtons;
 ColorRGBA CMenus::ms_ColorTabbarInactiveOutgame;
 ColorRGBA CMenus::ms_ColorTabbarActiveOutgame;
 ColorRGBA CMenus::ms_ColorTabbarHoverOutgame;
@@ -124,6 +125,10 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 
 	if(Checked)
 		Color = ColorRGBA(0.6f, 0.6f, 0.6f, 0.5f);
+
+	if (Color.r == 1.0f && Color.g == 1.0f && Color.b == 1.0f)
+		Color = ColorRGBA(ms_GuiColorButtons.r, ms_GuiColorButtons.g, ms_GuiColorButtons.b, Color.a);
+
 	Color.a *= Ui()->ButtonColorMul(pButtonContainer);
 
 	pRect->Draw(Color, Corners, Rounding);
@@ -282,7 +287,7 @@ int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const c
 	Label.VSplitLeft(5.0f, nullptr, &Label);
 
 	Box.Margin(2.0f, &Box);
-	Box.Draw(ColorRGBA(1, 1, 1, 0.25f * Ui()->ButtonColorMul(pId)), IGraphics::CORNER_ALL, 3.0f);
+	Box.Draw(ColorRGBA(ms_GuiColorButtons.r, ms_GuiColorButtons.g, ms_GuiColorButtons.b, 0.25f * Ui()->ButtonColorMul(pId)), IGraphics::CORNER_ALL, 3.0f);
 
 	const bool Checkable = *pBoxText == 'X';
 	if(Checkable)
@@ -1164,6 +1169,7 @@ void CMenus::Render()
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
 		ms_ColorTabbarActive = ms_ColorTabbarActiveIngame;
 		ms_ColorTabbarHover = ms_ColorTabbarHoverIngame;
+		ms_GuiColorButtons = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColorButtons, true));
 	}
 	else
 	{
@@ -1171,9 +1177,26 @@ void CMenus::Render()
 		{
 			RenderBackground();
 		}
-		ms_ColorTabbarInactive = ms_ColorTabbarInactiveOutgame;
-		ms_ColorTabbarActive = ms_ColorTabbarActiveOutgame;
-		ms_ColorTabbarHover = ms_ColorTabbarHoverOutgame;
+		if (g_Config.m_UiColorMainMenu)
+		{
+			ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
+			ms_ColorTabbarActive = ms_ColorTabbarActiveIngame;
+			ms_ColorTabbarHover = ms_ColorTabbarHoverIngame;
+			ms_GuiColorButtons = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColorButtons, true));
+			if (g_Config.m_UiColorMainMenu == 1)
+			{
+				ms_ColorTabbarInactive.a = ms_ColorTabbarInactiveOutgame.a;
+				ms_ColorTabbarActive.a = ms_ColorTabbarActiveOutgame.a;
+				ms_ColorTabbarHover.a = ms_ColorTabbarHoverOutgame.a;
+			}
+		}
+		else
+		{
+			ms_ColorTabbarInactive = ms_ColorTabbarInactiveOutgame;
+			ms_ColorTabbarActive = ms_ColorTabbarActiveOutgame;
+			ms_ColorTabbarHover = ms_ColorTabbarHoverOutgame;
+			ms_GuiColorButtons = ColorRGBA(1.0f, 1.0f, 1.0f);
+		}
 	}
 
 	CUIRect Screen = *Ui()->Screen();
