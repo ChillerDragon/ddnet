@@ -276,6 +276,117 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	}
 }
 
+void CMenus::RenderSettingsDuckClient(CUIRect MainView)
+{
+	char aBuf[128 + IO_MAX_PATH_LENGTH];
+	CUIRect Label, Button, Left, Right, Game, ClientSettings, Menu;
+	MainView.HSplitTop(150.0f, &Game, &ClientSettings);
+	Game.VSplitMid(&Game, &Menu, 20.0f);
+
+	constexpr float VerticalSpacing(5.0f);
+	// Miscellaneous
+	{
+		// headline
+		Game.HSplitTop(30.0f, &Label, &Game);
+		Ui()->DoLabel(&Label, Localize("Miscellaneous"), 20.0f, TEXTALIGN_ML);
+		Left = Game;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		Ui()->DoScrollbarOption(&g_Config.m_ClOldClientConsole, &g_Config.m_ClOldClientConsole, &Button, Localize("Old client console"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClOldDoorLaser, Localize("Old door laser"), g_Config.m_ClOldDoorLaser, &Button))
+			g_Config.m_ClOldDoorLaser ^= 1;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClOldFreezeLaser, Localize("Old freeze laser"), g_Config.m_ClOldFreezeLaser, &Button))
+			g_Config.m_ClOldFreezeLaser ^= 1;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClExtraParticles, Localize("Extra particles"), g_Config.m_ClExtraParticles, &Button))
+			g_Config.m_ClExtraParticles ^= 1;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClBloodParticles, Localize("Extra blood particles"), g_Config.m_ClBloodParticles, &Button))
+			g_Config.m_ClBloodParticles ^= 1;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClPosistionCommunityFilter, Localize("Shift community filter position"), g_Config.m_ClPosistionCommunityFilter, &Button))
+			g_Config.m_ClPosistionCommunityFilter ^= 1;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if (g_Config.m_ClConfirmKillTime != -1)
+			str_copy(aBuf, Localize("s", "Seconds"), sizeof(aBuf));
+		else
+		{
+			str_copy(aBuf, " = ", sizeof(aBuf));
+			str_append(aBuf, Localize("Off"));
+		}
+		Ui()->DoScrollbarOption(&g_Config.m_ClConfirmKillTime, &g_Config.m_ClConfirmKillTime, &Button, Localize("Confirm kill time"), -1, 60, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, aBuf);
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClDuckFilter, Localize("Duck Filter"), g_Config.m_ClDuckFilter, &Button))
+			g_Config.m_ClDuckFilter ^= 1;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClChatInputBackground, Localize("Chat input background"), g_Config.m_ClChatInputBackground, &Button))
+			g_Config.m_ClChatInputBackground ^= 1;
+
+		Left.HSplitTop(2.0f, nullptr, &Left);
+		static CButtonContainer s_UiColorButtonsResetId;
+		DoLine_ColorPicker(&s_UiColorButtonsResetId, 25.0f, 13.0f, 2.0f, &Left, Localize("Button Color"), &g_Config.m_UiColorButtons, color_cast<ColorRGBA>(ColorHSLA(0xFFFFFFFF, true)), false, nullptr, true);
+
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		Ui()->DoScrollbarOption(&g_Config.m_UiColorMainMenu, &g_Config.m_UiColorMainMenu, &Button, Localize("UI color on main menu"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		Ui()->DoScrollbarOption(&g_Config.m_ClWeatherSnow, &g_Config.m_ClWeatherSnow, &Button, Localize("Snow Weather (won't be saved)"), 0, 15, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+
+	}
+
+	// From T-Client
+	{
+		// headline
+		Menu.HSplitTop(30.0f, &Label, &Menu);
+		Ui()->DoLabel(&Label, Localize("From T-Client"), 20.0f, TEXTALIGN_ML);
+
+		Menu.HSplitTop(VerticalSpacing, nullptr, &Menu);
+		Menu.HSplitTop(20.0f, &Button, &Menu);
+		if(DoButton_CheckBox(&g_Config.m_ClHammerRotatesWithCursor, Localize("Spinny hammer"), g_Config.m_ClHammerRotatesWithCursor, &Button))
+			g_Config.m_ClHammerRotatesWithCursor ^= 1;
+
+		Menu.HSplitTop(5.0f, nullptr, &Menu);
+		Menu.HSplitTop(20.0f, &Label, &Menu);
+		Menu.HSplitTop(2.0f, nullptr, &Menu);
+		Ui()->DoLabel(&Label, Localize("Custom Communities Url"), 14.0f, TEXTALIGN_ML);
+		Menu.HSplitTop(20.0f, &Button, &Menu);
+		static CLineInput s_CommunityUrl(g_Config.m_TcCustomCommunitiesUrl, sizeof(g_Config.m_TcCustomCommunitiesUrl));
+		s_CommunityUrl.SetEmptyText(Localize("Community Url"));
+		Ui()->DoEditBox(&s_CommunityUrl, &Button, 14.0f);
+		static CButtonContainer s_ButtonTimeout;
+		Menu.HSplitTop(8.0f, nullptr, &Menu);
+		Menu.HSplitTop(20.0f, &Button, &Menu);
+		Button.VSplitRight(120.0f, nullptr, &Button);
+		if(DoButton_Menu(&s_ButtonTimeout, Localize("Reset Url"), 0, &Button))
+		{
+			str_copy(g_Config.m_TcCustomCommunitiesUrl, "https://raw.githubusercontent.com/SollyBunny/ddnet-custom-communities/refs/heads/main/custom-communities-ddnet-info.json");
+		}
+	}
+}
+
 void CMenus::SetNeedSendInfo()
 {
 	if(m_Dummy)
@@ -2247,7 +2358,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Graphics"),
 		Localize("Sound"),
 		Localize("DDNet"),
-		Localize("Assets")};
+		Localize("Assets"),
+		Localize("DuckC"),};
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 
 	for(int i = 0; i < SETTINGS_LENGTH; i++)
@@ -2310,6 +2422,11 @@ void CMenus::RenderSettings(CUIRect MainView)
 	{
 		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_SETTINGS_ASSETS);
 		RenderSettingsCustom(MainView);
+	}
+	else if(g_Config.m_UiSettingsPage == SETTINGS_DUCKCLIENT)
+	{
+		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_SETTINGS_APPEARANCE);
+		RenderSettingsDuckClient(MainView);
 	}
 	else
 	{
