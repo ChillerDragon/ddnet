@@ -203,7 +203,7 @@ void CInfoMessages::CreateTextContainersIfNotCreated(CInfoMsg &InfoMsg)
 	{
 		{
 			CTextCursor Cursor;
-			// TextRender()->SetCursor(&Cursor, 0, 0, FONT_SIZE, TEXTFLAG_RENDER);
+			Cursor.m_FontSize = FONT_SIZE;
 			TextRender()->TextColor(NameColor(InfoMsg.m_AssistantId));
 			TextRender()->CreateTextContainer(InfoMsg.m_AssistantTextContainerIndex, &Cursor, InfoMsg.m_aAssistantName);
 		}
@@ -214,7 +214,7 @@ void CInfoMessages::CreateTextContainersIfNotCreated(CInfoMsg &InfoMsg)
 			const ColorRGBA PlusColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClKillMessageHighlightColor));
 
 			CTextCursor Cursor;
-			// TextRender()->SetCursor(&Cursor, 0, 0, FONT_SIZE, TEXTFLAG_RENDER);
+			Cursor.m_FontSize = FONT_SIZE;
 			TextRender()->TextColor(PlusColor);
 			TextRender()->CreateTextContainer(InfoMsg.m_AssistantPlusContainerIndex, &Cursor, aPlus);
 		}
