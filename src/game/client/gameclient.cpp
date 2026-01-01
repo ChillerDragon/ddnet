@@ -5394,23 +5394,32 @@ void CGameClient::OnKZUpdate()
 		m_SendingCustomClientTicks = 25;
 	}
 
-	switch(m_SendingCustomClientTicks)
-	{
-	case 25:
-		SendInfo(false);
-		SendDummyInfo(false);
-		m_SendingCustomClientTicks = 24;
-		break;
-	case 0:
-		SendInfo(false);
-		SendDummyInfo(false);
-		m_SendingCustomClientTicks = -1;
-		break;
-	default:
-		if(m_SendingCustomClientTicks > 0)
-			m_SendingCustomClientTicks--;
-		break;
-	}
+	switch (m_SendingCustomClientTicks)
+    {
+    case 25:
+        SendInfo(false);
+        if(m_aClients[m_aLocalIds[0]].m_Country >= MINIMUM_CUSTOM_CLIENT_ID)
+            m_SendingCustomClientTicks = 24;
+        break;
+    case 24:
+        SendDummyInfo(false);
+        if(Client()->DummyConnected() ? m_aClients[m_aLocalIds[1]].m_Country >= MINIMUM_CUSTOM_CLIENT_ID : true)
+            m_SendingCustomClientTicks = 23;
+        break;
+    case 1:
+        SendInfo(false);
+        if(m_aClients[m_aLocalIds[0]].m_Country < MINIMUM_CUSTOM_CLIENT_ID)
+            m_SendingCustomClientTicks = 0;
+    case 0:
+        SendDummyInfo(false);
+        if(Client()->DummyConnected() ? m_aClients[m_aLocalIds[1]].m_Country < MINIMUM_CUSTOM_CLIENT_ID : true)
+            m_SendingCustomClientTicks = -1;
+        break;
+    default:
+        if(m_SendingCustomClientTicks > 0)
+            m_SendingCustomClientTicks--;
+        break;
+    }
 }
 
 void CGameClient::OnKZReset()
@@ -5458,7 +5467,8 @@ int CGameClient::HandleClientCountry(int Country, int ClientId)
 {
 	if(IsCustomClientId(Country)) //if it is a custom client id, set custom client id and keep country
 	{
-		m_aClients[ClientId].m_CustomClient = Country;
+		if(!m_aClients[ClientId].m_CustomClient)
+			m_aClients[ClientId].m_CustomClient = Country;
 		return m_aClients[ClientId].m_Country;
 	}
 	else //otherwise, set country
