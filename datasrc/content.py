@@ -492,6 +492,22 @@ container.sprites.Add(Sprite("part_sparkle", set_extras, 2,0,2,2))
 container.sprites.Add(Sprite("part_pulley", set_extras, 4,0,1,1))
 container.sprites.Add(Sprite("part_hectagon", set_extras, 6,0,2,2))
 
+# TClient Client Icons
+
+# Kaizo Network
+kz_image_kaizoicon= Image("kz_kaizoicon", "clienticons/kaizoicon.png")
+container.images.Add(kz_image_kaizoicon)
+set_kz_kaizoicon = SpriteSet("kz_kaizoicon", kz_image_kaizoicon, 1, 1)
+container.spritesets.Add(set_kz_kaizoicon)
+container.sprites.Add(Sprite("kz_kaizoicon", set_kz_kaizoicon, 0, 0, 1, 1))
+
+# DuckClient
+duck_image_duckicon= Image("duck_duckicon", "clienticons/duckicon.png")
+container.images.Add(duck_image_duckicon)
+set_duck_duckicon = SpriteSet("duck_duckicon", duck_image_duckicon, 1, 1)
+container.spritesets.Add(set_duck_duckicon)
+container.sprites.Add(Sprite("duck_duckicon", set_duck_duckicon, 0, 0, 1, 1))
+
 anim = Animation("base")
 anim.body.frames.Add(AnimKeyframe(0, 0, -4, 0))
 anim.back_foot.frames.Add(AnimKeyframe(0, 0, 10, 0))
