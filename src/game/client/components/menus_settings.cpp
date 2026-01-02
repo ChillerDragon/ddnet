@@ -400,6 +400,23 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 			str_copy(g_Config.m_TcCustomCommunitiesUrl, "https://raw.githubusercontent.com/SollyBunny/ddnet-custom-communities/refs/heads/main/custom-communities-ddnet-info.json");
 		}
 	}
+
+	// From Kaizo client
+	{
+		// headline
+		Menu.HSplitTop(30.0f, &Label, &Menu);
+		Ui()->DoLabel(&Label, Localize("From Kaizo Client"), 20.0f, TEXTALIGN_ML);
+
+		Menu.HSplitTop(VerticalSpacing, nullptr, &Menu);
+		Menu.HSplitTop(20.0f, &Button, &Menu);
+		if(DoButton_CheckBox(&g_Config.m_ClSendClientType, Localize("Send Client Type"), g_Config.m_ClSendClientType, &Button))
+			g_Config.m_ClSendClientType ^= 1;
+
+		Menu.HSplitTop(VerticalSpacing, nullptr, &Menu);
+		Menu.HSplitTop(20.0f, &Button, &Menu);
+		if(DoButton_CheckBox(&g_Config.m_ClShowClientType, Localize("Show Client Types"), g_Config.m_ClShowClientType, &Button))
+			g_Config.m_ClShowClientType ^= 1;
+	}
 }
 
 void CMenus::SetNeedSendInfo()
