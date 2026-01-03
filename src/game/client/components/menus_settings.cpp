@@ -288,12 +288,46 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 	{
 		// headline
 		Game.HSplitTop(30.0f, &Label, &Game);
-		Ui()->DoLabel(&Label, Localize("Miscellaneous"), 20.0f, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, Localize("User Interface"), 20.0f, TEXTALIGN_ML);
 		Left = Game;
 
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
 		Ui()->DoScrollbarOption(&g_Config.m_ClOldClientConsole, &g_Config.m_ClOldClientConsole, &Button, Localize("Old client console"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClPosistionCommunityFilter, Localize("Shift community filter position"), g_Config.m_ClPosistionCommunityFilter, &Button))
+			g_Config.m_ClPosistionCommunityFilter ^= 1;
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClChatInputBackground, Localize("Chat input background"), g_Config.m_ClChatInputBackground, &Button))
+			g_Config.m_ClChatInputBackground ^= 1;
+
+		Left.HSplitTop(2.0f, nullptr, &Left);
+		static CButtonContainer s_UiColorButtonsResetId;
+		DoLine_ColorPicker(&s_UiColorButtonsResetId, 25.0f, 13.0f, 2.0f, &Left, Localize("Button Color"), &g_Config.m_UiColorButtons, color_cast<ColorRGBA>(ColorHSLA(0xFFFFFFFF, true)), false, nullptr, true);
+
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		Ui()->DoScrollbarOption(&g_Config.m_UiColorMainMenu, &g_Config.m_UiColorMainMenu, &Button, Localize("UI color on main menu"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		Ui()->DoScrollbarOption(&g_Config.m_ClScoreboardStyle, &g_Config.m_ClScoreboardStyle, &Button, Localize("Scoreboard Style"), 0, 3, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+
+		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		Ui()->DoScrollbarOption(&g_Config.m_ClScoreboardShorten, &g_Config.m_ClScoreboardShorten, &Button, Localize("Shorten Scoreboard"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+
+
+		// miscellaneous
+		Left.HSplitTop(40.0f, &Label, &Left);
+		Left.HSplitTop(30.0f, &Label, &Left);
+		Ui()->DoLabel(&Label, Localize("Miscellaneous"), 20.0f, TEXTALIGN_ML);
+
 
 
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
@@ -318,11 +352,6 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
-		if(DoButton_CheckBox(&g_Config.m_ClPosistionCommunityFilter, Localize("Shift community filter position"), g_Config.m_ClPosistionCommunityFilter, &Button))
-			g_Config.m_ClPosistionCommunityFilter ^= 1;
-
-		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
 		if (g_Config.m_ClConfirmKillTime != -1)
 			str_copy(aBuf, Localize("s", "Seconds"), sizeof(aBuf));
 		else
@@ -336,20 +365,6 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 		Left.HSplitTop(20.0f, &Button, &Left);
 		if(DoButton_CheckBox(&g_Config.m_ClDuckFilter, Localize("Duck Filter"), g_Config.m_ClDuckFilter, &Button))
 			g_Config.m_ClDuckFilter ^= 1;
-
-		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
-		if(DoButton_CheckBox(&g_Config.m_ClChatInputBackground, Localize("Chat input background"), g_Config.m_ClChatInputBackground, &Button))
-			g_Config.m_ClChatInputBackground ^= 1;
-
-		Left.HSplitTop(2.0f, nullptr, &Left);
-		static CButtonContainer s_UiColorButtonsResetId;
-		DoLine_ColorPicker(&s_UiColorButtonsResetId, 25.0f, 13.0f, 2.0f, &Left, Localize("Button Color"), &g_Config.m_UiColorButtons, color_cast<ColorRGBA>(ColorHSLA(0xFFFFFFFF, true)), false, nullptr, true);
-
-
-		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
-		Left.HSplitTop(20.0f, &Button, &Left);
-		Ui()->DoScrollbarOption(&g_Config.m_UiColorMainMenu, &g_Config.m_UiColorMainMenu, &Button, Localize("UI color on main menu"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
 
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
