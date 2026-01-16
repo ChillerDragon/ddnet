@@ -12,6 +12,16 @@
 #include <game/client/gameclient.h>
 #include <game/localization.h>
 
+static const vec4 s_aWeaponColors[] =
+{
+	vec4(201/255.0f, 197/255.0f, 205/255.0f, 1.0f),
+	vec4(156/255.0f, 158/255.0f, 100/255.0f, 1.0f),
+	vec4(98/255.0f, 80/255.0f, 46/255.0f, 1.0f),
+	vec4(163/255.0f, 51/255.0f, 56/255.0f, 1.0f),
+	vec4(65/255.0f, 97/255.0f, 161/255.0f, 1.0f),
+	vec4(182/255.0f, 137/255.0f, 40/255.0f, 1.0f),
+};
+
 CStatboard::CStatboard()
 {
 	m_Active = false;
@@ -180,8 +190,8 @@ void CStatboard::RenderGlobalStats()
 
 	// Dirty hack. Do not show scoreboard if there are more than 32 players
 	// remove as soon as support of more than 32 players is required
-	if(NumPlayers > 32)
-		return;
+	// if(NumPlayers > 32)
+	// 	return;
 
 	//clear motd if it is active
 	if(GameClient()->m_Motd.IsActive())
@@ -190,12 +200,13 @@ void CStatboard::RenderGlobalStats()
 	bool GameWithFlags = GameClient()->m_Snap.m_pGameInfoObj &&
 			     GameClient()->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS;
 
-	StatboardContentWidth += 7 * 85 + 95; // Suicides 95; other labels 85
+	StatboardContentWidth += 3*85 + 1*95 + 2*125 + 4; // Suicides 95; other labels 85
 
 	if(GameWithFlags)
 		StatboardContentWidth += 150; // Grabs & Flags
 
 	bool aDisplayWeapon[NUM_WEAPONS] = {false};
+	bool NoDisplayedWeapon = true;
 	for(int i = 0; i < NumPlayers; i++)
 	{
 		const CGameClient::CClientStats *pStats = &GameClient()->m_aStats[apPlayers[i]->m_ClientId];
@@ -204,7 +215,10 @@ void CStatboard::RenderGlobalStats()
 	}
 	for(bool DisplayWeapon : aDisplayWeapon)
 		if(DisplayWeapon)
+		{
 			StatboardContentWidth += 80;
+			NoDisplayedWeapon = false;
+		}
 
 	float x = StatboardWidth / 2 - StatboardContentWidth / 2;
 	float y = 200.0f;
@@ -218,14 +232,18 @@ void CStatboard::RenderGlobalStats()
 
 	TextRender()->Text(x + 10, y - 5, 22.0f, Localize("Name"), -1.0f);
 	const char *apHeaders[] = {
-		Localize("Frags"), Localize("Deaths"), Localize("Suicides"),
+		Localize("K:D"), Localize("Suicides"),
 		Localize("Ratio"), Localize("Net"), Localize("FPM"),
-		Localize("Spree"), Localize("Best"), Localize("Grabs")};
-	for(int i = 0; i < 9; i++)
+		Localize("Spree"), Localize("Grabs")};
+	for(int i = 0; i < 7; i++)
 	{
-		if(i == 2)
+		if(i == 0)
+			px += 40.0f; // K:D
+		if(i == 1)
 			px += 10.0f; // Suicides
-		if(i == 8 && !GameWithFlags) // Don't draw "Grabs" in game with no flag
+		if(i == 5)
+			px += 40.0f; // Spree
+		if(i == 6 && !GameWithFlags) // Don't draw "Grabs" in game with no flag
 			continue;
 		tw = TextRender()->TextWidth(22.0f, apHeaders[i], -1, -1.0f);
 		TextRender()->Text(x + px - tw, y - 5, 22.0f, apHeaders[i], -1.0f);
@@ -283,6 +301,21 @@ void CStatboard::RenderGlobalStats()
 
 	for(int j = 0; j < NumPlayers; j++)
 	{
+		// workaround
+		if(j == 31)
+		{
+			char aBuf[64];
+			str_format(aBuf, sizeof(aBuf), Localize("⋅⋅⋅ %d other players"), NumPlayers-j);
+
+			CTextCursor Cursor;
+			Cursor.SetPosition(vec2(x, y + (LineHeight * 0.95f - FontSize) / 2.f));
+			Cursor.m_FontSize = FontSize;
+			Cursor.m_Flags |= TEXTFLAG_STOP_AT_END;
+			Cursor.m_LineWidth = 220;
+			TextRender()->TextEx(&Cursor, aBuf, -1);
+			break;
+		}
+
 		const CNetObj_PlayerInfo *pInfo = apPlayers[j];
 		const CGameClient::CClientStats *pStats = &GameClient()->m_aStats[pInfo->m_ClientId];
 
@@ -314,18 +347,19 @@ void CStatboard::RenderGlobalStats()
 
 		// FRAGS
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Frags);
+			px += 40;
+			str_format(aBuf, sizeof(aBuf), "%d:%d", pStats->m_Frags, pStats->m_Deaths);
 			tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(x - tw + px, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
 			px += 85;
 		}
-		// DEATHS
-		{
-			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Deaths);
-			tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(x - tw + px, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
-			px += 85;
-		}
+		// // DEATHS
+		// {
+		// 	str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Deaths);
+		// 	tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
+		// 	TextRender()->Text(x - tw + px, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
+		// 	px += 85;
+		// }
 		// SUICIDES
 		{
 			px += 10;
@@ -361,18 +395,19 @@ void CStatboard::RenderGlobalStats()
 		}
 		// SPREE
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_CurrentSpree);
+			px += 40;
+			str_format(aBuf, sizeof(aBuf), "%d (%d)", pStats->m_CurrentSpree, pStats->m_BestSpree);
 			tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(x - tw + px, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
 			px += 85;
 		}
 		// BEST SPREE
-		{
-			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_BestSpree);
-			tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(x - tw + px, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
-			px += 85;
-		}
+		// {
+		// 	str_format(aBuf, sizeof(aBuf), "%d", pStats->m_BestSpree);
+		// 	tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
+		// 	TextRender()->Text(x - tw + px, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
+		// 	px += 85;
+		// }
 		// GRABS
 		if(GameWithFlags)
 		{
@@ -383,15 +418,49 @@ void CStatboard::RenderGlobalStats()
 		}
 		// WEAPONS
 		px -= 40;
-		for(int i = 0; i < NUM_WEAPONS; i++)
+		if (!Config()->m_ClStatboardWeaponsStyle)
 		{
-			if(!aDisplayWeapon[i])
-				continue;
+			for(int i = 0; i < NUM_WEAPONS; i++)
+			{
+				if(!aDisplayWeapon[i])
+					continue;
 
-			str_format(aBuf, sizeof(aBuf), "%d/%d", pStats->m_aFragsWith[i], pStats->m_aDeathsFrom[i]);
-			tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(x + px - tw / 2, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
-			px += 80;
+				str_format(aBuf, sizeof(aBuf), "%d/%d", pStats->m_aFragsWith[i], pStats->m_aDeathsFrom[i]);
+				tw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
+				TextRender()->Text(x + px - tw / 2, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
+				px += 80;
+			}
+		} else {
+			const float BarHeight = 0.3f*LineHeight;
+			const float Offset = 40.0f;
+			const float StartX = px - Offset;
+			const float RoundSize = BarHeight/2.0f;
+			float EndX = StartX; // each bar will have its width incremented by the roundsize so this avoids that last one would overflow
+			int TotalKills = 0;
+			for(int i = 0; i < NUM_WEAPONS; i++)
+			{
+				if(aDisplayWeapon[i])
+				{
+					EndX += 80.0f;
+					TotalKills += pStats->m_aFragsWith[i];
+				}					
+			}
+			float ExploitableLength = (EndX-StartX) - RoundSize;
+			CUIRect Rect = {x + StartX, y + LineHeight / 2.0f - BarHeight / 2.0f, 0.0f, BarHeight};
+			for(int i = 0; i < NUM_WEAPONS; i++)
+			{
+				if(pStats->m_aFragsWith[i])
+				{
+					Rect.w = ExploitableLength * pStats->m_aFragsWith[i] / (float)TotalKills;
+					Rect.w += RoundSize;
+					Rect.Draw(s_aWeaponColors[i], IGraphics::CORNER_ALL, RoundSize);
+					Rect.w -= RoundSize;
+					Rect.x += Rect.w;
+				}
+			}
+			px = EndX + Offset;
+			if(!NoDisplayedWeapon)
+				px += 10;
 		}
 		// FLAGS
 		if(GameWithFlags)

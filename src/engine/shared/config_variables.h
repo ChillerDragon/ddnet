@@ -754,6 +754,7 @@ MACRO_CONFIG_INT(ClReplaceEscapeKey, cl_replace_escape_key, 0, 0, 512, CFGFLAG_S
 MACRO_CONFIG_INT(ClParticleLimit, cl_particle_limit, 8192, 0, 8192, CFGFLAG_SAVE | CFGFLAG_CLIENT, "What the limit on the amount of particles should be")
 MACRO_CONFIG_INT(ClScoreboardStyle, cl_scoreboard_style, 0, 0, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Style of the scoreboard")
 MACRO_CONFIG_INT(ClScoreboardShorten, cl_scoreboard_shorten, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Shorten the scoreboard if there are not so many players")
+MACRO_CONFIG_INT(ClStatboardWeaponsStyle, cl_statboard_weapons_style, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Change the statboard weapons style to a bar")
 
 MACRO_CONFIG_INT(ClWeatherSnow, cl_weather_snow, 0, 0, 15, CFGFLAG_CLIENT, "Whether to spawn snow")
 MACRO_CONFIG_INT(ClUIWidth, cl_ui_width, 600, 400, 1000, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Size of UI (low values may break some UI, might need restart)")
