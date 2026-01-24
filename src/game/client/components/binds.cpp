@@ -436,9 +436,8 @@ const char *CBinds::GetModifierName(int Modifier)
 	case MODIFIER_GUI:
 		return "gui";
 	default:
-		return "";
-		// dbg_assert(false, "Modifier invalid: %d", Modifier);
-		// dbg_break();
+		dbg_assert(false, "Modifier invalid: %d", Modifier);
+		dbg_break();
 	}
 }
 
