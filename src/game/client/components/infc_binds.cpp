@@ -33,25 +33,16 @@ void CInfCBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserD
 	pConfigManager->WriteLine("infc_unbindall", InfclassConfigDomainId());
 	for(int Modifier = MODIFIER_NONE; Modifier < MODIFIER_COMBINATION_COUNT; Modifier++)
 	{
-		const char* aModifiers = GetModifierName(Modifier);
 		for(int Key = KEY_FIRST; Key < KEY_LAST; Key++)
 		{
 			if(!pSelf->m_aapKeyBindings[Modifier][Key])
 				continue;
 
-			// worst case the str_escape can double the string length
-			int Size = str_length(pSelf->m_aapKeyBindings[Modifier][Key]) * 2 + 30;
-			char *pBuffer = (char *)malloc(Size);
-			char *pEnd = pBuffer + Size;
-
-			str_format(pBuffer, Size, "infc_bind %s%s \"", aModifiers, pSelf->Input()->KeyName(Key));
-			// process the string. we need to escape some characters
-			char *pDst = pBuffer + str_length(pBuffer);
-			str_escape(&pDst, pSelf->m_aapKeyBindings[Modifier][Key], pEnd);
-			str_append(pBuffer, "\"", Size);
-			
-			pConfigManager->WriteLine(pBuffer, InfclassConfigDomainId());
-			free(pBuffer);
+			char *pBuf = pSelf->GetKeyBindCommand(Modifier, Key);
+			char pBuf2[128];
+			str_format(pBuf2, sizeof(pBuf2), "infc_%s", pBuf); 
+			pConfigManager->WriteLine(pBuf2, InfclassConfigDomainId());
+			free(pBuf);
 		}
 	}
 }
