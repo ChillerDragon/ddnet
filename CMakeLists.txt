@@ -1857,6 +1857,9 @@ set(EXPECTED_DATA
   themes/jungle_duck.png
   themes/jungle_duck_day.map
   themes/jungle_duck_night.map
+  themes/saturn_bushes.png
+  themes/saturn_bushes_day.map
+  themes/saturn_bushes_night.map
   themes/newyear.map
   themes/newyear.png
   themes/none.png
@@ -1864,6 +1867,9 @@ set(EXPECTED_DATA
   themes/winter.png
   themes/winter_day.map
   themes/winter_night.map
+  themes/winter_bushes.png
+  themes/winter_bushes_day.map
+  themes/winter_bushes_night.map
   touch_controls.json
   wordlist.txt
 )
