@@ -1851,6 +1851,9 @@ set(EXPECTED_DATA
   themes/autumn.png
   themes/autumn_day.map
   themes/autumn_night.map
+  themes/desert.png
+  themes/desert_day.map
+  themes/desert_night.map
   themes/heavens.png
   themes/heavens_day.map
   themes/heavens_night.map
