@@ -1,3 +1,9 @@
+# [Duck 'n' Infclass Client](https://pointer31.github.io/duckclient.html)
+
+The Duck 'n' Infclass Client is an Infclass client fork with some silly and useful features.
+
+Below is the upstream Infclass README file content.
+
 [![Infclass](https://infclass.github.io/assets/logo720.png)](https://infclass.github.io)
 
 Infclass client is a DDNet client fork with the follow infclass-specific features:
