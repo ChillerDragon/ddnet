@@ -552,8 +552,7 @@ public:
 		// 0.7 Skin
 		CSixup m_aSixup[NUM_DUMMIES];
 
-		int m_CustomClient = '\0';
-		bool m_SentCustomClient = false;
+		int m_CustomClient = 0;
 
 		void KZReset();
 	};
@@ -1013,9 +1012,8 @@ private:
 public:
 	void OnKZReset();
 
-	int ReplaceCountryFlagWithCustomClientId(int Country);
+	int InsertCustomClientIdIntoSkinColor(int Color);
 	bool IsCustomClientId(int Country);
-	int m_SendingCustomClientTicks = -1;
 	int HandleClientCountry(int Country, int ClientId);
 	int GetPredictedDummyId() { return m_PredictedDummyId; }
 };

@@ -1771,6 +1771,28 @@ void CGameClient::OnNewSnapshot()
 
 					if (g_Config.m_ClDuckFilter)
 						str_copy(pClient->m_aSkinName, "Scrubby Duck");
+					
+					//identify kaizo
+					union
+					{
+						int c = 0;
+						unsigned char b[4];
+					} a;
+
+					a.c = pInfo->m_ColorBody;
+
+					if(a.b[3] == CCID_COLOR_BODY_KAIZO_CLIENT)
+					{
+						pClient->m_CustomClient = CUSTOM_CLIENT_ID_KAIZO_NETWORK;
+					}
+					else if(a.b[3] == CCID_COLOR_BODY_CHILLERBOTUX)
+					{
+						pClient->m_CustomClient = CUSTOM_CLIENT_ID_CHILLERBOTUX;
+					}
+					else if(a.b[3] == CCID_COLOR_BODY_PDUCKCLIENT)
+					{
+						pClient->m_CustomClient = CUSTOM_CLIENT_ID_PDUCKCLIENT;
+					}
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
@@ -3070,7 +3092,7 @@ void CGameClient::SendStartInfo7(bool Dummy)
 	protocol7::CNetMsg_Cl_StartInfo Msg;
 	Msg.m_pName = Dummy ? Client()->DummyName() : Client()->PlayerName();
 	Msg.m_pClan = Dummy ? Config()->m_ClDummyClan : Config()->m_PlayerClan;
-	Msg.m_Country = ReplaceCountryFlagWithCustomClientId(Dummy ? Config()->m_ClDummyCountry : Config()->m_PlayerCountry);
+	Msg.m_Country = Dummy ? Config()->m_ClDummyCountry : Config()->m_PlayerCountry;
 	for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
 	{
 		Msg.m_apSkinPartNames[p] = CSkins7::ms_apSkinVariables[(int)Dummy][p];
@@ -3155,10 +3177,10 @@ void CGameClient::SendInfo(bool Start)
 		CNetMsg_Cl_StartInfo Msg;
 		Msg.m_pName = Client()->PlayerName();
 		Msg.m_pClan = g_Config.m_PlayerClan;
-		Msg.m_Country = ReplaceCountryFlagWithCustomClientId(g_Config.m_PlayerCountry);
+		Msg.m_Country = g_Config.m_PlayerCountry;
 		Msg.m_pSkin = g_Config.m_ClPlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_ClPlayerUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClPlayerColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClPlayerColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClPlayerColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -3170,10 +3192,10 @@ void CGameClient::SendInfo(bool Start)
 		CNetMsg_Cl_ChangeInfo Msg;
 		Msg.m_pName = Client()->PlayerName();
 		Msg.m_pClan = g_Config.m_PlayerClan;
-		Msg.m_Country = ReplaceCountryFlagWithCustomClientId(g_Config.m_PlayerCountry);
+		Msg.m_Country = g_Config.m_PlayerCountry;
 		Msg.m_pSkin = g_Config.m_ClPlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_ClPlayerUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClPlayerColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClPlayerColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClPlayerColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -3197,10 +3219,10 @@ void CGameClient::SendDummyInfo(bool Start)
 		CNetMsg_Cl_StartInfo Msg;
 		Msg.m_pName = Client()->DummyName();
 		Msg.m_pClan = g_Config.m_ClDummyClan;
-		Msg.m_Country = ReplaceCountryFlagWithCustomClientId(g_Config.m_ClDummyCountry);
+		Msg.m_Country = g_Config.m_ClDummyCountry;
 		Msg.m_pSkin = g_Config.m_ClDummySkin;
 		Msg.m_UseCustomColor = g_Config.m_ClDummyUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClDummyColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClDummyColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClDummyColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -3212,10 +3234,10 @@ void CGameClient::SendDummyInfo(bool Start)
 		CNetMsg_Cl_ChangeInfo Msg;
 		Msg.m_pName = Client()->DummyName();
 		Msg.m_pClan = g_Config.m_ClDummyClan;
-		Msg.m_Country = ReplaceCountryFlagWithCustomClientId(g_Config.m_ClDummyCountry);
+		Msg.m_Country = g_Config.m_ClDummyCountry;
 		Msg.m_pSkin = g_Config.m_ClDummySkin;
 		Msg.m_UseCustomColor = g_Config.m_ClDummyUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClDummyColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClDummyColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClDummyColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -5366,60 +5388,7 @@ int CGameClient::FindFirstMultiViewId()
 
 void CGameClient::OnKZUpdate()
 {
-	bool MustSendCustomClient = false;
-
-	for(auto &Client : m_aClients)
-	{
-		if(Client.m_Active)
-		{
-			if(Client.ClientId() == m_Snap.m_LocalClientId || Client.ClientId() == GetPredictedDummyId())
-			{
-				m_aClients[Client.ClientId()].m_CustomClient = CUSTOM_CLIENT_ID_PDUCKCLIENT; //force tater client for us
-			}
-
-			if(!m_aClients[Client.ClientId()].m_SentCustomClient)
-			{
-				MustSendCustomClient = true;
-				m_aClients[Client.ClientId()].m_SentCustomClient = true;
-			}
-		}
-		else
-		{
-			m_aClients[Client.ClientId()].m_SentCustomClient = false;
-		}
-	}
-
-	if(MustSendCustomClient)
-	{
-		m_SendingCustomClientTicks = 25;
-	}
-
-	switch (m_SendingCustomClientTicks)
-    {
-    case 25:
-        SendInfo(false);
-        if(m_aClients[m_aLocalIds[0]].m_Country >= MINIMUM_CUSTOM_CLIENT_ID)
-            m_SendingCustomClientTicks = 24;
-        break;
-    case 24:
-        SendDummyInfo(false);
-        if(Client()->DummyConnected() ? m_aClients[m_aLocalIds[1]].m_Country >= MINIMUM_CUSTOM_CLIENT_ID : true)
-            m_SendingCustomClientTicks = 23;
-        break;
-    case 1:
-        SendInfo(false);
-        if(m_aClients[m_aLocalIds[0]].m_Country < MINIMUM_CUSTOM_CLIENT_ID)
-            m_SendingCustomClientTicks = 0;
-    case 0:
-        SendDummyInfo(false);
-        if(Client()->DummyConnected() ? m_aClients[m_aLocalIds[1]].m_Country < MINIMUM_CUSTOM_CLIENT_ID : true)
-            m_SendingCustomClientTicks = -1;
-        break;
-    default:
-        if(m_SendingCustomClientTicks > 0)
-            m_SendingCustomClientTicks--;
-        break;
-    }
+	
 }
 
 void CGameClient::OnKZReset()
@@ -5428,32 +5397,36 @@ void CGameClient::OnKZReset()
 	{
 		ClientData.KZReset();
 	}
-
-	m_SendingCustomClientTicks = 25;
 }
 
 void CGameClient::CClientData::KZReset()
 {
 	m_CustomClient = 0;
-	m_SentCustomClient = false;
 }
 
 // function originally from Kaizo Network by +KZ, credit if used
-int CGameClient::ReplaceCountryFlagWithCustomClientId(int Country)
+int CGameClient::InsertCustomClientIdIntoSkinColor(int Color)
 {
-	if(!g_Config.m_ClSendClientType)
-		return Country;
+    if(!g_Config.m_ClSendClientType)
+    {
+        return Color;
+    }
 
-	if(m_SendingCustomClientTicks <= 1) //dont send custom flag
-		return Country;
+    union
+    {
+        int c = 0;
+        unsigned char b[4];
+    } a;
 
-	//if some random day amount of flags conflicts with invalid flag, just send normal country
-	if(m_CountryFlags.Num() >= MINIMUM_CUSTOM_CLIENT_ID)
-	{
-		return Country;
-	}
+    a.c = Color;
 
-	return CUSTOM_CLIENT_ID_PDUCKCLIENT;
+    //printf("color %d %d %d %d\n", a.b[0], a.b[1], a.b[2], a.b[3]);
+    
+    //alpha is unused
+    a.b[3] = (unsigned char)CCID_COLOR_BODY_PDUCKCLIENT;
+    Color = a.c;
+
+	return Color;
 }
 
 // function originally from Kaizo Network by +KZ, credit if used
