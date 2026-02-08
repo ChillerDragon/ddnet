@@ -1,3 +1,5 @@
 Licenses for the files inside this folder:
 
 kaizoicon.png by +KZ, released under CC BY-SA 4.0
+
+duckicon.png by Pointer (license: CC BY 4.0)
