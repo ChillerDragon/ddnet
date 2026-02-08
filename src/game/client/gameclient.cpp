@@ -1454,7 +1454,7 @@ void CGameClient::ProcessEvents()
 					if(EntItem.m_Type == NETOBJTYPE_LASER || EntItem.m_Type == NETOBJTYPE_DDNETLASER)
 					{
 						CLaserData Data = ExtractLaserInfo(EntItem.m_Type, pData, &m_GameWorld, pEntEx);
-						if (abs(Data.m_To.x - Pos.x) < 10 && abs(Data.m_To.y - Pos.y) < 10) {
+						if (std::abs(Data.m_To.x - Pos.x) < 10 && std::abs(Data.m_To.y - Pos.y) < 10) {
 							if(Data.m_Type == LASERTYPE_SHOTGUN)
 								IsShotgun = true;
 							// else if(Data.m_Type == LASERTYPE_RIFLE)
