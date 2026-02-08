@@ -1448,12 +1448,12 @@ void CGameClient::ProcessEvents()
 				bool IsShotgun = false;
 				for(const CSnapEntities &Ent : SnapEntities())
 				{
-					const IClient::CSnapItem Item = Ent.m_Item;
-					const void *pData = Item.m_pData;
+					const IClient::CSnapItem EntItem = Ent.m_Item;
+					const void *pData = EntItem.m_pData;
 					const CNetObj_EntityEx *pEntEx = Ent.m_pDataEx;
-					if(Item.m_Type == NETOBJTYPE_LASER || Item.m_Type == NETOBJTYPE_DDNETLASER)
+					if(EntItem.m_Type == NETOBJTYPE_LASER || EntItem.m_Type == NETOBJTYPE_DDNETLASER)
 					{
-						CLaserData Data = ExtractLaserInfo(Item.m_Type, pData, &m_GameWorld, pEntEx);
+						CLaserData Data = ExtractLaserInfo(EntItem.m_Type, pData, &m_GameWorld, pEntEx);
 						if (abs(Data.m_To.x - Pos.x) < 10 && abs(Data.m_To.y - Pos.y) < 10) {
 							if(Data.m_Type == LASERTYPE_SHOTGUN)
 								IsShotgun = true;
