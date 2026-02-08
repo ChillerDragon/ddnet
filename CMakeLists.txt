@@ -1137,6 +1137,7 @@ set(EXPECTED_DATA
   audio/wp_switch-02.wv
   audio/wp_switch-03.wv
   autoexec_server.cfg
+  autoexec_server_twplus.cfg
   background_noise.png
   blob.png
   censorlist.txt
@@ -1568,6 +1569,10 @@ set(EXPECTED_DATA
   maps/dm7.map
   maps/dm8.map
   maps/dm9.map
+  maps/dm_gfountain.map
+  maps/dm_jungle_large_tele.map
+  maps/dm_large_tele.map
+  maps/htf_dm1.map
   maps/license.txt
   maps7/Gold\ Mine.map
   maps7/LearnToPlay.map
@@ -1859,23 +1864,23 @@ set(EXPECTED_DATA
   themes/heavens_night.map
   themes/jungle.png
   themes/jungle_day.map
-  themes/jungle_night.map
   themes/jungle_duck.png
   themes/jungle_duck_day.map
   themes/jungle_duck_night.map
-  themes/saturn_bushes.png
-  themes/saturn_bushes_day.map
-  themes/saturn_bushes_night.map
+  themes/jungle_night.map
   themes/newyear.map
   themes/newyear.png
   themes/none.png
   themes/rand.png
+  themes/saturn_bushes.png
+  themes/saturn_bushes_day.map
+  themes/saturn_bushes_night.map
   themes/winter.png
-  themes/winter_day.map
-  themes/winter_night.map
   themes/winter_bushes.png
   themes/winter_bushes_day.map
   themes/winter_bushes_night.map
+  themes/winter_day.map
+  themes/winter_night.map
   touch_controls.json
   wordlist.txt
 )
