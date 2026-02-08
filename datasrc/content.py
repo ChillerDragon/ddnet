@@ -492,9 +492,9 @@ container.sprites.Add(Sprite("part_sparkle", set_extras, 2,0,2,2))
 container.sprites.Add(Sprite("part_pulley", set_extras, 4,0,1,1))
 container.sprites.Add(Sprite("part_hectagon", set_extras, 6,0,2,2))
 
-# TClient Client Icons
+# DuckClient Client Icons
 
-# Kaizo Network
+# Kaizo Client
 kz_image_kaizoicon= Image("kz_kaizoicon", "clienticons/kaizoicon.png")
 container.images.Add(kz_image_kaizoicon)
 set_kz_kaizoicon = SpriteSet("kz_kaizoicon", kz_image_kaizoicon, 1, 1)
