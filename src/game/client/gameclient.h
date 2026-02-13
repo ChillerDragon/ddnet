@@ -553,6 +553,7 @@ public:
 		CSixup m_aSixup[NUM_DUMMIES];
 
 		int m_CustomClient = 0;
+		bool m_ReceivedDDNetPlayerInfoInLastSnapshot = false;
 
 		void KZReset();
 	};

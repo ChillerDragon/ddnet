@@ -1731,6 +1731,7 @@ void CGameClient::OnNewSnapshot()
 	for(auto &Client : m_aClients)
 	{
 		Client.m_SpecCharPresent = false;
+		Client.m_ReceivedDDNetPlayerInfoInLastSnapshot = false;
 	}
 
 	// go through all the items in the snapshot and gather the info we want
@@ -1829,6 +1830,8 @@ void CGameClient::OnNewSnapshot()
 					}
 					else if(m_aStats[pInfo->m_ClientId].IsActive())
 						m_aStats[pInfo->m_ClientId].JoinSpec(Client()->GameTick(g_Config.m_ClDummy));
+
+					m_aClients[pInfo->m_ClientId].m_ReceivedDDNetPlayerInfoInLastSnapshot = true;
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_DDNETPLAYER)
@@ -2110,6 +2113,11 @@ void CGameClient::OnNewSnapshot()
 	for(CClientData &Client : m_aClients)
 	{
 		Client.UpdateSkinInfo();
+
+		if(!Client.m_ReceivedDDNetPlayerInfoInLastSnapshot)
+		{
+			Client.m_CustomClient = 0;
+		}
 	}
 
 	// setup local pointers
