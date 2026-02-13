@@ -186,6 +186,17 @@ void CVoting::AddOption(const char *pDescription)
 	if(!m_pFirst)
 		m_pFirst = pOption;
 
+	// start of 0.7 depth code
+	int Depth = 0;
+	for(;*pDescription == '#'; pDescription++, Depth++);
+	pOption->m_Depth = Depth ? Depth : pOption->m_pPrev ? pOption->m_pPrev->m_Depth : 0;
+
+	pOption->m_IsSubheader = Depth;
+
+	if(!*pDescription)
+		pOption->m_Depth = 0;
+	// end of 0.7 depth code
+
 	str_copy(pOption->m_aDescription, pDescription);
 	++m_NumVoteOptions;
 }

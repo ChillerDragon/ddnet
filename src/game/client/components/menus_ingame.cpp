@@ -861,12 +861,16 @@ bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)
 		aIndices[NumVoteOptions] = i;
 		NumVoteOptions++;
 
-		const CListboxItem Item = s_ListBox.DoNextItem(pOption);
+		CListboxItem Item = pOption->m_IsSubheader ? s_ListBox.DoSubheader() : s_ListBox.DoNextItem(pOption);
 		if(!Item.m_Visible)
 			continue;
 
 		CUIRect Label;
+		// some 0.7 vote depth code
+		for(int i = pOption->m_IsSubheader ? 1 : 0; i < pOption->m_Depth; i++)
+			Item.m_Rect.VSplitLeft(10.0f, 0, &Item.m_Rect);
 		Item.m_Rect.VMargin(2.0f, &Label);
+		
 		Ui()->DoLabel(&Label, pOption->m_aDescription, 13.0f, TEXTALIGN_ML);
 	}
 
