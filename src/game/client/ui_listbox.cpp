@@ -182,7 +182,10 @@ CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, float CornerRa
 CListboxItem CListBox::DoSubheader()
 {
 	CListboxItem Item = DoNextRow();
-	Item.m_Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.2f), IGraphics::CORNER_NONE, 0.0f);
+	
+	ColorRGBA color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColor, false));
+	color.a = 0.1;
+	Item.m_Rect.Draw(color, IGraphics::CORNER_NONE, 0.0f);
 	return Item;
 }
 
