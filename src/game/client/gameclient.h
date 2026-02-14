@@ -551,6 +551,11 @@ public:
 
 		// 0.7 Skin
 		CSixup m_aSixup[NUM_DUMMIES];
+
+		int m_CustomClient = 0;
+		bool m_ReceivedDDNetPlayerInfoInLastSnapshot = false;
+
+		void KZReset();
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
@@ -937,6 +942,7 @@ public:
 
 	void ResetMultiView();
 	int FindFirstMultiViewId();
+	void OnKZUpdate();
 	void CleanMultiViewId(int ClientId);
 
 private:
@@ -1003,6 +1009,14 @@ private:
 	};
 
 	SMultiView m_MultiView;
+
+public:
+	void OnKZReset();
+
+	int InsertCustomClientIdIntoSkinColor(int Color);
+	bool IsCustomClientId(int Country);
+	int HandleClientCountry(int Country, int ClientId);
+	int GetPredictedDummyId() { return m_PredictedDummyId; }
 };
 
 ColorRGBA CalculateNameColor(ColorHSLA TextColorHSL);

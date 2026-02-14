@@ -86,6 +86,8 @@
 
 #include <game/client/laser_data.h>
 
+#include <engine/external/ddnet-custom-clients/custom_clients_ids.h>
+
 using namespace std::chrono_literals;
 
 const char *CGameClient::Version() const { return GAME_VERSION; }
@@ -514,6 +516,8 @@ void CGameClient::OnUpdate()
 	{
 		pComponent->OnUpdate();
 	}
+
+	OnKZUpdate();
 }
 
 void CGameClient::OnDummySwap()
@@ -600,6 +604,7 @@ void CGameClient::OnConnected()
 		pComponent->OnMapLoad();
 		pComponent->OnReset();
 	}
+	OnKZReset();
 
 	ConfigManager()->ResetGameSettings();
 	LoadMapSettings();
@@ -727,6 +732,8 @@ void CGameClient::OnReset()
 
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnReset();
+
+	OnKZReset();
 
 	Editor()->ResetMentions();
 	Editor()->ResetIngameMoved();
@@ -1251,6 +1258,7 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 	// reset everything when not already connected (to keep gathered stuff)
 	if(NewState < IClient::STATE_ONLINE)
 		OnReset();
+	OnKZReset();
 
 	// then change the state
 	for(auto &pComponent : m_vpAll)
@@ -1723,6 +1731,7 @@ void CGameClient::OnNewSnapshot()
 	for(auto &Client : m_aClients)
 	{
 		Client.m_SpecCharPresent = false;
+		Client.m_ReceivedDDNetPlayerInfoInLastSnapshot = false;
 	}
 
 	// go through all the items in the snapshot and gather the info we want
@@ -1748,6 +1757,7 @@ void CGameClient::OnNewSnapshot()
 					}
 					IntsToStr(pInfo->m_aClan, std::size(pInfo->m_aClan), pClient->m_aClan, std::size(pClient->m_aClan));
 					pClient->m_Country = pInfo->m_Country;
+					HandleClientCountry(pClient->m_Country, ClientId); //+KZ
 
 					IntsToStr(pInfo->m_aSkin, std::size(pInfo->m_aSkin), pClient->m_aSkinName, std::size(pClient->m_aSkinName));
 					if(!CSkin::IsValidName(pClient->m_aSkinName) ||
@@ -1762,6 +1772,28 @@ void CGameClient::OnNewSnapshot()
 
 					if (g_Config.m_ClDuckFilter)
 						str_copy(pClient->m_aSkinName, "Scrubby Duck");
+					
+					//identify kaizo
+					union
+					{
+						int c = 0;
+						unsigned char b[4];
+					} a;
+
+					a.c = pInfo->m_ColorBody;
+
+					if(a.b[3] == CCID_COLOR_BODY_KAIZO_CLIENT)
+					{
+						pClient->m_CustomClient = CUSTOM_CLIENT_ID_KAIZO_NETWORK;
+					}
+					else if(a.b[3] == CCID_COLOR_BODY_CHILLERBOTUX)
+					{
+						pClient->m_CustomClient = CUSTOM_CLIENT_ID_CHILLERBOTUX;
+					}
+					else if(a.b[3] == CCID_COLOR_BODY_PDUCKCLIENT)
+					{
+						pClient->m_CustomClient = CUSTOM_CLIENT_ID_PDUCKCLIENT;
+					}
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
@@ -1798,6 +1830,8 @@ void CGameClient::OnNewSnapshot()
 					}
 					else if(m_aStats[pInfo->m_ClientId].IsActive())
 						m_aStats[pInfo->m_ClientId].JoinSpec(Client()->GameTick(g_Config.m_ClDummy));
+
+					m_aClients[pInfo->m_ClientId].m_ReceivedDDNetPlayerInfoInLastSnapshot = true;
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_DDNETPLAYER)
@@ -2079,6 +2113,11 @@ void CGameClient::OnNewSnapshot()
 	for(CClientData &Client : m_aClients)
 	{
 		Client.UpdateSkinInfo();
+
+		if(!Client.m_ReceivedDDNetPlayerInfoInLastSnapshot)
+		{
+			Client.m_CustomClient = 0;
+		}
 	}
 
 	// setup local pointers
@@ -3149,7 +3188,7 @@ void CGameClient::SendInfo(bool Start)
 		Msg.m_Country = g_Config.m_PlayerCountry;
 		Msg.m_pSkin = g_Config.m_ClPlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_ClPlayerUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClPlayerColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClPlayerColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClPlayerColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -3164,7 +3203,7 @@ void CGameClient::SendInfo(bool Start)
 		Msg.m_Country = g_Config.m_PlayerCountry;
 		Msg.m_pSkin = g_Config.m_ClPlayerSkin;
 		Msg.m_UseCustomColor = g_Config.m_ClPlayerUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClPlayerColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClPlayerColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClPlayerColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -3191,7 +3230,7 @@ void CGameClient::SendDummyInfo(bool Start)
 		Msg.m_Country = g_Config.m_ClDummyCountry;
 		Msg.m_pSkin = g_Config.m_ClDummySkin;
 		Msg.m_UseCustomColor = g_Config.m_ClDummyUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClDummyColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClDummyColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClDummyColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -3206,7 +3245,7 @@ void CGameClient::SendDummyInfo(bool Start)
 		Msg.m_Country = g_Config.m_ClDummyCountry;
 		Msg.m_pSkin = g_Config.m_ClDummySkin;
 		Msg.m_UseCustomColor = g_Config.m_ClDummyUseCustomColor;
-		Msg.m_ColorBody = g_Config.m_ClDummyColorBody;
+		Msg.m_ColorBody = InsertCustomClientIdIntoSkinColor(g_Config.m_ClDummyColorBody);
 		Msg.m_ColorFeet = g_Config.m_ClDummyColorFeet;
 		CMsgPacker Packer(&Msg);
 		Msg.Pack(&Packer);
@@ -5353,4 +5392,68 @@ int CGameClient::FindFirstMultiViewId()
 			return i;
 	}
 	return ClientId;
+}
+
+void CGameClient::OnKZUpdate()
+{
+	
+}
+
+void CGameClient::OnKZReset()
+{
+	for(auto &ClientData : m_aClients)
+	{
+		ClientData.KZReset();
+	}
+}
+
+void CGameClient::CClientData::KZReset()
+{
+	m_CustomClient = 0;
+}
+
+// function originally from Kaizo Network by +KZ, credit if used
+int CGameClient::InsertCustomClientIdIntoSkinColor(int Color)
+{
+    if(!g_Config.m_ClSendClientType)
+    {
+        return Color;
+    }
+
+    union
+    {
+        int c = 0;
+        unsigned char b[4];
+    } a;
+
+    a.c = Color;
+
+    //printf("color %d %d %d %d\n", a.b[0], a.b[1], a.b[2], a.b[3]);
+    
+    //alpha is unused
+    a.b[3] = (unsigned char)CCID_COLOR_BODY_PDUCKCLIENT;
+    Color = a.c;
+
+	return Color;
+}
+
+// function originally from Kaizo Network by +KZ, credit if used
+bool CGameClient::IsCustomClientId(int Country)
+{
+	return (size_t)Country > m_CountryFlags.Num();
+}
+
+// code originally from Kaizo Network by +KZ, credit if used
+int CGameClient::HandleClientCountry(int Country, int ClientId)
+{
+	if(IsCustomClientId(Country)) //if it is a custom client id, set custom client id and keep country
+	{
+		if(!m_aClients[ClientId].m_CustomClient)
+			m_aClients[ClientId].m_CustomClient = Country;
+		return m_aClients[ClientId].m_Country;
+	}
+	else //otherwise, set country
+	{
+		return Country;
+	}
 }
