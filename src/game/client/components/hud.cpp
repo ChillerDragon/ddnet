@@ -861,14 +861,25 @@ void CHud::RenderAmmoHealthAndArmor(const CNetObj_Character *pCharacter)
 		}
 		else if(CurWeapon >= 0 && GameClient()->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon].IsValid())
 		{
+			int Ammo = pCharacter->m_AmmoCount == -1 ? 1 : std::clamp(pCharacter->m_AmmoCount, 0, 10);
 			Graphics()->TextureSet(GameClient()->m_GameSkin.m_aSpriteWeaponProjectiles[CurWeapon]);
 			if(AmmoOffsetY > 0)
 			{
-				Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, std::clamp(pCharacter->m_AmmoCount, 0, 10), 0, AmmoOffsetY);
+				Graphics()->RenderQuadContainerEx(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, Ammo, 0, AmmoOffsetY);
 			}
 			else
 			{
-				Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, std::clamp(pCharacter->m_AmmoCount, 0, 10));
+				Graphics()->RenderQuadContainer(m_HudQuadContainerIndex, m_aAmmoOffset[CurWeapon] + QuadOffsetSixup, Ammo);
+			}
+
+			if (pCharacter->m_AmmoCount == -1)
+			{
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_SYMBOL_INFINITE].m_Id);
+				Graphics()->QuadsBegin();
+				Graphics()->SetColor(vec4(1.0f, 1.0f, 1.0f, 1.0));
+				IGraphics::CQuadItem QuadItemBackground(18.0f, AmmoOffsetY+3, 16, 16);
+				Graphics()->QuadsDrawTL(&QuadItemBackground, 1);
+				Graphics()->QuadsEnd();
 			}
 		}
 	}

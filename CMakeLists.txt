@@ -1847,6 +1847,7 @@ set(EXPECTED_DATA
   skins7/x_ninja.json
   skins7/xmas_hat.png
   strong_weak.png
+  symbol_infinite.png
   clienticons/duckicon.png
   clienticons/kaizoicon.png
   clienticons/license.txt
