@@ -14,8 +14,8 @@
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
 #include <game/client/prediction/gameworld.h>
-#include <game/localization.h>
 #include <game/damage_type.h>
+#include <game/localization.h>
 
 static constexpr float ROW_HEIGHT = 46.0f;
 static constexpr float FONT_SIZE = 36.0f;

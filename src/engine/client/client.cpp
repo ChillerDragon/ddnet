@@ -28,11 +28,6 @@
 #include <engine/message.h>
 #include <engine/notifications.h>
 #include <engine/serverbrowser.h>
-#include <engine/sound.h>
-#include <engine/steam.h>
-#include <engine/storage.h>
-#include <engine/textrender.h>
-
 #include <engine/shared/assertion_logger.h>
 #include <engine/shared/compression.h>
 #include <engine/shared/config.h>

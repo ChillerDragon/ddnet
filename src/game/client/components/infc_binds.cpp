@@ -1,6 +1,7 @@
 #include "infc_binds.h"
 
 #include <engine/shared/infclass.h>
+
 #include <game/client/gameclient.h>
 
 void CInfCBinds::OnConsoleInit()
@@ -9,7 +10,7 @@ void CInfCBinds::OnConsoleInit()
 	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
 	if(pConfigManager)
 		pConfigManager->RegisterCallback(ConfigSaveCallback, this);
-	
+
 	Console()->Register("infc_bind", "s[key] ?r[command]", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute a command or view keybindings");
 	Console()->Register("infc_binds", "?s[key]", CFGFLAG_CLIENT, ConBinds, this, "Print command executed by this keybindind or all binds");
 	Console()->Register("infc_unbind", "s[key]", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key");
@@ -40,7 +41,7 @@ void CInfCBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserD
 
 			char *pBuf = pSelf->GetKeyBindCommand(Modifier, Key);
 			char pBuf2[128];
-			str_format(pBuf2, sizeof(pBuf2), "infc_%s", pBuf); 
+			str_format(pBuf2, sizeof(pBuf2), "infc_%s", pBuf);
 			pConfigManager->WriteLine(pBuf2, InfclassConfigDomainId());
 			free(pBuf);
 		}

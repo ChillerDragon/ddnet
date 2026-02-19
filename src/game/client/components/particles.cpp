@@ -40,9 +40,9 @@ void CParticles::OnReset()
 
 void CParticles::Add(int Group, CParticle *pPart, float TimePassed)
 {
-	if (g_Config.m_ClParticleLimit == 0)
+	if(g_Config.m_ClParticleLimit == 0)
 		return;
-		
+
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();

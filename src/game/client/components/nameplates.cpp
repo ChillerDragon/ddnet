@@ -1,5 +1,6 @@
 #include "nameplates.h"
 
+#include <engine/external/ddnet-custom-clients/custom_clients_ids.h> //TClient
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <engine/shared/protocol7.h>
@@ -13,8 +14,6 @@
 
 #include <memory>
 #include <vector>
-
-#include <engine/external/ddnet-custom-clients/custom_clients_ids.h> //TClient
 
 static constexpr float DEFAULT_PADDING = 5.0f;
 
@@ -475,12 +474,12 @@ public:
 
 	CNamePlatePartCustomClient(CGameClient &This) :
 		CNamePlatePartSprite(This)
-		{
-			m_Texture = g_pData->m_aImages[IMAGE_KZ_KAIZOICON].m_Id;
-			m_Padding = vec2(0.0f, 0.0f);
-			m_Sprite = SPRITE_KZ_KAIZOICON;
-			m_Size = vec2(20 + DEFAULT_PADDING, 20 + DEFAULT_PADDING);
-		}
+	{
+		m_Texture = g_pData->m_aImages[IMAGE_KZ_KAIZOICON].m_Id;
+		m_Padding = vec2(0.0f, 0.0f);
+		m_Sprite = SPRITE_KZ_KAIZOICON;
+		m_Size = vec2(20 + DEFAULT_PADDING, 20 + DEFAULT_PADDING);
+	}
 };
 
 // Name Plates
@@ -539,7 +538,7 @@ private:
 		AddPart<CNamePlatePartHookStrongWeak>(This);
 		AddPart<CNamePlatePartHookStrongWeakId>(This);
 
-		AddPart<CNamePlatePartCustomClient>(This); 
+		AddPart<CNamePlatePartCustomClient>(This);
 	}
 
 public:

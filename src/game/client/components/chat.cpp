@@ -1188,11 +1188,11 @@ void CChat::OnRender()
 		{
 			Graphics()->TextureClear();
 			int yy = y - 1.0f;
-			int ContainerIndex = Graphics()->CreateRectQuadContainer(x/2, yy/2, Width - 189.0f, 2.5f*ScaledFontSize, MessageRounding(), IGraphics::CORNER_ALL);
+			int ContainerIndex = Graphics()->CreateRectQuadContainer(x / 2, yy / 2, Width - 189.0f, 2.5f * ScaledFontSize, MessageRounding(), IGraphics::CORNER_ALL);
 			if(0 != -1)
 			{
 				Graphics()->SetColor(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClChatBackgroundColor, true)));
-				Graphics()->RenderQuadContainerEx(ContainerIndex, 0, -1, x/2, yy/2);
+				Graphics()->RenderQuadContainerEx(ContainerIndex, 0, -1, x / 2, yy / 2);
 			}
 		}
 

@@ -188,7 +188,8 @@ void CVoting::AddOption(const char *pDescription)
 
 	// start of 0.7 depth code
 	int Depth = 0;
-	for(;*pDescription == '#'; pDescription++, Depth++);
+	for(; *pDescription == '#'; pDescription++, Depth++)
+		;
 	pOption->m_Depth = Depth ? Depth : pOption->m_pPrev ? pOption->m_pPrev->m_Depth : 0;
 
 	pOption->m_IsSubheader = Depth;

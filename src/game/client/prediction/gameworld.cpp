@@ -15,10 +15,11 @@
 
 #include <engine/shared/config.h>
 
+#include <generated/protocol.h>
+
 #include <game/client/laser_data.h>
 #include <game/client/pickup_data.h>
 #include <game/client/projectile_data.h>
-#include <generated/protocol.h>
 #include <game/mapbugs.h>
 #include <game/mapitems.h>
 
@@ -606,7 +607,7 @@ void CGameWorld::NetObjAdd(int ObjId, int ObjType, const void *pObjData, const C
 		NetObject.SetSnapData1(pObject->m_Data1);
 
 		CIcPlacedObject *pExisting = static_cast<CIcPlacedObject *>(GetEntity(ObjId, ENTTYPE_IC_PLACED_OBJECT));
-		if (pExisting && pExisting->Match(&NetObject))
+		if(pExisting && pExisting->Match(&NetObject))
 		{
 			pExisting->Keep();
 			pExisting->Read(NetObject);

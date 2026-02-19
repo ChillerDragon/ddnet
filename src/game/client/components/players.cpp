@@ -15,6 +15,7 @@
 #include <generated/client_data7.h>
 #include <generated/protocol.h>
 
+#include <game/classes.h>
 #include <game/client/animstate.h>
 #include <game/client/components/controls.h>
 #include <game/client/components/effects.h>
@@ -24,8 +25,6 @@
 #include <game/client/gameclient.h>
 #include <game/gamecore.h>
 #include <game/mapitems.h>
-
-#include <game/classes.h>
 
 static float CalculateHandAngle(vec2 Dir, float AngleOffset)
 {
@@ -636,7 +635,7 @@ void CPlayers::RenderPlayer(
 				if(g_Config.m_ClHammerRotatesWithCursor)
 				{
 					QuadsRotation += Angle;
-					if (Direction.x < 0)
+					if(Direction.x < 0)
 						QuadsRotation += pi;
 					Graphics()->QuadsSetRotation(QuadsRotation);
 				}

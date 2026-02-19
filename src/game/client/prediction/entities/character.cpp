@@ -9,12 +9,9 @@
 
 #include <generated/client_data.h>
 
+#include <game/classes.h>
 #include <game/collision.h>
 #include <game/mapitems.h>
-
-#include <game/classes.h>
-
-#include <game/classes.h>
 
 // Character, "physical" player's part
 
@@ -570,7 +567,7 @@ void CCharacter::FireWeapon()
 					return;
 				}
 			}
-				break;
+			break;
 			case PLAYERCLASS_LOOPER:
 				LaserReach = LaserReach * 0.7f;
 				FireDelay = 250;

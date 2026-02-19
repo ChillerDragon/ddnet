@@ -126,7 +126,7 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 	if(Checked)
 		Color = ColorRGBA(0.6f, 0.6f, 0.6f, 0.5f);
 
-	if (Color.r == 1.0f && Color.g == 1.0f && Color.b == 1.0f)
+	if(Color.r == 1.0f && Color.g == 1.0f && Color.b == 1.0f)
 		Color = ColorRGBA(ms_GuiColorButtons.r, ms_GuiColorButtons.g, ms_GuiColorButtons.b, Color.a);
 
 	Color.a *= Ui()->ButtonColorMul(pButtonContainer);
@@ -749,7 +749,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 				const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
 				const char *pName = pCommunity->Name();
-				
+
 				if(g_Config.m_ClEnableCommunities == 0)
 				{
 					if(str_comp(pCommunity->Id(), IServerBrowser::COMMUNITY_DDNET) == 0)
@@ -761,13 +761,13 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 						pName = "KoG";
 					}
 				}
-				
+
 				if(DoButton_MenuTab(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], pName, ActivePage == Page, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIT_TAB_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex], nullptr, nullptr, nullptr, 10.0f, m_CommunityIcons.Find(pCommunity->Id())))
 				{
 					NewPage = Page;
 				}
 				GameClient()->m_Tooltips.DoToolTip(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], &Button, pCommunity->Name());
-				
+
 				++FavoriteCommunityIndex;
 				if(FavoriteCommunityIndex >= std::size(s_aFavoriteCommunityButtons))
 					break;
@@ -1177,13 +1177,13 @@ void CMenus::Render()
 		{
 			RenderBackground();
 		}
-		if (g_Config.m_UiColorMainMenu)
+		if(g_Config.m_UiColorMainMenu)
 		{
 			ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
 			ms_ColorTabbarActive = ms_ColorTabbarActiveIngame;
 			ms_ColorTabbarHover = ms_ColorTabbarHoverIngame;
 			ms_GuiColorButtons = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColorButtons, true));
-			if (g_Config.m_UiColorMainMenu == 1)
+			if(g_Config.m_UiColorMainMenu == 1)
 			{
 				ms_ColorTabbarInactive.a = ms_ColorTabbarInactiveOutgame.a;
 				ms_ColorTabbarActive.a = ms_ColorTabbarActiveOutgame.a;

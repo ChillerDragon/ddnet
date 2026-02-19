@@ -309,7 +309,6 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 		static CButtonContainer s_UiColorButtonsResetId;
 		DoLine_ColorPicker(&s_UiColorButtonsResetId, 25.0f, 13.0f, 2.0f, &Left, Localize("Button Color"), &g_Config.m_UiColorButtons, color_cast<ColorRGBA>(ColorHSLA(0xFFFFFFFF, true)), false, nullptr, true);
 
-
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
 		Ui()->DoScrollbarOption(&g_Config.m_UiColorMainMenu, &g_Config.m_UiColorMainMenu, &Button, Localize("UI color on main menu"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
@@ -322,13 +321,10 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 		Left.HSplitTop(20.0f, &Button, &Left);
 		Ui()->DoScrollbarOption(&g_Config.m_ClScoreboardShorten, &g_Config.m_ClScoreboardShorten, &Button, Localize("Shorten Scoreboard"), 0, 2, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
 
-
 		// miscellaneous
 		Left.HSplitTop(40.0f, &Label, &Left);
 		Left.HSplitTop(30.0f, &Label, &Left);
 		Ui()->DoLabel(&Label, Localize("Miscellaneous"), 20.0f, TEXTALIGN_ML);
-
-
 
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
@@ -352,7 +348,7 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
-		if (g_Config.m_ClConfirmKillTime != -1)
+		if(g_Config.m_ClConfirmKillTime != -1)
 			str_copy(aBuf, Localize("s", "Seconds"), sizeof(aBuf));
 		else
 		{
@@ -369,7 +365,6 @@ void CMenus::RenderSettingsDuckClient(CUIRect MainView)
 		Left.HSplitTop(VerticalSpacing, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
 		Ui()->DoScrollbarOption(&g_Config.m_ClWeatherSnow, &g_Config.m_ClWeatherSnow, &Button, Localize("Snow Weather (won't be saved)"), 0, 15, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
-
 	}
 
 	// From T-Client
@@ -2391,7 +2386,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Sound"),
 		Localize("DDNet"),
 		Localize("Assets"),
-		Localize("DuckC"),};
+		Localize("DuckC"),
+	};
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 
 	for(int i = 0; i < SETTINGS_LENGTH; i++)

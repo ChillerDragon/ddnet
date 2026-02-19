@@ -3,9 +3,6 @@
 
 #include "gameclient.h"
 
-#include <game/classes.h>
-#include <game/damage_type.h>
-
 #include "components/background.h"
 #include "components/binds.h"
 #include "components/broadcast.h"
@@ -57,18 +54,18 @@
 #include <engine/discord.h>
 #include <engine/editor.h>
 #include <engine/engine.h>
+#include <engine/external/ddnet-custom-clients/custom_clients_ids.h>
 #include <engine/favorites.h>
 #include <engine/friends.h>
 #include <engine/graphics.h>
 #include <engine/map.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
+#include <engine/shared/infclass.h>
 #include <engine/sound.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/updater.h>
-
-#include <engine/shared/infclass.h>
 
 #include <generated/client_data.h>
 #include <generated/client_data7.h>
@@ -76,17 +73,16 @@
 #include <generated/protocol7.h>
 #include <generated/protocolglue.h>
 
+#include <game/classes.h>
+#include <game/client/laser_data.h>
 #include <game/client/projectile_data.h>
+#include <game/damage_type.h>
 #include <game/localization.h>
 #include <game/mapitems.h>
 #include <game/version.h>
 
 #include <chrono>
 #include <limits>
-
-#include <game/client/laser_data.h>
-
-#include <engine/external/ddnet-custom-clients/custom_clients_ids.h>
 
 using namespace std::chrono_literals;
 
@@ -938,14 +934,14 @@ void CGameClient::OnRender()
 
 	UpdateManagedTeeRenderInfos();
 
-	if (g_Config.m_ClWeatherSnow) {
+	if(g_Config.m_ClWeatherSnow)
+	{
 		static int snowTick = 1;
-		if (Client()->PredGameTick(0)/2 > snowTick || Client()->PredGameTick(0)/2 < snowTick - 50) {
-			snowTick = Client()->PredGameTick(0)/2;
-			if (g_Config.m_ClWeatherSnow >= 3 
-				|| (g_Config.m_ClWeatherSnow == 2 && snowTick % 2 == 0) 
-				|| (g_Config.m_ClWeatherSnow == 1 && snowTick % 4 == 0))
-				for (int i = 0; i < maximum(1, g_Config.m_ClWeatherSnow - 2); i++)
+		if(Client()->PredGameTick(0) / 2 > snowTick || Client()->PredGameTick(0) / 2 < snowTick - 50)
+		{
+			snowTick = Client()->PredGameTick(0) / 2;
+			if(g_Config.m_ClWeatherSnow >= 3 || (g_Config.m_ClWeatherSnow == 2 && snowTick % 2 == 0) || (g_Config.m_ClWeatherSnow == 1 && snowTick % 4 == 0))
+				for(int i = 0; i < maximum(1, g_Config.m_ClWeatherSnow - 2); i++)
 					m_Effects.Snow(m_LocalCharacterPos);
 		}
 	}
@@ -1451,7 +1447,8 @@ void CGameClient::ProcessEvents()
 			if(m_GameInfo.m_RaceSounds && ((pEvent->m_SoundId == SOUND_GUN_FIRE && !g_Config.m_SndGun) || (pEvent->m_SoundId == SOUND_PLAYER_PAIN_LONG && !g_Config.m_SndLongPain)))
 				continue;
 
-			if (pEvent->m_SoundId == SOUND_LASER_BOUNCE && g_Config.m_ClExtraParticles) {
+			if(pEvent->m_SoundId == SOUND_LASER_BOUNCE && g_Config.m_ClExtraParticles)
+			{
 				vec2 Pos = vec2(pEvent->m_X, pEvent->m_Y);
 				bool IsShotgun = false;
 				for(const CSnapEntities &Ent : SnapEntities())
@@ -1462,7 +1459,8 @@ void CGameClient::ProcessEvents()
 					if(EntItem.m_Type == NETOBJTYPE_LASER || EntItem.m_Type == NETOBJTYPE_DDNETLASER)
 					{
 						CLaserData Data = ExtractLaserInfo(EntItem.m_Type, pData, &m_GameWorld, pEntEx);
-						if (std::abs(Data.m_To.x - Pos.x) < 10 && std::abs(Data.m_To.y - Pos.y) < 10) {
+						if(std::abs(Data.m_To.x - Pos.x) < 10 && std::abs(Data.m_To.y - Pos.y) < 10)
+						{
 							if(Data.m_Type == LASERTYPE_SHOTGUN)
 								IsShotgun = true;
 							// else if(Data.m_Type == LASERTYPE_RIFLE)
@@ -1472,10 +1470,10 @@ void CGameClient::ProcessEvents()
 						}
 					}
 				}
-				if (IsShotgun)
+				if(IsShotgun)
 					m_Effects.LaserBounce(Pos, Alpha, g_Config.m_ClLaserShotgunInnerColor);
 				else
-					m_Effects.LaserBounce(Pos, Alpha, g_Config.m_ClLaserRifleInnerColor);	
+					m_Effects.LaserBounce(Pos, Alpha, g_Config.m_ClLaserRifleInnerColor);
 			}
 
 			m_Sounds.PlayAt(CSounds::CHN_WORLD, pEvent->m_SoundId, 1.0f, vec2(pEvent->m_X, pEvent->m_Y));
@@ -1770,9 +1768,9 @@ void CGameClient::OnNewSnapshot()
 					pClient->m_ColorBody = pInfo->m_ColorBody;
 					pClient->m_ColorFeet = pInfo->m_ColorFeet;
 
-					if (g_Config.m_ClDuckFilter)
+					if(g_Config.m_ClDuckFilter)
 						str_copy(pClient->m_aSkinName, "Scrubby Duck");
-					
+
 					//identify kaizo
 					union
 					{
@@ -3291,13 +3289,13 @@ void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
 	int time = pClient->CurrentRaceTime();
 
 	// after 1-2 seconds, the attempts should be reset
-	if (abs(lastKillTime - time) > 1)
+	if(abs(lastKillTime - time) > 1)
 		killAttempts = 0;
-	
+
 	lastKillTime = time;
-	
+
 	// if not enough time has passed for the protection to be avtive, or it had already been activated prior, then kill
-	if (g_Config.m_ClConfirmKillTime == -1 || time <= g_Config.m_ClConfirmKillTime || killAttempts >= 1)
+	if(g_Config.m_ClConfirmKillTime == -1 || time <= g_Config.m_ClConfirmKillTime || killAttempts >= 1)
 		pClient->SendKill();
 	else
 		pClient->m_Chat.Echo("Self kill attempt prevented. Trigger self kill again to confirm.");
@@ -3418,7 +3416,7 @@ void CGameClient::UpdateLocalTuning()
 		m_GameWorld.GetTuning(0)->m_PlayerHooking = 1;
 		m_GameWorld.GetTuning(0)->m_JetpackStrength = 400;
 	}
-	
+
 	if(!m_Snap.m_pLocalCharacter && !m_Snap.m_pSpectatorInfo)
 		return;
 
@@ -4835,12 +4833,12 @@ IGraphics::CTextureHandle *CGameClient::GetInfclassTexturePtrForDamageType(EDama
 {
 	switch(DamageType)
 	{
-//	case EDamageType::SNIPER_RIFLE:
-//		return &m_InfclassSkin.m_SpriteSniperRifle;
-//	case EDamageType::SCIENTIST_LASER:
-//		return &m_InfclassSkin.m_SpriteScientistLaser;
-//	case EDamageType::MEDIC_SHOTGUN:
-//		return &m_InfclassSkin.m_SpriteMedicShotgun;
+		//	case EDamageType::SNIPER_RIFLE:
+		//		return &m_InfclassSkin.m_SpriteSniperRifle;
+		//	case EDamageType::SCIENTIST_LASER:
+		//		return &m_InfclassSkin.m_SpriteScientistLaser;
+		//	case EDamageType::MEDIC_SHOTGUN:
+		//		return &m_InfclassSkin.m_SpriteMedicShotgun;
 
 	case EDamageType::LASER_WALL:
 		return &m_InfclassSkin.m_SpriteLaserWall;
@@ -4852,8 +4850,8 @@ IGraphics::CTextureHandle *CGameClient::GetInfclassTexturePtrForDamageType(EDama
 		return &m_InfclassSkin.m_SpriteBiologistMine;
 	case EDamageType::MERCENARY_BOMB:
 		return &m_InfclassSkin.m_SpriteMercenaryBomb;
-//	case EDamageType::WHITE_HOLE:
-//		return &m_InfclassSkin.m_SpriteWhiteHole;
+		//	case EDamageType::WHITE_HOLE:
+		//		return &m_InfclassSkin.m_SpriteWhiteHole;
 	case EDamageType::TURRET_DESTRUCTION:
 		return &m_InfclassSkin.m_SpriteTurretDestruction;
 	case EDamageType::TURRET_LASER:
@@ -5396,7 +5394,6 @@ int CGameClient::FindFirstMultiViewId()
 
 void CGameClient::OnKZUpdate()
 {
-	
 }
 
 void CGameClient::OnKZReset()
@@ -5415,24 +5412,24 @@ void CGameClient::CClientData::KZReset()
 // function originally from Kaizo Network by +KZ, credit if used
 int CGameClient::InsertCustomClientIdIntoSkinColor(int Color)
 {
-    if(!g_Config.m_ClSendClientType)
-    {
-        return Color;
-    }
+	if(!g_Config.m_ClSendClientType)
+	{
+		return Color;
+	}
 
-    union
-    {
-        int c = 0;
-        unsigned char b[4];
-    } a;
+	union
+	{
+		int c = 0;
+		unsigned char b[4];
+	} a;
 
-    a.c = Color;
+	a.c = Color;
 
-    //printf("color %d %d %d %d\n", a.b[0], a.b[1], a.b[2], a.b[3]);
-    
-    //alpha is unused
-    a.b[3] = (unsigned char)CCID_COLOR_BODY_PDUCKCLIENT;
-    Color = a.c;
+	//printf("color %d %d %d %d\n", a.b[0], a.b[1], a.b[2], a.b[3]);
+
+	//alpha is unused
+	a.b[3] = (unsigned char)CCID_COLOR_BODY_PDUCKCLIENT;
+	Color = a.c;
 
 	return Color;
 }

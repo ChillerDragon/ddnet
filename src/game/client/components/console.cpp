@@ -1095,9 +1095,10 @@ void CGameConsole::OnRender()
 	Ui()->MapScreen();
 
 	int ExtraHeight = 0;
-	if (g_Config.m_ClOldClientConsole >= 1)
+	if(g_Config.m_ClOldClientConsole >= 1)
 		ExtraHeight = 10;
-	if (g_Config.m_ClOldClientConsole >= 2) {
+	if(g_Config.m_ClOldClientConsole >= 2)
+	{
 		// do background
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
 		Graphics()->QuadsBegin();
@@ -1108,7 +1109,9 @@ void CGameConsole::OnRender()
 		IGraphics::CQuadItem QuadItem(0, 0, Screen.w, ConsoleHeight + ExtraHeight);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
-	} else {
+	}
+	else
+	{
 		// background
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BACKGROUND_NOISE].m_Id);
 		Graphics()->QuadsBegin();
@@ -1127,7 +1130,8 @@ void CGameConsole::OnRender()
 	Graphics()->QuadsDrawTL(&QuadItemBorder, 1);
 	Graphics()->QuadsEnd();
 
-	if (g_Config.m_ClOldClientConsole >= 1) {
+	if(g_Config.m_ClOldClientConsole >= 1)
+	{
 		// do console shadow
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
@@ -1162,7 +1166,9 @@ void CGameConsole::OnRender()
 		IGraphics::CQuadItem QuadItemBar(0, ConsoleHeight, Screen.w, 10.0f);
 		Graphics()->QuadsDrawTL(&QuadItemBar, 1);
 		Graphics()->QuadsEnd();
-	} else {
+	}
+	else
+	{
 		// bottom shadow
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();

@@ -13,13 +13,13 @@
 #include <game/localization.h>
 
 static const vec4 s_aWeaponColors[] =
-{
-	vec4(201/255.0f, 197/255.0f, 205/255.0f, 1.0f),
-	vec4(156/255.0f, 158/255.0f, 100/255.0f, 1.0f),
-	vec4(98/255.0f, 80/255.0f, 46/255.0f, 1.0f),
-	vec4(163/255.0f, 51/255.0f, 56/255.0f, 1.0f),
-	vec4(65/255.0f, 97/255.0f, 161/255.0f, 1.0f),
-	vec4(182/255.0f, 137/255.0f, 40/255.0f, 1.0f),
+	{
+		vec4(201 / 255.0f, 197 / 255.0f, 205 / 255.0f, 1.0f),
+		vec4(156 / 255.0f, 158 / 255.0f, 100 / 255.0f, 1.0f),
+		vec4(98 / 255.0f, 80 / 255.0f, 46 / 255.0f, 1.0f),
+		vec4(163 / 255.0f, 51 / 255.0f, 56 / 255.0f, 1.0f),
+		vec4(65 / 255.0f, 97 / 255.0f, 161 / 255.0f, 1.0f),
+		vec4(182 / 255.0f, 137 / 255.0f, 40 / 255.0f, 1.0f),
 };
 
 CStatboard::CStatboard()
@@ -200,7 +200,7 @@ void CStatboard::RenderGlobalStats()
 	bool GameWithFlags = GameClient()->m_Snap.m_pGameInfoObj &&
 			     GameClient()->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS;
 
-	StatboardContentWidth += 3*85 + 1*95 + 2*125 + 4; // Suicides 95; other labels 85
+	StatboardContentWidth += 3 * 85 + 1 * 95 + 2 * 125 + 4; // Suicides 95; other labels 85
 
 	if(GameWithFlags)
 		StatboardContentWidth += 150; // Grabs & Flags
@@ -305,7 +305,7 @@ void CStatboard::RenderGlobalStats()
 		if(j == 31)
 		{
 			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), Localize("⋅⋅⋅ %d other players"), NumPlayers-j);
+			str_format(aBuf, sizeof(aBuf), Localize("⋅⋅⋅ %d other players"), NumPlayers - j);
 
 			CTextCursor Cursor;
 			Cursor.SetPosition(vec2(x, y + (LineHeight * 0.95f - FontSize) / 2.f));
@@ -418,7 +418,7 @@ void CStatboard::RenderGlobalStats()
 		}
 		// WEAPONS
 		px -= 40;
-		if (!Config()->m_ClStatboardWeaponsStyle)
+		if(!Config()->m_ClStatboardWeaponsStyle)
 		{
 			for(int i = 0; i < NUM_WEAPONS; i++)
 			{
@@ -430,11 +430,13 @@ void CStatboard::RenderGlobalStats()
 				TextRender()->Text(x + px - tw / 2, y + (LineHeight * 0.95f - FontSize) / 2.f, FontSize, aBuf, -1.0f);
 				px += 80;
 			}
-		} else {
-			const float BarHeight = 0.3f*LineHeight;
+		}
+		else
+		{
+			const float BarHeight = 0.3f * LineHeight;
 			const float Offset = 40.0f;
 			const float StartX = px - Offset;
-			const float RoundSize = BarHeight/2.0f;
+			const float RoundSize = BarHeight / 2.0f;
 			float EndX = StartX; // each bar will have its width incremented by the roundsize so this avoids that last one would overflow
 			int TotalKills = 0;
 			for(int i = 0; i < NUM_WEAPONS; i++)
@@ -443,9 +445,9 @@ void CStatboard::RenderGlobalStats()
 				{
 					EndX += 80.0f;
 					TotalKills += pStats->m_aFragsWith[i];
-				}					
+				}
 			}
-			float ExploitableLength = (EndX-StartX) - RoundSize;
+			float ExploitableLength = (EndX - StartX) - RoundSize;
 			CUIRect Rect = {x + StartX, y + LineHeight / 2.0f - BarHeight / 2.0f, 0.0f, BarHeight};
 			for(int i = 0; i < NUM_WEAPONS; i++)
 			{

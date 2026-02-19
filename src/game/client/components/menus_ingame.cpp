@@ -870,7 +870,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)
 		for(int i = pOption->m_IsSubheader ? 1 : 0; i < pOption->m_Depth; i++)
 			Item.m_Rect.VSplitLeft(10.0f, 0, &Item.m_Rect);
 		Item.m_Rect.VMargin(2.0f, &Label);
-		
+
 		Ui()->DoLabel(&Label, pOption->m_aDescription, 13.0f, TEXTALIGN_ML);
 	}
 

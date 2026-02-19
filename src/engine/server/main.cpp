@@ -11,8 +11,8 @@
 #include <engine/server/server_logger.h>
 #include <engine/shared/assertion_logger.h>
 #include <engine/shared/config.h>
-#include <engine/storage.h>
 #include <engine/shared/infclass.h>
+#include <engine/storage.h>
 
 #include <game/version.h>
 

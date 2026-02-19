@@ -49,11 +49,12 @@ void CEffects::AirJump(vec2 Pos, float Alpha)
 
 void CEffects::LaserBounce(vec2 Pos, float Alpha, unsigned int Color)
 {
-	if (!g_Config.m_ClExtraParticles)
+	if(!g_Config.m_ClExtraParticles)
 		return;
 
 	CParticle p;
-	for (int i = 0; i < 3; i++) {
+	for(int i = 0; i < 3; i++)
+	{
 		p.SetDefault();
 		p.m_Spr = SPRITE_PART_HIT01;
 		p.m_Pos = Pos + vec2(-6.0f, 16.0f);
@@ -296,7 +297,8 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientId, float Alpha)
 	}
 
 	// Pointer31's
-	if (g_Config.m_ClBloodParticles) {
+	if(g_Config.m_ClBloodParticles)
+	{
 		for(int i = 0; i < 64; i++)
 		{
 			CParticle p;
@@ -401,13 +403,13 @@ void CEffects::Explosion(vec2 Pos, float Alpha)
 	p.m_StartAlpha = Alpha;
 	GameClient()->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &p);
 
-	if (g_Config.m_ClExtraParticles)
+	if(g_Config.m_ClExtraParticles)
 		for(int i = 0; i < 14; i++)
 		{
 			p.SetDefault();
 			p.m_Spr = SPRITE_PART_SMOKE; // SPRITE_PART_AIRJUMP
 			p.m_Pos = Pos + random_direction() * (random_float(0.0f, 1.0f) * 32.0f);
-			p.m_Vel = {0,0};
+			p.m_Vel = {0, 0};
 			p.m_LifeSpan = random_float(1.5f, 1.7f);
 			p.m_StartSize = random_float(28.0f, 35.0f);
 			p.m_EndSize = random_float(28.0f, 35.0f);
@@ -418,7 +420,7 @@ void CEffects::Explosion(vec2 Pos, float Alpha)
 			p.m_StartAlpha = p.m_Color.a;
 			p.m_EndAlpha = 0.0f;
 			p.m_UseAlphaFading = true;
-			if (Collision()->CheckPoint(p.m_Pos))
+			if(Collision()->CheckPoint(p.m_Pos))
 				GameClient()->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &p);
 		}
 
@@ -491,7 +493,7 @@ void CEffects::Snow(vec2 Pos, float Alpha)
 	p.SetDefault();
 	p.m_Spr = SPRITE_PART_SNOWFLAKE;
 	p.m_Pos = Pos + vec2(random_float(-120.0f, 120.0f), random_float(-100.5f, 30.0f)) * Size;
-	if (Collision()->CheckPoint(p.m_Pos))
+	if(Collision()->CheckPoint(p.m_Pos))
 		return;
 	p.m_Vel = vec2(random_float(-50.0f, -10.0f), 50);
 	p.m_LifeSpan = 8.5f;
@@ -510,7 +512,6 @@ void CEffects::Snow(vec2 Pos, float Alpha)
 	p.m_StartAlpha = Alpha;
 	GameClient()->m_Particles.Add(CParticles::GROUP_EXTRA, &p);
 }
-
 
 void CEffects::OnRender()
 {

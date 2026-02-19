@@ -812,7 +812,6 @@ public:
 
 	void DoAudioPreview(CUIRect View, const void *pPlayPauseButtonId, const void *pStopButtonId, const void *pSeekBarId, int SampleId);
 
-	
 	// Zooming
 	void ZoomAdaptOffsetX(float ZoomFactor, const CUIRect &View);
 	void UpdateZoomEnvelopeX(const CUIRect &View);

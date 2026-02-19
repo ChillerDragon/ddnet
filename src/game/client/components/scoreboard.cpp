@@ -129,7 +129,7 @@ void CScoreboard::RenderTitle(CUIRect TitleBar, int Team, const char *pTitle)
 
 void CScoreboard::RenderGoals(CUIRect Goals)
 {
-	if (g_Config.m_ClScoreboardStyle >= 2)
+	if(g_Config.m_ClScoreboardStyle >= 2)
 		Goals.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), g_Config.m_ClScoreboardStyle == 2 ? IGraphics::CORNER_T : IGraphics::CORNER_ALL, 15.0f);
 	else
 		Goals.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 15.0f);
@@ -183,8 +183,8 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 {
 	static int LinesUsed = 1;
 	int MaxHeight = Spectators.h;
-	if (g_Config.m_ClScoreboardShorten >= 1)
-		Spectators.HSplitTop(LinesUsed*22.0f, &Spectators, nullptr);
+	if(g_Config.m_ClScoreboardShorten >= 1)
+		Spectators.HSplitTop(LinesUsed * 22.0f, &Spectators, nullptr);
 	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
 	if(g_Config.m_ClScoreboardStyle == 2 && pGameInfoObj && (pGameInfoObj->m_ScoreLimit || pGameInfoObj->m_TimeLimit || (pGameInfoObj->m_RoundNum && pGameInfoObj->m_RoundCurrent)))
 		Spectators.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_B, 15.0f);
@@ -697,7 +697,7 @@ void CScoreboard::OnRender()
 	const float ScoreboardWidth = !Teams && NumPlayers <= 16 ? ScoreboardSmallWidth : 1500.0f;
 	const float TitleHeight = 60.0f;
 
-	CUIRect Scoreboard = {(Width - ScoreboardWidth) / 2.0f, 150.0f, ScoreboardWidth, (g_Config.m_ClScoreboardShorten >= 2 && NumPlayers <= 8 ? 50.0f + 76.0f*NumPlayers : 710.0f) + TitleHeight};
+	CUIRect Scoreboard = {(Width - ScoreboardWidth) / 2.0f, 150.0f, ScoreboardWidth, (g_Config.m_ClScoreboardShorten >= 2 && NumPlayers <= 8 ? 50.0f + 76.0f * NumPlayers : 710.0f) + TitleHeight};
 	CScoreboardRenderState RenderState{};
 
 	if(Teams)
@@ -763,8 +763,8 @@ void CScoreboard::OnRender()
 	}
 	else
 	{
-		if (!g_Config.m_ClScoreboardStyle)
-		Scoreboard.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 15.0f);
+		if(!g_Config.m_ClScoreboardStyle)
+			Scoreboard.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 15.0f);
 
 		const char *pTitle;
 		if(pGameInfoObj && (pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER))
@@ -778,7 +778,7 @@ void CScoreboard::OnRender()
 
 		CUIRect Title;
 		Scoreboard.HSplitTop(TitleHeight, &Title, &Scoreboard);
-		if (g_Config.m_ClScoreboardStyle)
+		if(g_Config.m_ClScoreboardStyle)
 		{
 			Title.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), g_Config.m_ClScoreboardStyle <= 2 ? IGraphics::CORNER_T : IGraphics::CORNER_ALL, 15.0f);
 			Scoreboard.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), g_Config.m_ClScoreboardStyle <= 2 ? IGraphics::CORNER_B : IGraphics::CORNER_ALL, 15.0f);
@@ -825,8 +825,8 @@ void CScoreboard::OnRender()
 	{
 		CUIRect Goals;
 		Spectators.HSplitTop(50.0f, &Goals, &Spectators);
-		if (g_Config.m_ClScoreboardStyle <= 1)
-		Spectators.HSplitTop(10.0f, nullptr, &Spectators);
+		if(g_Config.m_ClScoreboardStyle <= 1)
+			Spectators.HSplitTop(10.0f, nullptr, &Spectators);
 		RenderGoals(Goals);
 	}
 	RenderSpectators(Spectators);
