@@ -1141,6 +1141,9 @@ set(EXPECTED_DATA
   background_noise.png
   blob.png
   censorlist.txt
+  clienticons/duckicon.png
+  clienticons/kaizoicon.png
+  clienticons/license.txt
   communityicons/none.png
   console.png
   console_bar.png
@@ -1853,9 +1856,6 @@ set(EXPECTED_DATA
   skins7/xmas_hat.png
   strong_weak.png
   symbol_infinite.png
-  clienticons/duckicon.png
-  clienticons/kaizoicon.png
-  clienticons/license.txt
   themes/auto.png
   themes/autumn.png
   themes/autumn_day.map
