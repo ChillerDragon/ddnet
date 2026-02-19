@@ -25,6 +25,7 @@
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/map.h>
+#include <engine/message.h>
 #include <engine/notifications.h>
 #include <engine/serverbrowser.h>
 #include <engine/sound.h>
@@ -227,6 +228,11 @@ void CClient::SendInfo(int Conn)
 		SendMsg(Conn, &Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH);
 		return;
 	}
+
+	CMsgPacker IamDuck(NETMSG_IAMDUCKCLIENT, true);
+	IamDuck.AddInt(DUCKCLIENT_VERSIONNUM);
+	IamDuck.AddString("duck " DUCKCLIENT_VERSIONSTR " built on " __DATE__ ", " __TIME__);
+	SendMsg(Conn, &IamDuck, MSGFLAG_VITAL);
 
 	CMsgPacker MsgVerInfclass(NETMSG_CLIENTVER_INFCLASS, true);
 	MsgVerInfclass.AddInt(INFCLASS_CLIENT_VERSION);
