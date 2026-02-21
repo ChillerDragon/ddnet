@@ -1604,6 +1604,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				return;
 			}
 
+			log_info("client", "allowed origin: %s", pAllowedOrigin);
+			log_info("client", "our origin: %s", m_aRedirectOrigin);
+
 			if(!str_is_allowed_origin(pAllowedOrigin, m_aRedirectOrigin))
 			{
 				char aBuf[512];

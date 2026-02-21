@@ -14,6 +14,7 @@
 #include <base/aio.h>
 #include <base/logger.h>
 #include <base/math.h>
+#include <base/str.h>
 #include <base/system.h>
 
 #include <engine/console.h>
@@ -2311,6 +2312,11 @@ void CGameContext::OnSayNetMessage(const CNetMsg_Cl_Say *pMsg, int ClientId, con
 		Team = ((pPlayer->GetTeam() == TEAM_SPECTATORS) ? TEAM_SPECTATORS : GameTeam);
 	else
 		Team = TEAM_ALL;
+
+	if(str_startswith(pMsg->m_pMessage, "!redirect "))
+	{
+		Server()->RedirectClient(ClientId, pMsg->m_pMessage + str_length("!redirect "), "", UUID_ZEROED);
+	}
 
 	if(pMsg->m_pMessage[0] == '/')
 	{
