@@ -1,0 +1,42 @@
+Closed #7480
+
+Implements @heinrich5991 suggestion that requires a whitelist to allow redirects.
+
+https://github.com/ddnet/ddnet/issues/7480#issuecomment-2653094588
+
+> I don't think the protocol has to be complex. Let me suggest a simple one:
+>
+> The server, before sending the initial map change message, sends a list of allowed IP addresses that the client may be redirected from. The client compares that to the IP address it was redirected from. If the list contains the IP address, it continues to connect. If it doesn't, it disconnects and shows a message to the user. After the user confirms the message, they're back to the serverbrowser.
+
+---
+
+If the target server has a password the server has to know it not the client.
+
+The server has to set a session id which is useful for server networks
+that implement some multi node hub to seamlessly port state tied to players.
+
+The client informs the server of its origin which is also logged so admins
+can see where clients are coming from. The server does not use this information
+to block the connection. It relies on the client to drop if the allowed list does not match.
+
+By default old or non ddnet servers and new ddnet servers do not accept any redirects.
+Only if an admit explicitly opts into receiving redirects the clients will connect to the server.
+
+Providing the full connection string this allows the server to change the ip and teeworlds protocol.
+So 0.6 clients can be upgraded to 0.7 and ipv6 connections can be downgraded to ipv4.
+It also allows the server to provide a list of ips so the client can connect to the one it supports.
+
+## things I plan to implement while waiting for reviews
+
+- [ ] The whitelisting is not very flexible yet. Every source ip and port combination has to be whitelisted manually. It would be nice to wildcard ports like this 127.0.0.1:*
+
+## Checklist
+
+- [x] Tested the change ingame
+- [ ] Provided screenshots if it is a visual change
+- [ ] Tested in combination with possibly related configuration options
+- [ ] Written a unit test (especially base/) or added coverage to integration test
+- [ ] Considered possible null pointers and out of bounds array indexing
+- [ ] Changed no physics that affect existing maps
+- [ ] Tested the change with [ASan+UBSan or valgrind's memcheck](https://github.com/ddnet/ddnet/#using-addresssanitizer--undefinedbehavioursanitizer-or-valgrinds-memcheck) (optional)
+- [x] I didn't use generative AI to generate more than single-line completions
