@@ -413,6 +413,21 @@ int str_comp(const char *a, const char *b);
 int str_comp_num(const char *a, const char *b, int num);
 
 /**
+ * Checks if pValue matches pPattern where the pattern can contain a pWildcard
+ *
+ * @ingroup Strings
+ *
+ * @param pattern the pattern that can optionally contain wildcards
+ * @param text the value we match against
+ * @params wildcard the wildcard that can be used in the pattern to match anything
+ *
+ * @return true if the text is exactly the same as pattern or matched by wildcards
+ *
+ * @remark The strings are treated as null-terminated strings.
+ */
+bool str_match_wildcard(const char *pattern, const char *text, char wildcard);
+
+/**
  * Checks case insensitive whether the string begins with a certain prefix.
  *
  * @ingroup Strings
@@ -531,6 +546,8 @@ const char *str_next_token(const char *str, const char *delim, char *buffer, int
  * @remark The strings are treated as null-terminated strings.
  */
 int str_in_list(const char *list, const char *delim, const char *needle);
+
+bool str_in_wildcard_list(const char *list, const char *delim, char wildcard, const char *needle);
 
 /**
  * @ingroup Strings

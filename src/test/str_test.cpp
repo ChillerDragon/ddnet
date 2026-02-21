@@ -1486,6 +1486,33 @@ TEST(Str, WindowsUtf8WideConversion)
 }
 #endif
 
+TEST(Str, Wildcard)
+{
+	EXPECT_TRUE(str_match_wildcard("hello", "hello", '*'));
+	EXPECT_TRUE(str_match_wildcard("hello*", "hello world", '*'));
+	EXPECT_TRUE(str_match_wildcard("hello", "hello", '*'));
+	EXPECT_TRUE(str_match_wildcard("he*o", "hello", '*'));
+	EXPECT_FALSE(str_match_wildcard("brown", "quick brown fox", '*'));
+	EXPECT_TRUE(str_match_wildcard("*brown*", "brown", '*'));
+	EXPECT_FALSE(str_match_wildcard("h*llo", "hyellow", '*'));
+	EXPECT_FALSE(str_match_wildcard("h*llo", "h*yellow", '*'));
+	EXPECT_FALSE(str_match_wildcard("h*llo", "h**yellow", '*'));
+	EXPECT_TRUE(str_match_wildcard("*h*e*l*l*o*", "hello", '*'));
+	EXPECT_TRUE(str_match_wildcard("hell****o", "hello", '*'));
+	EXPECT_FALSE(str_match_wildcard("hell****o", "hello!", '*'));
+	EXPECT_TRUE(str_match_wildcard("h*ello", "heylo labeylo in yelow says ello", '*'));
+	EXPECT_TRUE(str_match_wildcard("hello*", "hello", '*'));
+	EXPECT_TRUE(str_match_wildcard("*", "hello", '*'));
+}
+
+TEST(Str, WildcardList)
+{
+	EXPECT_TRUE(str_in_wildcard_list("hello,world", ",", '*', "hello"));
+	EXPECT_TRUE(str_in_wildcard_list("hello,world", ",", '*', "world"));
+	EXPECT_TRUE(str_in_wildcard_list("h*llo,world", ",", '*', "world"));
+	EXPECT_FALSE(str_in_wildcard_list("h*llo,world", ",", '*', "yellow"));
+}
+
 TEST(Str, AllowedOrigin)
 {
 	EXPECT_TRUE(str_is_allowed_origin("*", "127.0.0.1"));
@@ -1499,4 +1526,11 @@ TEST(Str, AllowedOrigin)
 
 	EXPECT_FALSE(str_is_allowed_origin("127.0.0.1,mars", "127.0.0.2"));
 	EXPECT_FALSE(str_is_allowed_origin("127.0.0.1,mars", "venus"));
+
+	EXPECT_TRUE(str_is_allowed_origin("127.0.0.1:*", "127.0.0.1:8303"));
+	EXPECT_FALSE(str_is_allowed_origin("127.0.0.1:*", "127.0.0.1"));
+	EXPECT_TRUE(str_is_allowed_origin("*.ddnet.tw,ddnet.tw,*.ddnet.org,ddnet.org", "ger1.ddnet.org"));
+	EXPECT_TRUE(str_is_allowed_origin("*.ddnet.tw,ddnet.tw,*.ddnet.org,ddnet.org", "ddnet.org"));
+	EXPECT_TRUE(str_is_allowed_origin("*.ddnet.tw,ddnet.tw,*.ddnet.org,ddnet.org", "ger10.ddnet.tw"));
+	EXPECT_FALSE(str_is_allowed_origin("*.ddnet.tw,ddnet.tw,*.ddnet.org,ddnet.org", "localhost"));
 }

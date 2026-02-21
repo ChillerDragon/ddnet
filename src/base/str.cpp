@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 int str_copy(char *dst, const char *src, int dst_size)
 {
@@ -380,6 +381,45 @@ int str_comp_num(const char *a, const char *b, int num)
 	return strncmp(a, b, num);
 }
 
+// full credit goes to
+// https://www.geeksforgeeks.org/dsa/wildcard-pattern-matching/
+bool str_match_wildcard(const char *pattern, const char *text, char wildcard)
+{
+	int n = str_length(text);
+	int m = str_length(pattern);
+	int i = 0, j = 0, startIndex = -1, match = 0;
+
+	while(i < n)
+	{
+		if(j < m && (pattern[j] == text[i]))
+		{
+			i++;
+			j++;
+		}
+		else if(j < m && pattern[j] == wildcard)
+		{
+			startIndex = j;
+			match = i;
+			j++;
+		}
+		else if(startIndex != -1)
+		{
+			j = startIndex + 1;
+			match++;
+			i = match;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	while(j < m && pattern[j] == wildcard)
+	{
+		j++;
+	}
+	return j == m;
+}
+
 const char *str_startswith_nocase(const char *str, const char *prefix)
 {
 	int prefixl = str_length(prefix);
@@ -523,6 +563,24 @@ int str_in_list(const char *list, const char *delim, const char *needle)
 	while(notfound && (tok = str_token_get(tok, delim, &len)))
 	{
 		notfound = needlelen != len || str_comp_num(tok, needle, len);
+		tok = tok + len;
+	}
+
+	return !notfound;
+}
+
+bool str_in_wildcard_list(const char *list, const char *delim, char wildcard, const char *needle)
+{
+	const char *tok = list;
+	int len = 0, notfound = 1, needlelen = str_length(needle);
+
+	while(notfound && (tok = str_token_get(tok, delim, &len)))
+	{
+		char buf[2048];
+		str_copy(buf, tok);
+		buf[len] = '\0';
+
+		notfound = needlelen != len || !str_match_wildcard(buf, needle, wildcard);
 		tok = tok + len;
 	}
 
@@ -1380,5 +1438,5 @@ bool str_is_allowed_origin(const char *pAllowedOrigins, const char *pHost)
 		return false;
 	if(!str_comp(pAllowedOrigins, "*"))
 		return true;
-	return str_in_list(pAllowedOrigins, ",", pHost);
+	return str_in_wildcard_list(pAllowedOrigins, ",", '*', pHost);
 }
