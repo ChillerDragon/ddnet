@@ -22,6 +22,7 @@
 #include <engine/shared/fifo.h>
 #include <engine/shared/http.h>
 #include <engine/shared/network.h>
+#include <engine/shared/uuid_manager.h>
 #include <engine/textrender.h>
 #include <engine/warning.h>
 
@@ -92,6 +93,8 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	CUuid m_ConnectionId = UUID_ZEROED;
 	bool m_Sixup;
+	char m_aRedirectOrigin[MAX_SERVER_ADDRESSES * NETADDR_MAXSTRSIZE] = "";
+	CUuid m_RedirectSessionId = UUID_ZEROED;
 
 	bool m_HaveGlobalTcpAddr = false;
 	NETADDR m_GlobalTcpAddr = NETADDR_ZEROED;
@@ -365,6 +368,7 @@ public:
 	void Restart() override;
 	void Quit() override;
 	void ResetSocket();
+	void FailedRedirect(const char *pReason);
 
 	const char *PlayerName() const override;
 	const char *DummyName() override;

@@ -1485,3 +1485,18 @@ TEST(Str, WindowsUtf8WideConversion)
 	}
 }
 #endif
+
+TEST(Str, AllowedOrigin)
+{
+	EXPECT_TRUE(str_is_allowed_origin("*", "127.0.0.1"));
+	EXPECT_TRUE(str_is_allowed_origin("*", "mars"));
+
+	EXPECT_FALSE(str_is_allowed_origin("", "127.0.0.1"));
+	EXPECT_FALSE(str_is_allowed_origin("", "mars"));
+
+	EXPECT_TRUE(str_is_allowed_origin("127.0.0.1,mars", "127.0.0.1"));
+	EXPECT_TRUE(str_is_allowed_origin("127.0.0.1,mars", "mars"));
+
+	EXPECT_FALSE(str_is_allowed_origin("127.0.0.1,mars", "127.0.0.2"));
+	EXPECT_FALSE(str_is_allowed_origin("127.0.0.1,mars", "venus"));
+}

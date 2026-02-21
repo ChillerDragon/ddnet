@@ -1373,3 +1373,12 @@ int str_utf32_dist_buffer(const int *a, int a_len, const int *b, int b_len, int 
 	return B(a_len, b_len);
 #undef B
 }
+
+bool str_is_allowed_origin(const char *pAllowedOrigins, const char *pHost)
+{
+	if(pAllowedOrigins[0] == '\0')
+		return false;
+	if(!str_comp(pAllowedOrigins, "*"))
+		return true;
+	return str_in_list(pAllowedOrigins, ",", pHost);
+}
