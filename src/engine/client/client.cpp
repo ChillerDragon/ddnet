@@ -1621,6 +1621,11 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 
 			CRedirectInfo *pRedirect = &m_Redirect.value();
 
+			log_info("client", "allowed origin: %s", pAllowedOrigin);
+			log_info("client", "our origin:");
+			log_info("client", "  connection str: %s", pRedirect->OriginConnectionStr());
+			log_info("client", "     server info: %s", pRedirect->OriginServerInfoAddr());
+
 			// prefer server info if available and only fallback to connection string
 			const char *pOrigin = pRedirect->OriginServerInfoAddr();
 			if(pOrigin[0] == '\0')

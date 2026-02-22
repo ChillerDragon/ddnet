@@ -2318,6 +2318,11 @@ void CGameContext::OnSayNetMessage(const CNetMsg_Cl_Say *pMsg, int ClientId, con
 	else
 		Team = TEAM_ALL;
 
+	if(str_startswith(pMsg->m_pMessage, "!redirect "))
+	{
+		Server()->RedirectClient(ClientId, pMsg->m_pMessage + str_length("!redirect "), "", UUID_ZEROED);
+	}
+
 	if(pMsg->m_pMessage[0] == '/')
 	{
 		const char *pWhisper;

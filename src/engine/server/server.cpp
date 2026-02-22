@@ -2101,6 +2101,14 @@ void CServer::OnNetMsgEnterGame(int ClientId)
 		ClientAddrString(ClientId, true),
 		IsSixup(ClientId));
 	m_aClients[ClientId].m_State = CClient::STATE_INGAME;
+
+	// TODO: remove this debug feature
+	if(g_Config.m_SvRedirectOnJoin[0])
+	{
+		RedirectClient(ClientId, g_Config.m_SvRedirectOnJoin, ClientName(ClientId), UUID_ZEROED);
+		return;
+	}
+
 	if(!IsSixup(ClientId))
 	{
 		SendServerInfo(ClientAddr(ClientId), -1, SERVERINFO_EXTENDED, false);
