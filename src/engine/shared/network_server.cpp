@@ -425,20 +425,16 @@ void CNetServer::OnPreConnMsg(NETADDR &Addr, CNetPacketConstruct &Packet)
 			SECURITY_TOKEN SecurityToken = Unpacker.GetInt();
 			if(SecurityToken == GetVanillaToken(Addr))
 			{
-				if(g_Config.m_Debug)
-					dbg_msg("security", "new client (vanilla handshake)");
+				dbg_msg("security", "new client (vanilla handshake)");
 				// try to accept client skipping auth state
 				TryAcceptClient(Addr, NET_SECURITY_TOKEN_UNSUPPORTED, true);
 			}
-			else if(g_Config.m_Debug)
+			else
 				dbg_msg("security", "invalid token (vanilla handshake)");
 		}
 		else
 		{
-			if(g_Config.m_Debug)
-			{
-				dbg_msg("security", "invalid preconn msg %d", Msg);
-			}
+			dbg_msg("security", "invalid preconn msg %d", Msg);
 		}
 	}
 }
