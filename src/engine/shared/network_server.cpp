@@ -323,7 +323,7 @@ void CNetServer::OnPreConnMsg(NETADDR &Addr, CNetPacketConstruct &Packet)
 				}
 			}
 
-			if(g_Config.m_Debug && Flooding)
+			if(Flooding)
 			{
 				dbg_msg("security", "vanilla connection flooding detected");
 			}
@@ -684,7 +684,7 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 					}
 					else
 					{
-						dbg_msg("network_in", "got game or sys msg");
+						dbg_msg("network_in", "got game or sys msg (pre con)");
 						// got connection-less ctrl or sys msg
 						OnPreConnMsg(Addr, m_RecvUnpacker.m_Data);
 					}
