@@ -500,7 +500,7 @@ MACRO_CONFIG_INT(EcBantime, ec_bantime, 0, 0, 1440, CFGFLAG_ECON, "The time a cl
 MACRO_CONFIG_INT(EcAuthTimeout, ec_auth_timeout, 30, 1, 120, CFGFLAG_ECON, "Time in seconds before the the econ authentication times out")
 MACRO_CONFIG_INT(EcOutputLevel, ec_output_level, 0, -3, 2, CFGFLAG_ECON, "Adjusts the amount of information in the external console (-3 = none, -2 = error only, -1 = warn, 0 = info, 1 = debug, 2 = trace)")
 
-MACRO_CONFIG_INT(Debug, debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SERVER, "Debug mode")
+MACRO_CONFIG_INT(Debug, debug, 0, 0, 4, CFGFLAG_CLIENT | CFGFLAG_SERVER, "Debug mode")
 MACRO_CONFIG_INT(NetSecurity, net_security, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SERVER, "disable all network checks")
 MACRO_CONFIG_INT(DbgSnap, dbg_snap, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SERVER, "Verbose printing of all snapshot items")
 MACRO_CONFIG_INT(DbgSql, dbg_sql, 1, 0, 1, CFGFLAG_SERVER, "Debug SQL")

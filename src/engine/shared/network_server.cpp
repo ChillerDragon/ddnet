@@ -601,6 +601,13 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 		if(Bytes <= 0)
 			break;
 
+		if(g_Config.m_Debug > 3)
+		{
+			char aHex[8049];
+			str_hex(aHex, sizeof(aHex), pData, Bytes);
+			dbg_msg("network_in", "%s", aHex);
+		}
+
 		// check if we just should drop the packet
 		char aBuf[128];
 		if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
