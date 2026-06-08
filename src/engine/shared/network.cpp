@@ -6,6 +6,7 @@
 #include "huffman.h"
 
 #include <base/log.h>
+#include <base/str.h>
 #include <base/system.h>
 #include <base/types.h>
 
@@ -239,6 +240,32 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 		aBuffer[1] = pPacket->m_Ack & 0xff;
 		aBuffer[2] = pPacket->m_NumChunks;
 		net_udp_send(Socket, pAddr, aBuffer, FinalSize);
+
+		if(g_Config.m_Debug > 3)
+		{
+			char aHex[8049];
+			str_hex(aHex, sizeof(aHex), aBuffer, FinalSize);
+			char aFlags[512] = {0};
+			if((pPacket->m_Flags&NET_PACKETFLAG_CONTROL) != 0)
+				str_append(aFlags, ", CONTROL");
+			if((pPacket->m_Flags&NET_PACKETFLAG_COMPRESSION) != 0)
+				str_append(aFlags, ", COMPRESSION");
+			if((pPacket->m_Flags&NET_PACKETFLAG_CONNLESS) != 0)
+				str_append(aFlags, ", CONNLESS");
+			if((pPacket->m_Flags&NET_PACKETFLAG_RESEND) != 0)
+				str_append(aFlags, ", RESEND");
+			if((pPacket->m_Flags&NET_PACKETFLAG_TOKEN) != 0)
+				str_append(aFlags, ", TOKEN");
+			if((pPacket->m_Flags&NET_PACKETFLAG_EXTENDED) != 0)
+				str_append(aFlags, ", EXTENDED");
+			if((pPacket->m_Flags&NET_PACKETFLAG_UNUSED) != 0)
+				str_append(aFlags, ", UNUSED ");
+			dbg_msg(
+				"network_out",
+				"sending packet flags=%s",
+				aFlags + 2);
+			dbg_msg("network_out", " raw: %s", aHex);
+		}
 
 		// log raw socket data
 		if(ms_DataLogSent)
