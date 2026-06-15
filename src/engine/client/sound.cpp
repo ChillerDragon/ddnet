@@ -323,7 +323,9 @@ void CSound::RateConvert(CSample &Sample) const
 
 		// set new data
 		if(Sample.m_Channels == 1)
+		{
 			pNewData[i] = Sample.m_pData[f];
+		}
 		else if(Sample.m_Channels == 2)
 		{
 			pNewData[i * 2] = Sample.m_pData[f * 2];
@@ -377,8 +379,10 @@ bool CSound::DecodeOpus(CSample &Sample, const void *pData, unsigned DataSize, c
 				log_error("sound/opus", "op_read error %d at %d. Filename='%s'", Read, Pos, pContextName);
 				return false;
 			}
-			else if(Read == 0) // EOF
+			else if(Read == 0)
+			{ // EOF
 				break;
+			}
 			Pos += Read;
 		}
 
@@ -485,13 +489,13 @@ bool CSound::DecodeWV(CSample &Sample, const void *pData, unsigned DataSize, con
 	char aError[100];
 
 #if defined(CONF_WAVPACK_OPEN_FILE_INPUT_EX)
-	WavpackStreamReader Callback = {0};
+	WavpackStreamReader Callback = {nullptr};
 	Callback.can_seek = ReturnFalse;
 	Callback.get_length = GetLength;
 	Callback.get_pos = GetPos;
 	Callback.push_back_byte = PushBackByte;
 	Callback.read_bytes = ReadData;
-	WavpackContext *pContext = WavpackOpenFileInputEx(&Callback, (void *)1, 0, aError, 0, 0);
+	WavpackContext *pContext = WavpackOpenFileInputEx(&Callback, (void *)1, nullptr, aError, 0, 0);
 #else
 	WavpackContext *pContext = WavpackOpenFileInput(ReadDataOld, aError);
 #endif

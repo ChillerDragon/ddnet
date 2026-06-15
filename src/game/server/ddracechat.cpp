@@ -972,8 +972,10 @@ void CGameContext::ConTeamRank(IConsole::IResult *pResult, void *pUserData)
 			log_info("chatresp", "Showing the team rank of other players is not allowed on this server.");
 	}
 	else
+	{
 		pSelf->Score()->ShowTeamRank(pResult->m_ClientId,
 			pSelf->Server()->ClientName(pResult->m_ClientId));
+	}
 }
 
 void CGameContext::ConRank(IConsole::IResult *pResult, void *pUserData)
@@ -990,8 +992,10 @@ void CGameContext::ConRank(IConsole::IResult *pResult, void *pUserData)
 			log_info("chatresp", "Showing the rank of other players is not allowed on this server.");
 	}
 	else
+	{
 		pSelf->Score()->ShowRank(pResult->m_ClientId,
 			pSelf->Server()->ClientName(pResult->m_ClientId));
+	}
 }
 
 void CGameContext::ConLock(IConsole::IResult *pResult, void *pUserData)
@@ -1200,7 +1204,9 @@ void CGameContext::ConInvite(IConsole::IResult *pResult, void *pUserData)
 		pSelf->SendChatTeam(Team, aBuf);
 	}
 	else
+	{
 		log_info("chatresp", "Can't invite players to this team");
+	}
 }
 
 void CGameContext::ConTeam0Mode(IConsole::IResult *pResult, void *pUserData)
@@ -1368,11 +1374,17 @@ void CGameContext::ConSetEyeEmote(IConsole::IResult *pResult,
 		return;
 	}
 	else if(str_comp_nocase(pResult->GetString(0), "on") == 0)
+	{
 		pPlayer->m_EyeEmoteEnabled = true;
+	}
 	else if(str_comp_nocase(pResult->GetString(0), "off") == 0)
+	{
 		pPlayer->m_EyeEmoteEnabled = false;
+	}
 	else if(str_comp_nocase(pResult->GetString(0), "toggle") == 0)
+	{
 		pPlayer->m_EyeEmoteEnabled = !pPlayer->m_EyeEmoteEnabled;
+	}
 	log_info("chatresp", pPlayer->m_EyeEmoteEnabled ?
 				     "You can now use the preset eye emotes." :
 				     "You don't have any eye emotes, remember to bind some.");
@@ -1406,19 +1418,33 @@ void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData)
 
 		int EmoteType = 0;
 		if(!str_comp_nocase(pResult->GetString(0), "angry"))
+		{
 			EmoteType = EMOTE_ANGRY;
+		}
 		else if(!str_comp_nocase(pResult->GetString(0), "blink"))
+		{
 			EmoteType = EMOTE_BLINK;
+		}
 		else if(!str_comp_nocase(pResult->GetString(0), "close"))
+		{
 			EmoteType = EMOTE_BLINK;
+		}
 		else if(!str_comp_nocase(pResult->GetString(0), "happy"))
+		{
 			EmoteType = EMOTE_HAPPY;
+		}
 		else if(!str_comp_nocase(pResult->GetString(0), "pain"))
+		{
 			EmoteType = EMOTE_PAIN;
+		}
 		else if(!str_comp_nocase(pResult->GetString(0), "surprise"))
+		{
 			EmoteType = EMOTE_SURPRISE;
+		}
 		else if(!str_comp_nocase(pResult->GetString(0), "normal"))
+		{
 			EmoteType = EMOTE_NORMAL;
+		}
 		else
 		{
 			log_info("chatresp", "Unknown emote... Say /emote");
@@ -1465,7 +1491,9 @@ void CGameContext::ConShowOthers(IConsole::IResult *pResult, void *pUserData)
 			pPlayer->m_ShowOthers = !pPlayer->m_ShowOthers;
 	}
 	else
+	{
 		log_info("chatresp", "Showing players from other teams is disabled");
+	}
 }
 
 void CGameContext::ConShowAll(IConsole::IResult *pResult, void *pUserData)
@@ -1618,15 +1646,25 @@ void CGameContext::ConSetTimerType(IConsole::IResult *pResult, void *pUserData)
 		bool Result = false;
 
 		if(str_comp_nocase(pResult->GetString(0), "default") == 0)
+		{
 			Result = pPlayer->SetTimerType(CPlayer::TIMERTYPE_DEFAULT);
+		}
 		else if(str_comp_nocase(pResult->GetString(0), "gametimer") == 0)
+		{
 			Result = pPlayer->SetTimerType(CPlayer::TIMERTYPE_GAMETIMER);
+		}
 		else if(str_comp_nocase(pResult->GetString(0), "broadcast") == 0)
+		{
 			Result = pPlayer->SetTimerType(CPlayer::TIMERTYPE_BROADCAST);
+		}
 		else if(str_comp_nocase(pResult->GetString(0), "both") == 0)
+		{
 			Result = pPlayer->SetTimerType(CPlayer::TIMERTYPE_GAMETIMER_AND_BROADCAST);
+		}
 		else if(str_comp_nocase(pResult->GetString(0), "none") == 0)
+		{
 			Result = pPlayer->SetTimerType(CPlayer::TIMERTYPE_NONE);
+		}
 		else
 		{
 			log_info("chatresp", "Unknown parameter. Accepted values: default, gametimer, broadcast, both, none");
@@ -2351,8 +2389,10 @@ void CGameContext::ConPoints(IConsole::IResult *pResult, void *pUserData)
 			log_info("chatresp", "Showing the global points of other players is not allowed on this server.");
 	}
 	else
+	{
 		pSelf->Score()->ShowPoints(pResult->m_ClientId,
 			pSelf->Server()->ClientName(pResult->m_ClientId));
+	}
 }
 
 void CGameContext::ConTopPoints(IConsole::IResult *pResult, void *pUserData)

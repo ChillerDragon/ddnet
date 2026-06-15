@@ -192,8 +192,10 @@ void CRaceDemo::StopRecord(int Time)
 
 			Storage()->RenameFile(m_aTmpFilename, aNewFilename, IStorage::TYPE_SAVE);
 		}
-		else // no new record
+		else
+		{ // no new record
 			Storage()->RemoveFile(m_aTmpFilename, IStorage::TYPE_SAVE);
+		}
 
 		m_aTmpFilename[0] = '\0';
 	}
@@ -236,7 +238,9 @@ int CRaceDemo::RaceDemolistFetchCallback(const CFsFileInfo *pInfo, int IsDir, in
 			return 0;
 	}
 	else if(pTEnd[0])
+	{
 		return 0;
+	}
 
 	Item.m_Time = CRaceHelper::TimeFromSecondsStr(pTime);
 	if(Item.m_Time > 0)

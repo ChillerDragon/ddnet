@@ -451,21 +451,37 @@ void CServerBrowser::Filter()
 		bool Filtered = false;
 
 		if(g_Config.m_BrFilterEmpty && Info.m_NumFilteredPlayers == 0)
+		{
 			Filtered = true;
+		}
 		else if(g_Config.m_BrFilterFull && Players(Info) == Max(Info))
+		{
 			Filtered = true;
+		}
 		else if(g_Config.m_BrFilterPw && Info.m_Flags & SERVER_FLAG_PASSWORD)
+		{
 			Filtered = true;
+		}
 		else if(g_Config.m_BrFilterServerAddress[0] && !str_find_nocase(Info.m_aAddress, g_Config.m_BrFilterServerAddress))
+		{
 			Filtered = true;
+		}
 		else if(g_Config.m_BrFilterGametypeStrict && g_Config.m_BrFilterGametype[0] && str_comp_nocase(Info.m_aGameType, g_Config.m_BrFilterGametype))
+		{
 			Filtered = true;
+		}
 		else if(!g_Config.m_BrFilterGametypeStrict && g_Config.m_BrFilterGametype[0] && !str_utf8_find_nocase(Info.m_aGameType, g_Config.m_BrFilterGametype))
+		{
 			Filtered = true;
+		}
 		else if(g_Config.m_BrFilterUnfinishedMap && Info.m_HasRank == CServerInfo::RANK_RANKED)
+		{
 			Filtered = true;
+		}
 		else if(g_Config.m_BrFilterLogin && Info.m_RequiresLogin)
+		{
 			Filtered = true;
+		}
 		else
 		{
 			if(!Communities().empty())
@@ -2434,9 +2450,13 @@ ColorRGBA CServerInfo::GametypeColor(const char *pGametype)
 {
 	ColorHSLA HslaColor;
 	if(str_comp(pGametype, "DM") == 0 || str_comp(pGametype, "TDM") == 0 || str_comp(pGametype, "CTF") == 0 || str_comp(pGametype, "LMS") == 0 || str_comp(pGametype, "LTS") == 0)
+	{
 		HslaColor = ColorHSLA(0.33f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "catch"))
+	{
 		HslaColor = ColorHSLA(0.17f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "dm") || str_find_nocase(pGametype, "tdm") || str_find_nocase(pGametype, "ctf") || str_find_nocase(pGametype, "lms") || str_find_nocase(pGametype, "lts"))
 	{
 		if(pGametype[0] == 'i' || pGametype[0] == 'g')
@@ -2445,23 +2465,41 @@ ColorRGBA CServerInfo::GametypeColor(const char *pGametype)
 			HslaColor = ColorHSLA(0.40f, 1.0f, 0.75f);
 	}
 	else if(str_find_nocase(pGametype, "s-ddracex"))
+	{
 		HslaColor = ColorHSLA(1.0f, 1.0f, 0.7f);
+	}
 	else if(str_find_nocase(pGametype, "f-ddrace") || str_find_nocase(pGametype, "freeze"))
+	{
 		HslaColor = ColorHSLA(0.0f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "fng"))
+	{
 		HslaColor = ColorHSLA(0.83f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "gores"))
+	{
 		HslaColor = ColorHSLA(0.525f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "BW"))
+	{
 		HslaColor = ColorHSLA(0.05f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "ddracenet") || str_find_nocase(pGametype, "ddnet") || str_find_nocase(pGametype, "0xf"))
+	{
 		HslaColor = ColorHSLA(0.58f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "ddrace") || str_find_nocase(pGametype, "mkrace"))
+	{
 		HslaColor = ColorHSLA(0.75f, 1.0f, 0.75f);
+	}
 	else if(str_find_nocase(pGametype, "race") || str_find_nocase(pGametype, "fastcap"))
+	{
 		HslaColor = ColorHSLA(0.46f, 1.0f, 0.75f);
+	}
 	else
+	{
 		HslaColor = ColorHSLA(1.0f, 1.0f, 1.0f);
+	}
 	return color_cast<ColorRGBA>(HslaColor);
 }
 

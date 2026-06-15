@@ -1747,8 +1747,10 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 
 		// Hue
 		if(i == 0)
+		{
 			str_format(aBuf, sizeof(aBuf), "%s: %.1f° (%03d)", apLabels[i], Color[i] * 360.0f, round_to_int(Color[i] * 255.0f));
-		// Lht
+			// Lht
+		}
 		else if(i == 2)
 		{
 			// handle internal light clamping, see `UnclampLighting`
@@ -1757,7 +1759,9 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		}
 		// Sat and Alpha
 		else
+		{
 			str_format(aBuf, sizeof(aBuf), "%s: %.1f%% (%03d)", apLabels[i], Color[i] * 100.0f, round_to_int(Color[i] * 255.0f));
+		}
 		Ui()->DoLabel(&Label, aBuf, 12.0f, TEXTALIGN_ML);
 
 		ColorRGBA HandleColor;

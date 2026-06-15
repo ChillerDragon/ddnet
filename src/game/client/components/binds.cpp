@@ -358,7 +358,9 @@ void CBinds::ConBinds(IConsole::IResult *pResult, void *pUserData)
 		else
 		{
 			if(!pBinds->m_aapKeyBindings[BindSlot.m_ModifierMask][BindSlot.m_Key])
+			{
 				log_info_color(BIND_PRINT_COLOR, "binds", "%s is not bound", pKeyName);
+			}
 			else
 			{
 				char *pBuf = pBinds->GetKeyBindCommand(BindSlot.m_ModifierMask, BindSlot.m_Key);
@@ -410,7 +412,7 @@ CBindSlot CBinds::GetBindSlot(const char *pBindString) const
 	char aMod[32];
 	aMod[0] = '\0';
 	const char *pKey = str_next_token(pBindString, "+", aMod, sizeof(aMod));
-	while(aMod[0] && *(pKey))
+	while(aMod[0] && *pKey)
 	{
 		if(!str_comp_nocase(aMod, "shift"))
 			ModifierMask |= (1 << KeyModifier::SHIFT);

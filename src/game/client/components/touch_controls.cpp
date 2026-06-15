@@ -1816,7 +1816,9 @@ void CTouchControls::UpdateButtonsEditor(const std::vector<IInput::CTouchFingerS
 
 	// Update active and zoom fingerstate. The first finger will be used for moving button.
 	if(!vTouchFingerStates.empty())
+	{
 		m_ActiveFingerState = vTouchFingerStates[0];
+	}
 	else
 	{
 		m_ActiveFingerState = std::nullopt;

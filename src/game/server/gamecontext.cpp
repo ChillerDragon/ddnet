@@ -490,7 +490,9 @@ void CGameContext::CreateSoundGlobal(int Sound, int Target) const
 	CNetMsg_Sv_SoundGlobal Msg;
 	Msg.m_SoundId = Sound;
 	if(Target == -2)
+	{
 		Server()->SendPackMsg(&Msg, MSGFLAG_NOSEND, -1);
+	}
 	else
 	{
 		int Flag = MSGFLAG_VITAL;
@@ -2222,7 +2224,9 @@ void *CGameContext::PreProcessMsg(int *pMsgId, CUnpacker *pUnpacker, int ClientI
 		return s_aRawMsg;
 	}
 	else
+	{
 		return m_NetObjHandler.SecureUnpackMsg(*pMsgId, pUnpacker);
+	}
 }
 
 void CGameContext::CensorMessage(char *pCensoredMessage, const char *pMessage, int Size)
@@ -2351,7 +2355,9 @@ void CGameContext::OnSayNetMessage(const CNetMsg_Cl_Say *pMsg, int ClientId, con
 			pEnd = nullptr;
 		}
 		else if(pEnd == nullptr)
+		{
 			pEnd = pStrOld;
+		}
 
 		if(++Length >= 256)
 		{
@@ -2780,7 +2786,9 @@ void CGameContext::OnSetTeamNetMessage(const CNetMsg_Cl_SetTeam *pMsg, int Clien
 		pPlayer->m_TeamChangeTick = Server()->Tick();
 	}
 	else
+	{
 		SendBroadcast(aTeamJoinError, ClientId);
+	}
 }
 
 void CGameContext::OnIsDDNetLegacyNetMessage(const CNetMsg_Cl_IsDDNetLegacy *pMsg, int ClientId, CUnpacker *pUnpacker)
@@ -3819,7 +3827,9 @@ void CGameContext::ConAddMapVotes(IConsole::IResult *pResult, void *pUserData)
 			str_format(aCommand, sizeof(aCommand), "clear_votes; add_map_votes \"%s\"", aDirectory);
 		}
 		else
+		{
 			str_format(aCommand, sizeof(aCommand), "change_map \"%s%s%s\"", pDirectory, pDirectory[0] == '\0' ? "" : "/", aOptionEscaped);
+		}
 
 		pSelf->AddVote(aDescription, aCommand);
 	}
@@ -5034,14 +5044,18 @@ bool CGameContext::ProcessSpamProtection(int ClientId, bool RespectChatInitialDe
 	if(!m_apPlayers[ClientId])
 		return false;
 	if(g_Config.m_SvSpamprotection && m_apPlayers[ClientId]->m_LastChat && m_apPlayers[ClientId]->m_LastChat + Server()->TickSpeed() * g_Config.m_SvChatDelay > Server()->Tick())
+	{
 		return true;
+	}
 	else if(g_Config.m_SvDnsblChat && Server()->DnsblBlack(ClientId))
 	{
 		SendChatTarget(ClientId, "Players are not allowed to chat from VPNs at this time");
 		return true;
 	}
 	else
+	{
 		m_apPlayers[ClientId]->m_LastChat = Server()->Tick();
+	}
 
 	const std::optional<CMute> Muted = m_Mutes.IsMuted(Server()->ClientAddr(ClientId), RespectChatInitialDelay);
 	if(Muted.has_value())

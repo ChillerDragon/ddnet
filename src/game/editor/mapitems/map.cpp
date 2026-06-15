@@ -594,7 +594,9 @@ std::vector<std::shared_ptr<IEditorEnvelopeReference>> CEditorMap::DeleteEnvelop
 			return true;
 		}
 		else if(ElementIndex > Index)
+		{
 			ElementIndex--;
+		}
 		return false;
 	});
 
@@ -759,7 +761,9 @@ void CEditorMap::ToggleEnvPoint(int Index, int Channel)
 		m_vSelectedEnvelopePoints.erase(m_vSelectedEnvelopePoints.begin() + ListIndex);
 	}
 	else
+	{
 		m_vSelectedEnvelopePoints.emplace_back(Index, Channel);
+	}
 }
 
 bool CEditorMap::IsEnvPointSelected(int Index, int Channel) const

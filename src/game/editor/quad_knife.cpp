@@ -93,7 +93,9 @@ void CQuadKnife::DoSlice()
 		Editor()->MapView()->MapGrid()->SnapToGrid(OnGrid);
 
 		if(IsInTriangle(OnGrid, v[0], v[1], v[2]) || IsInTriangle(OnGrid, v[0], v[3], v[2]))
+		{
 			Point = OnGrid;
+		}
 		else
 		{
 			float MinDistance = -1.f;

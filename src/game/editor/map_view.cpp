@@ -257,7 +257,9 @@ void CMapView::Render(CUIRect View)
 			Ui()->SetActiveItem(Editor()->MapView());
 		}
 		else
+		{
 			Map()->m_MapViewState.m_ActiveOp = EActiveOp::NONE;
+		}
 
 		if(Map()->m_MapViewState.m_ActiveOp == EActiveOp::PAN_WORLD)
 			OffsetWorld(-Ui()->MouseDelta() * MouseWorldScale());
@@ -326,7 +328,9 @@ void CMapView::Render(CUIRect View)
 				}
 			}
 			else if(Editor()->m_pBrush->IsEmpty() && Map()->SelectedLayerType(0, LAYERTYPE_QUADS) != nullptr)
+			{
 				str_copy(Editor()->m_aTooltip, "Use left mouse button to drag and create a brush. Hold shift to select multiple quads. Press R to rotate selected quads. Use ctrl+right click to select layer.");
+			}
 			else if(Editor()->m_pBrush->IsEmpty())
 			{
 				if(g_Config.m_EdLayerSelector)
@@ -461,7 +465,9 @@ void CMapView::Render(CUIRect View)
 					Ui()->SetActiveItem(Editor()->MapView());
 
 					if(Editor()->m_pBrush->IsEmpty())
+					{
 						Map()->m_MapViewState.m_ActiveOp = EActiveOp::BRUSH_GRAB;
+					}
 					else
 					{
 						Map()->m_MapViewState.m_ActiveOp = EActiveOp::BRUSH_DRAW;

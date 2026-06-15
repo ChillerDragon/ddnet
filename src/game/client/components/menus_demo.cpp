@@ -885,7 +885,9 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 				Ui()->ShowPopupConfirm(Ui()->MouseX(), OkButton.y + OkButton.h + 5.0f, &s_ConfirmPopupContext);
 			}
 			else
+			{
 				s_ConfirmPopupContext.m_Result = CUi::SConfirmPopupContext::CONFIRMED;
+			}
 		}
 	}
 

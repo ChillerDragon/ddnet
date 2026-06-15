@@ -132,7 +132,9 @@ int CMenuBackground::ThemeScan(const char *pName, int IsDir, int DirType, void *
 		IsNight = true;
 	}
 	else
+	{
 		str_copy(aThemeName, aFullName);
+	}
 
 	if(str_comp(aThemeName, "none") == 0 || str_comp(aThemeName, "auto") == 0 || str_comp(aThemeName, "rand") == 0) // "none", "auto" and "rand" reserved, disallowed for maps
 		return 0;

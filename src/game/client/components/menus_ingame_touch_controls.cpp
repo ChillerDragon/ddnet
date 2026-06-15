@@ -1288,8 +1288,10 @@ void CMenusIngameTouchControls::CacheAllSettingsFromTarget(CTouchControls::CTouc
 				m_CachedExtraMenuNumber = pExtraMenuBehavior->GetNumber();
 			}
 		}
-		else // Empty
+		else
+		{ // Empty
 			dbg_assert_failed("Detected out of bound value in m_EditBehaviorType");
+		}
 	}
 }
 

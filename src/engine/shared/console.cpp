@@ -453,8 +453,10 @@ bool CConsole::LineIsValid(const char *pStr)
 					pNextPart = pEnd + 1;
 					break;
 				}
-				else if(*pEnd == '#') // comment, no need to do anything more
+				else if(*pEnd == '#')
+				{ // comment, no need to do anything more
 					break;
+				}
 			}
 
 			pEnd++;
@@ -511,8 +513,10 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 					pNextPart = pEnd + 1;
 					break;
 				}
-				else if(*pEnd == '#') // comment, no need to do anything more
+				else if(*pEnd == '#')
+				{ // comment, no need to do anything more
 					break;
+				}
 			}
 
 			pEnd++;
@@ -802,7 +806,9 @@ void CConsole::ConCommandAccess(IResult *pResult, void *pUser)
 		}
 	}
 	else
+	{
 		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
+	}
 
 	pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 }
@@ -1200,23 +1206,41 @@ std::optional<ColorHSLA> CConsole::ColorParse(const char *pStr, float DarkestLig
 			return std::nullopt;
 	}
 	else if(!str_comp_nocase(pStr, "red"))
+	{
 		return ColorHSLA(0.0f / 6.0f, 1.0f, 0.5f);
+	}
 	else if(!str_comp_nocase(pStr, "yellow"))
+	{
 		return ColorHSLA(1.0f / 6.0f, 1.0f, 0.5f);
+	}
 	else if(!str_comp_nocase(pStr, "green"))
+	{
 		return ColorHSLA(2.0f / 6.0f, 1.0f, 0.5f);
+	}
 	else if(!str_comp_nocase(pStr, "cyan"))
+	{
 		return ColorHSLA(3.0f / 6.0f, 1.0f, 0.5f);
+	}
 	else if(!str_comp_nocase(pStr, "blue"))
+	{
 		return ColorHSLA(4.0f / 6.0f, 1.0f, 0.5f);
+	}
 	else if(!str_comp_nocase(pStr, "magenta"))
+	{
 		return ColorHSLA(5.0f / 6.0f, 1.0f, 0.5f);
+	}
 	else if(!str_comp_nocase(pStr, "white"))
+	{
 		return ColorHSLA(0.0f, 0.0f, 1.0f);
+	}
 	else if(!str_comp_nocase(pStr, "gray"))
+	{
 		return ColorHSLA(0.0f, 0.0f, 0.5f);
+	}
 	else if(!str_comp_nocase(pStr, "black"))
+	{
 		return ColorHSLA(0.0f, 0.0f, 0.0f);
+	}
 
 	return std::nullopt;
 }

@@ -754,11 +754,17 @@ EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
 #if defined(CONF_BACKEND_VULKAN)
 	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
 	if(pEnvDriver && str_comp_nocase(pEnvDriver, "GLES") == 0)
+	{
 		RetBackendType = BACKEND_TYPE_OPENGL_ES;
+	}
 	else if(pEnvDriver && str_comp_nocase(pEnvDriver, "Vulkan") == 0)
+	{
 		RetBackendType = BACKEND_TYPE_VULKAN;
+	}
 	else if(pEnvDriver && str_comp_nocase(pEnvDriver, "OpenGL") == 0)
+	{
 		RetBackendType = BACKEND_TYPE_OPENGL;
+	}
 	else if(pEnvDriver == nullptr)
 	{
 		// load the config backend
@@ -1282,14 +1288,14 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 
 	// set flags
 	int SdlFlags = SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_ALLOW_HIGHDPI;
-	SdlFlags |= (IsOpenGLFamilyBackend) ? SDL_WINDOW_OPENGL : SDL_WINDOW_VULKAN;
+	SdlFlags |= IsOpenGLFamilyBackend ? SDL_WINDOW_OPENGL : SDL_WINDOW_VULKAN;
 	if(Flags & IGraphicsBackend::INITFLAG_RESIZABLE)
 		SdlFlags |= SDL_WINDOW_RESIZABLE;
 	if(Flags & IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags & IGraphicsBackend::INITFLAG_FULLSCREEN)
 		SdlFlags |= SDL_WINDOW_FULLSCREEN;
-	else if(Flags & (IGraphicsBackend::INITFLAG_DESKTOP_FULLSCREEN))
+	else if(Flags & IGraphicsBackend::INITFLAG_DESKTOP_FULLSCREEN)
 		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
 	bool IsFullscreen = (SdlFlags & SDL_WINDOW_FULLSCREEN) != 0 || g_Config.m_GfxFullscreen == 3;
@@ -1382,7 +1388,9 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 			SDL_Vulkan_GetDrawableSize(m_pWindow, pCurrentWidth, pCurrentHeight);
 	}
 	else
+	{
 		SDL_GetWindowSize(m_pWindow, pCurrentWidth, pCurrentHeight);
+	}
 	SDL_GetWindowSize(m_pWindow, pWidth, pHeight);
 
 	if(IsOpenGLFamilyBackend)

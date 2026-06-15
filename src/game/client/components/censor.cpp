@@ -25,7 +25,7 @@ void CensorReplaceWords(char *pBuffer, const std::vector<std::string> &vWords, c
 			pStart = str_utf8_find_nocase(pStart, Word.c_str(), &pEnd);
 			if(!pStart)
 				continue;
-			if((pStart == pBuffer || str_utf8_isspace(*(pStart - 1))) && (str_utf8_isspace(*(pEnd))))
+			if((pStart == pBuffer || str_utf8_isspace(*(pStart - 1))) && (str_utf8_isspace(*pEnd)))
 			{
 				while(pStart != pEnd)
 				{

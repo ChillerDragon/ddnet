@@ -763,7 +763,9 @@ void CEditorActionEditGroupProp::Undo()
 		Map()->m_SelectedGroup = Map()->MoveGroup(m_Current, m_Previous);
 	}
 	else
+	{
 		Apply(m_Previous);
+	}
 }
 
 void CEditorActionEditGroupProp::Redo()
@@ -773,7 +775,9 @@ void CEditorActionEditGroupProp::Redo()
 		Map()->m_SelectedGroup = Map()->MoveGroup(m_Previous, m_Current);
 	}
 	else
+	{
 		Apply(m_Current);
+	}
 }
 
 void CEditorActionEditGroupProp::Apply(int Value)
@@ -829,7 +833,9 @@ void CEditorActionEditLayerProp::Undo()
 		Map()->SelectLayer(pCurrentGroup->MoveLayer(m_Current, m_Previous));
 	}
 	else
+	{
 		Apply(m_Previous);
+	}
 }
 
 void CEditorActionEditLayerProp::Redo()
@@ -841,7 +847,9 @@ void CEditorActionEditLayerProp::Redo()
 		Map()->SelectLayer(pCurrentGroup->MoveLayer(m_Previous, m_Current));
 	}
 	else
+	{
 		Apply(m_Current);
+	}
 }
 
 void CEditorActionEditLayerProp::Apply(int Value)

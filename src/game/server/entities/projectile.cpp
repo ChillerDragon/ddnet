@@ -156,7 +156,9 @@ void CProjectile::Tick()
 			}
 		}
 		else if(pTargetChr)
+		{
 			pTargetChr->TakeDamage(vec2(0, 0), 0, m_Owner, m_Type);
+		}
 
 		if(pOwnerChar && !GameLayerClipped(ColPos) &&
 			((m_Type == WEAPON_GRENADE && pOwnerChar->HasTelegunGrenade()) || (m_Type == WEAPON_GUN && pOwnerChar->HasTelegunGun())))

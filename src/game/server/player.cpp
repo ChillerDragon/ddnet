@@ -246,7 +246,9 @@ void CPlayer::Tick()
 			}
 		}
 		else if(m_Spawning && !m_WeakHookSpawn)
+		{
 			TryRespawn();
+		}
 	}
 	else
 	{
@@ -273,7 +275,7 @@ void CPlayer::Tick()
 
 	if(m_Halloween && m_pCharacter && !m_pCharacter->IsPaused())
 	{
-		if(1200 - ((Server()->Tick() - m_pCharacter->GetLastAction()) % (1200)) < 5)
+		if(1200 - ((Server()->Tick() - m_pCharacter->GetLastAction()) % 1200) < 5)
 		{
 			GameServer()->SendEmoticon(GetCid(), EMOTICON_GHOST, -1);
 		}
@@ -671,7 +673,9 @@ bool CPlayer::SetTimerType(int TimerType)
 			return true;
 		}
 		else
+		{
 			return false;
+		}
 	}
 
 	if(TimerType == TIMERTYPE_GAMETIMER)
@@ -684,7 +688,9 @@ bool CPlayer::SetTimerType(int TimerType)
 	else if(TimerType == TIMERTYPE_GAMETIMER_AND_BROADCAST)
 	{
 		if(GetClientVersion() >= VERSION_DDNET_GAMETICK)
+		{
 			m_TimerType = TimerType;
+		}
 		else
 		{
 			m_TimerType = TIMERTYPE_BROADCAST;
@@ -692,7 +698,9 @@ bool CPlayer::SetTimerType(int TimerType)
 		}
 	}
 	else
+	{
 		m_TimerType = TimerType;
+	}
 
 	return true;
 }

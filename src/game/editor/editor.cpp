@@ -1651,7 +1651,9 @@ void CEditor::DoQuad(int LayerIndex, const std::shared_ptr<CLayerQuads> &pLayer,
 		}
 	}
 	else
+	{
 		Graphics()->SetColor(0, 1, 0, 1);
+	}
 
 	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f * MapView()->MouseWorldScale(), 5.0f * MapView()->MouseWorldScale());
 	Graphics()->QuadsDraw(&QuadItem, 1);
@@ -1862,7 +1864,9 @@ void CEditor::DoQuadPoint(int LayerIndex, const std::shared_ptr<CLayerQuads> &pL
 		}
 	}
 	else
+	{
 		Graphics()->SetColor(1, 0, 0, 1);
+	}
 
 	IGraphics::CQuadItem QuadItem(Center.x, Center.y, 5.0f * MapView()->MouseWorldScale(), 5.0f * MapView()->MouseWorldScale());
 	Graphics()->QuadsDraw(&QuadItem, 1);
@@ -2550,7 +2554,9 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 			}
 
 			if(Map()->m_vpGroups[g]->m_vpLayers[i]->m_aName[0])
+			{
 				str_copy(aBuf, Map()->m_vpGroups[g]->m_vpLayers[i]->m_aName);
+			}
 			else
 			{
 				if(Map()->m_vpGroups[g]->m_vpLayers[i]->m_Type == LAYERTYPE_TILES)
@@ -2661,7 +2667,9 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 									State.m_LayerPopupContext.m_vLayerIndices.push_back(LayerIndex);
 								}
 								else
+								{
 									AllTile = false;
+								}
 							}
 
 							// Don't allow editing if all selected layers are not tile layers
@@ -3820,14 +3828,18 @@ void CEditor::Render()
 		DoEditorDragBar(ToolBox, &DragBar, EDragSide::RIGHT, &m_ToolBoxWidth);
 
 		if(m_Mode == MODE_LAYERS)
+		{
 			RenderLayers(ToolBox);
+		}
 		else if(m_Mode == MODE_IMAGES)
 		{
 			RenderImagesList(ToolBox);
 			RenderSelectedImage(View);
 		}
 		else if(m_Mode == MODE_SOUNDS)
+		{
 			RenderSounds(ToolBox);
+		}
 	}
 
 	Ui()->MapScreen();
@@ -4059,7 +4071,9 @@ void CEditor::FreeDynamicPopupMenus()
 			delete pContext;
 		}
 		else
+		{
 			++Iterator;
+		}
 	}
 }
 

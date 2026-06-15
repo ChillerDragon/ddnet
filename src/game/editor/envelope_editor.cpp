@@ -404,7 +404,9 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		if(m_pContainerPanned == &s_EnvelopeEditorId)
 		{
 			if(!ShouldPan)
+			{
 				m_pContainerPanned = nullptr;
+			}
 			else
 			{
 				m_OffsetEnvelopeX += Ui()->MouseDeltaX() / Graphics()->ScreenWidth() * Ui()->Screen()->w / View.w;
@@ -953,7 +955,9 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							m_pUiGotContext = pId;
 						}
 						else
+						{
 							Graphics()->SetColor(aColors[c].r, aColors[c].g, aColors[c].b, 1.0f);
+						}
 
 						IGraphics::CQuadItem QuadItem(Final.x, Final.y, Final.w, Final.h);
 						Graphics()->QuadsDrawTL(&QuadItem, 1);
@@ -1088,7 +1092,9 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 								m_pUiGotContext = pId;
 							}
 							else
+							{
 								Graphics()->SetColor(aColors[c].r, aColors[c].g, aColors[c].b, 1.0f);
+							}
 
 							// draw triangle
 							IGraphics::CFreeformItem FreeformItem(Final.x + Final.w / 2.0f, Final.y, Final.x + Final.w / 2.0f, Final.y, Final.x + Final.w, Final.y + Final.h, Final.x, Final.y + Final.h);
@@ -1221,7 +1227,9 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 								m_pUiGotContext = pId;
 							}
 							else
+							{
 								Graphics()->SetColor(aColors[c].r, aColors[c].g, aColors[c].b, 1.0f);
+							}
 
 							// draw triangle
 							IGraphics::CFreeformItem FreeformItem(Final.x + Final.w / 2.0f, Final.y, Final.x + Final.w / 2.0f, Final.y, Final.x + Final.w, Final.y + Final.h, Final.x, Final.y + Final.h);

@@ -249,7 +249,7 @@ bool IGameController::OnEntity(int Index, int x, int y, int Layer, int Flags, bo
 		int Dir;
 		if(!Flags)
 			Dir = 0;
-		else if(Flags == (TILEFLAG_ROTATE))
+		else if(Flags == TILEFLAG_ROTATE)
 			Dir = 1;
 		else if(Flags == (TILEFLAG_XFLIP | TILEFLAG_YFLIP))
 			Dir = 2;
@@ -276,17 +276,29 @@ bool IGameController::OnEntity(int Index, int x, int y, int Layer, int Flags, bo
 	int SubType = 0;
 
 	if(Index == ENTITY_ARMOR_1)
+	{
 		Type = POWERUP_ARMOR;
+	}
 	else if(Index == ENTITY_ARMOR_SHOTGUN)
+	{
 		Type = POWERUP_ARMOR_SHOTGUN;
+	}
 	else if(Index == ENTITY_ARMOR_GRENADE)
+	{
 		Type = POWERUP_ARMOR_GRENADE;
+	}
 	else if(Index == ENTITY_ARMOR_NINJA)
+	{
 		Type = POWERUP_ARMOR_NINJA;
+	}
 	else if(Index == ENTITY_ARMOR_LASER)
+	{
 		Type = POWERUP_ARMOR_LASER;
+	}
 	else if(Index == ENTITY_HEALTH_1)
+	{
 		Type = POWERUP_HEALTH;
+	}
 	else if(Index == ENTITY_WEAPON_SHOTGUN)
 	{
 		Type = POWERUP_WEAPON;
@@ -327,9 +339,13 @@ bool IGameController::OnEntity(int Index, int x, int y, int Layer, int Flags, bo
 			M = 1;
 		}
 		else if(Ind == 0)
+		{
 			M = 0;
+		}
 		else
+		{
 			M = -1;
+		}
 
 		float AngularSpeed = 0.0f;
 		if(Ind == 0)
@@ -359,7 +375,9 @@ bool IGameController::OnEntity(int Index, int x, int y, int Layer, int Flags, bo
 					pLight->m_CurveLength = 0;
 				}
 				else
+				{
 					pLight->m_CurveLength = pLight->m_Length;
+				}
 			}
 		}
 	}

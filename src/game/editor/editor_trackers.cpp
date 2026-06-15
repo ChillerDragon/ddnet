@@ -169,7 +169,9 @@ void CQuadEditTracker::AddQuadPointPropTrack(EQuadPointProp Prop)
 	{
 		auto &Quad = m_pLayer->m_vQuads[QuadIndex];
 		if(Prop == EQuadPointProp::POS_X || Prop == EQuadPointProp::POS_Y)
+		{
 			m_InitialPoints[QuadIndex] = std::vector<CPoint>(std::begin(Quad.m_aPoints), std::end(Quad.m_aPoints));
+		}
 		else if(Prop == EQuadPointProp::COLOR)
 		{
 			for(int v = 0; v < 4; v++)

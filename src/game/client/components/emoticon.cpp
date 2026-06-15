@@ -198,7 +198,9 @@ void CEmoticon::OnRender()
 		Graphics()->QuadsEnd();
 	}
 	else
+	{
 		m_SelectedEyeEmote = -1;
+	}
 
 	RenderTools()->RenderCursor(ScreenCenter + m_SelectorMouse, 24.0f);
 }

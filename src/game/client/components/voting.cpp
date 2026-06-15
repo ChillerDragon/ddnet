@@ -100,7 +100,9 @@ void CVoting::CallvoteOption(int OptionId, const char *pReason, bool ForceVote)
 				Client()->Rcon(aBuf);
 			}
 			else
+			{
 				Callvote("option", pOption->m_aDescription, pReason);
+			}
 			break;
 		}
 
@@ -174,7 +176,9 @@ void CVoting::AddOption(const char *pDescription)
 			m_pRecycleLast = nullptr;
 	}
 	else
+	{
 		pOption = m_Heap.Allocate<CVoteOptionClient>();
+	}
 
 	pOption->m_pNext = nullptr;
 	pOption->m_pPrev = m_pLast;

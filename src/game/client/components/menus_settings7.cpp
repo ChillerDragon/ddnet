@@ -93,7 +93,9 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 				m_SkinNameInput.Append(m_pSelectedSkin->m_aName);
 			}
 			else
+			{
 				m_SkinNameInput.Set(m_pSelectedSkin->m_aName);
+			}
 		}
 	}
 

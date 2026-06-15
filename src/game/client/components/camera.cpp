@@ -73,7 +73,7 @@ void CCamera::ScaleZoom(float Factor)
 
 float CCamera::MaxZoomLevel()
 {
-	return (g_Config.m_ClLimitMaxZoomLevel) ? ((Graphics()->IsTileBufferingEnabled() ? 240 : 30)) : std::numeric_limits<float>::max();
+	return (g_Config.m_ClLimitMaxZoomLevel) ? (Graphics()->IsTileBufferingEnabled() ? 240 : 30) : std::numeric_limits<float>::max();
 }
 
 float CCamera::MinZoomLevel()
@@ -354,7 +354,9 @@ void CCamera::OnRender()
 		m_ForceFreeview = false;
 	}
 	else
+	{
 		m_ForceFreeviewPos = m_Center;
+	}
 
 	const int SpecId = GameClient()->m_Snap.m_SpecInfo.m_SpectatorId;
 
