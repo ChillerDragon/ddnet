@@ -2932,6 +2932,8 @@ if(SERVER)
     name_ban.h
     register.cpp
     register.h
+    role_manager.cpp
+    role_manager.h
     server.cpp
     server.h
     server_logger.cpp
