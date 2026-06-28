@@ -525,6 +525,8 @@ function(is_bundled VARIABLE PATH)
   endif()
 endfunction()
 
+find_package(libssh)
+
 if(NOT CMAKE_CROSSCOMPILING)
   # Check for PkgConfig once so all the other `find_package` calls can do it
   # quietly.
@@ -627,6 +629,7 @@ function(show_dependency_status OUTPUT_NAME NAME)
   endif()
 endfunction()
 
+show_dependency_status("libssh" libssh)
 if(NOT TARGET_OS STREQUAL "emscripten")
   show_dependency_status("Curl" CURL)
 endif()
@@ -667,6 +670,9 @@ endif()
 
 if(CLIENT AND VULKAN)
   show_dependency_status("Vulkan" VULKAN)
+endif()
+if(NOT(libssh_FOUND))
+  message(SEND_ERROR "You must install libssh to compile ${CMAKE_PROJECT_NAME}")
 endif()
 if(NOT(CURL_FOUND) AND NOT TARGET_OS STREQUAL "emscripten")
   message(SEND_ERROR "You must install Curl to compile ${CMAKE_PROJECT_NAME}")
@@ -2281,6 +2287,7 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   sixup_translate_snapshot.cpp
   snapshot.cpp
   snapshot.h
+  ssh_server.cpp
   storage.cpp
   stun.cpp
   stun.h
@@ -2386,6 +2393,10 @@ set(LIBS
   # on it.
   ${CMAKE_THREAD_LIBS_INIT}
 )
+
+find_package(libssh REQUIRED)
+
+message(STATUS "libs: ${libssh_LIBRARIES}")
 
 # Targets
 add_library(engine-gfx EXCLUDE_FROM_ALL OBJECT ${ENGINE_GFX})
@@ -3939,7 +3950,7 @@ foreach(target ${TARGETS})
     endif()
   endif()
   if(OUR_FLAGS_LINK)
-    target_link_libraries(${target} ${OUR_FLAGS_LINK})
+    target_link_libraries(${target} ${OUR_FLAGS_LINK} ssh)
   endif()
   if(OUR_FLAGS)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS})
