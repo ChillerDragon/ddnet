@@ -3123,6 +3123,7 @@ void CServer::PumpNetwork()
 
 	m_ServerBan.Update();
 	m_Econ.Update();
+	m_SshServer.Update();
 }
 
 void CServer::ChangeMap(const char *pMap)
@@ -3384,8 +3385,8 @@ int CServer::Run()
 	m_NetServer.SetCallbacks(NewClientCallback, NewClientNoAuthCallback, ClientRejoinCallback, DelClientCallback, this);
 
 	m_Econ.Init(Config(), Console(), &m_ServerBan);
-
 	m_Fifo.Init(Console(), Config()->m_SvInputFifo, CFGFLAG_SERVER);
+	m_SshServer.Init(Config(), Console(), &m_ServerBan);
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "server name is '%s'", Config()->m_SvName);
@@ -3720,6 +3721,7 @@ int CServer::Run()
 	m_pRegister->OnShutdown();
 	m_Econ.Shutdown();
 	m_Fifo.Shutdown();
+	m_SshServer.Shutdown();
 	m_pHttp->Shutdown();
 	Engine()->ShutdownJobs();
 
