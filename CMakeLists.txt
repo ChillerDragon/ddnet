@@ -2386,6 +2386,7 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   snapshot.cpp
   snapshot.h
   ssh_server.cpp
+  ssh_server.h
   storage.cpp
   stun.cpp
   stun.h
