@@ -3657,6 +3657,8 @@ int CServer::Run()
 					break;
 				}
 			}
+			if(m_SshServer.GotActiveConnections())
+				NonActive = false;
 
 			if(NonActive)
 			{
