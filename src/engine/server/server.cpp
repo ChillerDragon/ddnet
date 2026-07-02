@@ -3123,7 +3123,7 @@ void CServer::PumpNetwork()
 
 	m_ServerBan.Update();
 	m_Econ.Update();
-#if defined(CONF_FAMILY_UNIX)
+#if defined(CONF_SSH)
 	m_SshServer.Update();
 #endif
 }
@@ -3388,7 +3388,7 @@ int CServer::Run()
 
 	m_Econ.Init(Config(), Console(), &m_ServerBan);
 	m_Fifo.Init(Console(), Config()->m_SvInputFifo, CFGFLAG_SERVER);
-#if defined(CONF_FAMILY_UNIX)
+#if defined(CONF_SSH)
 	m_SshServer.Init(Config(), Console(), Storage(), &m_ServerBan);
 #endif
 
@@ -3661,7 +3661,7 @@ int CServer::Run()
 					break;
 				}
 			}
-#if defined(CONF_FAMILY_UNIX)
+#if defined(CONF_SSH)
 			if(m_SshServer.GotActiveConnections())
 				NonActive = false;
 #endif
@@ -3729,7 +3729,7 @@ int CServer::Run()
 	m_pRegister->OnShutdown();
 	m_Econ.Shutdown();
 	m_Fifo.Shutdown();
-#if defined(CONF_FAMILY_UNIX)
+#if defined(CONF_SSH)
 	m_SshServer.Shutdown();
 #endif
 	m_pHttp->Shutdown();
