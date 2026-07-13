@@ -3449,6 +3449,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     serverbrowser_test.cpp
     serverinfo_test.cpp
     snapshot_test.cpp
+    ssh_test.cpp
     str_test.cpp
     swap_endian_test.cpp
     teehistorian_test.cpp
