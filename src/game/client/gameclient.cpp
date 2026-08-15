@@ -1291,10 +1291,32 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		CNetMsg_Sv_MapInfo *pMsg = static_cast<CNetMsg_Sv_MapInfo *>(pRawMsg);
 		str_copy(m_aMapDescription, pMsg->m_pDescription);
 	}
-	else if(MsgId == NETMSGTYPE_SV_MAXTEAMSIZE)
+	else if(MsgId == NETMSGTYPE_SV_GAMESETTINGS)
 	{
-		CNetMsg_Sv_MaxTeamSize *pMsg = static_cast<CNetMsg_Sv_MaxTeamSize *>(pRawMsg);
+		CNetMsg_Sv_GameSettings *pMsg = static_cast<CNetMsg_Sv_GameSettings *>(pRawMsg);
+		Config()->m_SvOldTeleportWeapons = pMsg->m_OldTeleportWeapons;
+		Config()->m_SvOldTeleportHook = pMsg->m_OldTeleportHook;
+		Config()->m_SvTeleportHoldHook = pMsg->m_TeleportHoldHook;
+		Config()->m_SvTeleportLoseWeapons = pMsg->m_TeleportLoseWeapons;
+		Config()->m_SvDeepfly = pMsg->m_Deepfly;
+		Config()->m_SvDestroyBulletsOnDeath = pMsg->m_DestroyBulletsOnDeath;
+		Config()->m_SvDestroyLasersOnDeath = pMsg->m_DestroyLasersOnDeath;
+		Config()->m_SvHit = pMsg->m_Hit;
+		Config()->m_SvEndlessDrag = pMsg->m_EndlessDrag;
+		Config()->m_SvFreezeDelay = pMsg->m_FreezeDelay;
+		Config()->m_SvSaveWorseScores = pMsg->m_SaveWorseScores;
+		Config()->m_SvPauseable = pMsg->m_Pauseable;
+		Config()->m_SvTeam = pMsg->m_Team;
+		Config()->m_SvMinTeamSize = pMsg->m_MinTeamSize;
 		Config()->m_SvMaxTeamSize = pMsg->m_MaxTeamSize;
+		Config()->m_SvOldLaser = pMsg->m_OldLaser;
+		Config()->m_SvNoWeakHook = pMsg->m_NoWeakHook;
+		Config()->m_SvResetPickups = pMsg->m_ResetPickups;
+		Config()->m_SvShowOthersDefault = pMsg->m_ShowOthersDefault;
+		Config()->m_SvPlasmaRange = pMsg->m_PlasmaRange;
+		Config()->m_SvPlasmaPerSec = pMsg->m_PlasmaPerSec;
+		Config()->m_SvDraggerRange = pMsg->m_DraggerRange;
+		Config()->m_SvSoloServer = pMsg->m_SoloServer;
 	}
 }
 

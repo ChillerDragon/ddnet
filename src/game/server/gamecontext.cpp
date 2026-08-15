@@ -827,10 +827,32 @@ void CGameContext::SendSettings(int ClientId) const
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
 }
 
-void CGameContext::SendMaxTeamSize(int ClientId) const
+void CGameContext::SendGameSettings(int ClientId) const
 {
-	CNetMsg_Sv_MaxTeamSize Msg;
+	CNetMsg_Sv_GameSettings Msg;
+	Msg.m_OldTeleportWeapons = g_Config.m_SvOldTeleportWeapons;
+	Msg.m_OldTeleportHook = g_Config.m_SvOldTeleportHook;
+	Msg.m_TeleportHoldHook = g_Config.m_SvTeleportHoldHook;
+	Msg.m_TeleportLoseWeapons = g_Config.m_SvTeleportLoseWeapons;
+	Msg.m_Deepfly = g_Config.m_SvDeepfly;
+	Msg.m_DestroyBulletsOnDeath = g_Config.m_SvDestroyBulletsOnDeath;
+	Msg.m_DestroyLasersOnDeath = g_Config.m_SvDestroyLasersOnDeath;
+	Msg.m_Hit = g_Config.m_SvHit;
+	Msg.m_EndlessDrag = g_Config.m_SvEndlessDrag;
+	Msg.m_FreezeDelay = g_Config.m_SvFreezeDelay;
+	Msg.m_SaveWorseScores = g_Config.m_SvSaveWorseScores;
+	Msg.m_Pauseable = g_Config.m_SvPauseable;
+	Msg.m_Team = g_Config.m_SvTeam;
+	Msg.m_MinTeamSize = g_Config.m_SvMinTeamSize;
 	Msg.m_MaxTeamSize = g_Config.m_SvMaxTeamSize;
+	Msg.m_OldLaser = g_Config.m_SvOldLaser;
+	Msg.m_NoWeakHook = g_Config.m_SvNoWeakHook;
+	Msg.m_ResetPickups = g_Config.m_SvResetPickups;
+	Msg.m_ShowOthersDefault = g_Config.m_SvShowOthersDefault;
+	Msg.m_PlasmaRange = g_Config.m_SvPlasmaRange;
+	Msg.m_PlasmaPerSec = g_Config.m_SvPlasmaPerSec;
+	Msg.m_DraggerRange = g_Config.m_SvDraggerRange;
+	Msg.m_SoloServer = g_Config.m_SvSoloServer;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
 }
 
@@ -1821,7 +1843,7 @@ void CGameContext::OnClientEnter(int ClientId)
 
 	Server()->ExpireServerInfo();
 
-	SendMaxTeamSize(ClientId);
+	SendGameSettings(ClientId);
 
 	// send map info if loaded from database
 	if(m_aMapInfoMessage[0] != '\0')

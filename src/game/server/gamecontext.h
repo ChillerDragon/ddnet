@@ -318,7 +318,7 @@ public:
 	void SendWeaponPickup(int ClientId, int Weapon) const;
 	void SendMotd(int ClientId) const;
 	void SendSettings(int ClientId) const;
-	void SendMaxTeamSize(int ClientId) const;
+	void SendGameSettings(int ClientId) const;
 	void SendServerAlert(const char *pMessage);
 	void SendModeratorAlert(int ToClientId, const char *pMessage);
 	void SendBroadcast(const char *pText, int ClientId, bool IsImportant = true);
