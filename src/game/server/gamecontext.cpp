@@ -827,6 +827,13 @@ void CGameContext::SendSettings(int ClientId) const
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
 }
 
+void CGameContext::SendMaxTeamSize(int ClientId) const
+{
+	CNetMsg_Sv_MaxTeamSize Msg;
+	Msg.m_MaxTeamSize = g_Config.m_SvMaxTeamSize;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NORECORD, ClientId);
+}
+
 void CGameContext::SendServerAlert(const char *pMessage)
 {
 	for(int ClientId = 0; ClientId < Server()->MaxClients(); ClientId++)
@@ -1813,6 +1820,8 @@ void CGameContext::OnClientEnter(int ClientId)
 		SendVoteSet(ClientId);
 
 	Server()->ExpireServerInfo();
+
+	SendMaxTeamSize(ClientId);
 
 	// send map info if loaded from database
 	if(m_aMapInfoMessage[0] != '\0')

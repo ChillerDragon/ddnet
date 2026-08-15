@@ -664,4 +664,8 @@ Messages = [
 	NetMessageEx("Sv_MapInfo", "map-info@netmsg.ddnet.org", [
 		NetString("m_pDescription"),
 	]),
+
+	NetMessageEx("Sv_MaxTeamSize", "max-team-size@netmsg.ddnet.org", [
+		NetIntRange("m_MaxTeamSize", 1, 'MAX_CLIENTS'),
+	]),
 ]

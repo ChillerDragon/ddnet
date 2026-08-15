@@ -1291,6 +1291,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		CNetMsg_Sv_MapInfo *pMsg = static_cast<CNetMsg_Sv_MapInfo *>(pRawMsg);
 		str_copy(m_aMapDescription, pMsg->m_pDescription);
 	}
+	else if(MsgId == NETMSGTYPE_SV_MAXTEAMSIZE)
+	{
+		CNetMsg_Sv_MaxTeamSize *pMsg = static_cast<CNetMsg_Sv_MaxTeamSize *>(pRawMsg);
+		Config()->m_SvMaxTeamSize = pMsg->m_MaxTeamSize;
+	}
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
