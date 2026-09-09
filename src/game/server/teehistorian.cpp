@@ -581,7 +581,7 @@ void CTeeHistorian::RecordPlayerDrop(int ClientId, const char *pReason)
 	Buffer.Reset();
 	Buffer.AddInt(-TEEHISTORIAN_DROP);
 	Buffer.AddInt(ClientId);
-	Buffer.AddString(pReason, 0);
+	Buffer.AddString(pReason);
 
 	if(m_Debug)
 	{
@@ -598,7 +598,7 @@ void CTeeHistorian::RecordPlayerName(int ClientId, const char *pName)
 	CTeehistorianPacker Buffer;
 	Buffer.Reset();
 	Buffer.AddInt(ClientId);
-	Buffer.AddString(pName, 0);
+	Buffer.AddString(pName);
 
 	if(m_Debug)
 	{
@@ -617,11 +617,11 @@ void CTeeHistorian::RecordConsoleCommand(int ClientId, int FlagMask, const char 
 	Buffer.AddInt(-TEEHISTORIAN_CONSOLE_COMMAND);
 	Buffer.AddInt(ClientId);
 	Buffer.AddInt(FlagMask);
-	Buffer.AddString(pCmd, 0);
+	Buffer.AddString(pCmd);
 	Buffer.AddInt(pResult->NumArguments());
 	for(int i = 0; i < pResult->NumArguments(); i++)
 	{
-		Buffer.AddString(pResult->GetString(i), 0);
+		Buffer.AddString(pResult->GetString(i));
 	}
 
 	if(m_Debug)
@@ -662,7 +662,7 @@ void CTeeHistorian::RecordTeamSaveSuccess(int Team, CUuid SaveId, const char *pT
 	Buffer.Reset();
 	Buffer.AddInt(Team);
 	Buffer.AddRaw(&SaveId, sizeof(SaveId));
-	Buffer.AddString(pTeamSave, 0);
+	Buffer.AddString(pTeamSave);
 
 	if(m_Debug)
 	{
@@ -698,7 +698,7 @@ void CTeeHistorian::RecordTeamLoadSuccess(int Team, CUuid SaveId, const char *pT
 	Buffer.Reset();
 	Buffer.AddInt(Team);
 	Buffer.AddRaw(&SaveId, sizeof(SaveId));
-	Buffer.AddString(pTeamSave, 0);
+	Buffer.AddString(pTeamSave);
 
 	if(m_Debug)
 	{
@@ -761,7 +761,7 @@ void CTeeHistorian::RecordDDNetVersion(int ClientId, CUuid ConnectionId, int DDN
 	Buffer.AddInt(ClientId);
 	Buffer.AddRaw(&ConnectionId, sizeof(ConnectionId));
 	Buffer.AddInt(DDNetVersion);
-	Buffer.AddString(pDDNetVersionStr, 0);
+	Buffer.AddString(pDDNetVersionStr);
 
 	if(m_Debug)
 	{
@@ -778,8 +778,8 @@ void CTeeHistorian::RecordAuthInitial(int ClientId, const char *pRoleName, const
 	CTeehistorianPacker Buffer;
 	Buffer.Reset();
 	Buffer.AddInt(ClientId);
-	Buffer.AddString(pRoleName, 0);
-	Buffer.AddString(pAuthName, 0);
+	Buffer.AddString(pRoleName);
+	Buffer.AddString(pAuthName);
 
 	if(m_Debug)
 	{
@@ -795,7 +795,7 @@ void CTeeHistorian::RecordAuthLogin(int ClientId, const char *pRoleName, const c
 	Buffer.Reset();
 	Buffer.AddInt(ClientId);
 	Buffer.AddString(pRoleName);
-	Buffer.AddString(pAuthName, 0);
+	Buffer.AddString(pAuthName);
 
 	if(m_Debug)
 	{
