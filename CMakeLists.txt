@@ -2600,6 +2600,8 @@ if(CLIENT)
     graphics_threaded_sprites.cpp
     input.cpp
     input.h
+    keyboard.cpp
+    keyboard.h
     keynames.cpp
     keynames.h
     notifications.cpp
