@@ -244,7 +244,7 @@ CGameConsole::CInstance::CInstance(int Type)
 	m_UserGot = false;
 	m_UsernameReq = false;
 
-	m_IsCommand = false;
+	m_pCurrentCmd = nullptr;
 
 	m_Backlog.SetPopCallback([this](CBacklogEntry *pEntry) {
 		if(pEntry->m_LineCount != -1)
@@ -336,9 +336,7 @@ void CGameConsole::CInstance::Reset()
 {
 	m_CompletionRenderOffset = 0.0f;
 	m_CompletionRenderOffsetChange = 0.0f;
-	m_pCommandName = "";
-	m_pCommandHelp = "";
-	m_pCommandParams = "";
+	m_pCurrentCmd = nullptr;
 	m_CompletionArgumentPosition = 0;
 	m_CompletionDirty = true;
 }
@@ -744,19 +742,8 @@ bool CGameConsole::CInstance::OnInput(const IInput::CEvent &Event)
 			char aBuf[IConsole::CMDLINE_LENGTH];
 			StrCopyUntilSpace(aBuf, sizeof(aBuf), aCmd);
 
-			const IConsole::ICommandInfo *pCommand = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf, m_CompletionFlagmask,
+			m_pCurrentCmd = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf, m_CompletionFlagmask,
 				m_Type != CGameConsole::CONSOLETYPE_LOCAL && m_pGameConsole->Client()->RconAuthed() && m_pGameConsole->Client()->UseTempRconCommands());
-			if(pCommand)
-			{
-				m_IsCommand = true;
-				m_pCommandName = pCommand->Name();
-				m_pCommandHelp = pCommand->Help();
-				m_pCommandParams = pCommand->Params();
-			}
-			else
-			{
-				m_IsCommand = false;
-			}
 		}
 	}
 
@@ -1393,7 +1380,7 @@ void CGameConsole::OnRender()
 			Info.m_TotalWidth = Info.m_Cursor.m_X + Info.m_Offset;
 			pConsole->m_CompletionRenderOffset = Info.m_Offset;
 
-			if(NumCommands <= 0 && pConsole->m_IsCommand)
+			if(NumCommands <= 0 && pConsole->m_pCurrentCmd)
 			{
 				int NumArguments = 0;
 				if(!pConsole->m_vpArgumentSuggestions.empty())
@@ -1411,13 +1398,13 @@ void CGameConsole::OnRender()
 					pConsole->m_CompletionRenderOffset = Info.m_Offset;
 				}
 
-				if(NumArguments <= 0 && pConsole->m_IsCommand)
+				if(NumArguments <= 0 && pConsole->m_pCurrentCmd)
 				{
 					char aBuf[1024];
-					str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_pCommandHelp);
+					str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_pCurrentCmd->Help());
 					TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);
 					TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
-					str_format(aBuf, sizeof(aBuf), "Usage: %s %s", pConsole->m_pCommandName, pConsole->m_pCommandParams);
+					str_format(aBuf, sizeof(aBuf), "Usage: %s %s", pConsole->m_pCurrentCmd->Name(), pConsole->m_pCurrentCmd->Params());
 					TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);
 				}
 			}

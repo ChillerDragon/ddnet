@@ -77,10 +77,9 @@ class CGameConsole : public CComponent
 		bool m_UserGot;
 		bool m_UsernameReq;
 
-		bool m_IsCommand;
-		const char *m_pCommandName;
-		const char *m_pCommandHelp;
-		const char *m_pCommandParams;
+		// The command currently under the input cursor.
+		// `nullptr` if the input is empty or does not contain a valid command.
+		const IConsole::ICommandInfo *m_pCurrentCmd = nullptr;
 
 		bool m_CompletionDirty;
 		bool m_QueueResetAnimation;
