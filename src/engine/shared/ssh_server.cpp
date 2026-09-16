@@ -1698,7 +1698,6 @@ void CSshServer::TryProcessCurrentInput(CSshClient *pClient)
 				if(!str_comp(pCmd, "logout") || !str_comp(pCmd, "exit"))
 				{
 					OnClientDisconnect(pClient->m_ClientId, "logout");
-					pClient->m_Buffer.Clear();
 					return;
 				}
 				else if(!str_comp(pCmd, "w") || !str_comp(pCmd, "who"))
@@ -1853,7 +1852,6 @@ void CSshServer::TryProcessCurrentInput(CSshClient *pClient)
 			else
 			{
 				OnClientDisconnect(pClient->m_ClientId, "logout");
-				pClient->m_Buffer.Clear();
 				return;
 			}
 		}
@@ -2730,12 +2728,14 @@ void CSshServer::OnClientDisconnect(int ClientId, const char *pReason)
 	if(Channel)
 	{
 		ssh_channel_free(Channel);
+		pClient->m_Channel = nullptr;
 	}
-	ssh_session Session = m_apClients[ClientId]->m_Session;
+	ssh_session Session = pClient->m_Session;
 	if(Session)
 	{
 		ssh_disconnect(Session);
 		ssh_free(Session);
+		pClient->m_Session = nullptr;
 	}
 
 	delete m_apClients[ClientId];
@@ -2840,6 +2840,7 @@ void CSshServer::Update()
 			ssh_channel_send_eof(pClient->m_Channel);
 			ssh_channel_close(pClient->m_Channel);
 			OnClientDisconnect(pClient->m_ClientId);
+			continue;
 		}
 
 		if(!pClient->m_ShellReady)
