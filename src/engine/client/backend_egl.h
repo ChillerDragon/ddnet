@@ -92,7 +92,6 @@ class CGraphicsBackend_EGL : public CGraphicsBackend_Threaded
 	TGLBackendReadPresentedImageData m_ReadPresentedImageDataFunc;
 
 	SBackendCapabilities m_Capabilities;
-	EBackendType m_BackendType{BACKEND_TYPE_OPENGL};
 
 	char m_aVendorString[256]{};
 	char m_aVersionString[256]{};
