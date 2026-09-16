@@ -1,4 +1,3 @@
-#include <game/client/components/console.h>
 #if defined(CONF_SSH)
 
 #include "ssh_server.h"
@@ -27,7 +26,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 
@@ -68,12 +66,6 @@
 //       maybe the only really stable way to go is to implement proper wrapping
 //       or at least rewrite the entire input on resize to allow users to get out of
 //       the bad state by just expanding the terminal again without having to rewrite input
-
-// TODO: the default file location in the current dir is not ideal
-//       this should be in the storage save location
-//       or maybe even use the system wide location that also the regular host
-//       ssh server uses so we do not need to generate the key
-#define HOSTKEY_FILE "ssh_host_rsa_key"
 
 // the KEY_ prefix is already used by sdl
 // also it does not seem to perfectly fit
@@ -2094,17 +2086,127 @@ void CSshServer::ReadNewInput(CSshClient *pClient)
 	// }
 }
 
-void CSshServer::GenerateHostKeyIfMissing()
+void CSshServer::GetHostKeyFilePath(char *pBuf, size_t BufSize)
 {
-#ifdef CONF_PLATFORM_LINUX
-	// TODO: make this cross platform and use openssh C++ code
-	int Ret = system("bash -c \"[[ -f ssh_host_rsa_key ]] || ssh-keygen -t rsa -b 4096 -f ssh_host_rsa_key -N ''\"");
-	if(Ret != 0)
+	Storage()->GetCompletePath(IStorage::TYPE_SAVE, "ssh/ssh_host_rsa_key", pBuf, BufSize);
+}
+
+// Visualize the fingerprint hash of the public key with
+// a small ascii art
+// Same as the ssh-keygen cli tool does it
+static void LogDrunkenBishop(const unsigned char *pData, size_t Len)
+{
+	const char BishopSymbols[] = " .o+=*BOX@%&#/^SE";
+	const int Rows = 9;
+	const int Cols = 17;
+
+	// Field
+	int aField[Rows][Cols] = {{0}};
+	int x = Cols / 2;
+	int y = Rows / 2;
+
+	// Process each byte
+	for(size_t i = 0; i < Len; ++i)
 	{
-		str_copy(m_aError, "host key generation failed");
-		log_error("ssh", "failed to generate host key");
+		unsigned char b = pData[i];
+		for(int Bit = 0; Bit < 8; ++Bit)
+		{
+			// Move: high bit first
+			int dx = (b >> 7) & 1;
+			int dy = (b >> 6) & 1;
+			b <<= 2;
+
+			x += dx ? 1 : -1;
+			y += dy ? 1 : -1;
+
+			if(x < 0)
+				x = 0;
+			if(x >= Cols)
+				x = Cols - 1;
+			if(y < 0)
+				y = 0;
+			if(y >= Rows)
+				y = Rows - 1;
+
+			aField[y][x]++;
+		}
 	}
-#endif
+
+	log_info("ssh", "+---[ RSA KEY ]--+");
+
+	// Map counts to symbols
+	for(auto *pFieldRow : aField)
+	{
+		char aRow[1024] = {0};
+		int RowIdx = 0;
+		aRow[RowIdx] = '|';
+		while(++RowIdx < Cols)
+		{
+			int Val = pFieldRow[RowIdx];
+			if(Val + 1 > (int)sizeof(BishopSymbols))
+			{
+				Val = 2;
+			}
+			aRow[RowIdx] = BishopSymbols[Val];
+		}
+		aRow[RowIdx++] = '|';
+		aRow[RowIdx] = '\0';
+		log_info("ssh", "%s", aRow);
+	}
+	log_info("ssh", "+----------------+");
+}
+
+bool CSshServer::GenerateHostKeyIfMissing()
+{
+	char aHostKeyPath[IO_MAX_PATH_LENGTH];
+	GetHostKeyFilePath(aHostKeyPath, sizeof(aHostKeyPath));
+	if(Storage()->FileExists(aHostKeyPath, IStorage::TYPE_ABSOLUTE))
+		return true;
+
+	log_info("ssh", "generating host key ...");
+
+	ssh_key Key = nullptr;
+	if(ssh_pki_generate_key(SSH_KEYTYPE_RSA, nullptr, &Key) != SSH_OK)
+	{
+		log_error("ssh", "failed to generate host key");
+		str_copy(m_aError, "failed to generate host key");
+		ssh_key_free(Key);
+		return false;
+	}
+
+	char aPubKeyPath[IO_MAX_PATH_LENGTH];
+	str_format(aPubKeyPath, sizeof(aPubKeyPath), "%s.pub", aHostKeyPath);
+	if(ssh_pki_export_pubkey_file(Key, aPubKeyPath) != SSH_OK)
+	{
+		log_error("ssh", "failed to write public key");
+		str_copy(m_aError, "failed to write public key");
+		ssh_key_free(Key);
+		return false;
+	}
+
+	if(ssh_pki_export_privkey_file(Key, nullptr, nullptr, nullptr, aHostKeyPath) != SSH_OK)
+	{
+		log_error("ssh", "failed to write private key");
+		str_copy(m_aError, "failed to write private key");
+		ssh_key_free(Key);
+		return false;
+	}
+
+	unsigned char *pPubHash = nullptr;
+	size_t HashLen = 0;
+	if(ssh_get_publickey_hash(Key, SSH_PUBLICKEY_HASH_SHA256, &pPubHash, &HashLen) == SSH_OK)
+	{
+		LogDrunkenBishop(pPubHash, HashLen);
+		ssh_clean_pubkey_hash(&pPubHash);
+	}
+	else
+	{
+		// not critical we only need it for fancy user output
+		log_warn("ssh", "failed to get public key hash");
+	}
+
+	ssh_key_free(Key);
+	return true;
 }
 
 void CSshServer::Init(CConfig *pConfig, IConsole *pConsole, IStorage *pStorage)
@@ -2116,9 +2218,16 @@ void CSshServer::Init(CConfig *pConfig, IConsole *pConsole, IStorage *pStorage)
 	if(!g_Config.m_SvSsh)
 		return;
 
+	log_info("ssh", "libssh %s", ssh_version(0));
+
 	unicode_width_init(&m_UnicodeWidthState);
 
-	log_info("ssh", "libssh %s", ssh_version(0));
+	if(!Storage()->CreateFolder("ssh", IStorage::TYPE_SAVE))
+	{
+		log_error("ssh", "failed to create ssh directory");
+		str_copy(m_aError, "failed to create ssh directory");
+		return;
+	}
 
 	m_Bind = ssh_bind_new();
 	if(m_Bind == nullptr)
@@ -2128,14 +2237,20 @@ void CSshServer::Init(CConfig *pConfig, IConsole *pConsole, IStorage *pStorage)
 		return;
 	}
 
-	GenerateHostKeyIfMissing();
+	if(!GenerateHostKeyIfMissing())
+	{
+		return;
+	}
 
 	char aPort[32];
 	str_format(aPort, sizeof(aPort), "%d", g_Config.m_SvSshPort);
 
+	char aHostKeyPath[IO_MAX_PATH_LENGTH];
+	GetHostKeyFilePath(aHostKeyPath, sizeof(aHostKeyPath));
+
 	ssh_bind_options_set(m_Bind, SSH_BIND_OPTIONS_BINDADDR, "0.0.0.0");
 	ssh_bind_options_set(m_Bind, SSH_BIND_OPTIONS_BINDPORT_STR, aPort);
-	ssh_bind_options_set(m_Bind, SSH_BIND_OPTIONS_RSAKEY, HOSTKEY_FILE);
+	ssh_bind_options_set(m_Bind, SSH_BIND_OPTIONS_RSAKEY, aHostKeyPath);
 
 	int Ok = ssh_bind_listen(m_Bind);
 	if(Ok < 0)
@@ -2236,7 +2351,7 @@ int CSshServer::AuthPubkeyCallback(ssh_session Session, const char *pUsername, s
 	//       is that convenient for the admin or insecure?
 	//       right now there is only admin rank anyways
 
-	const char *pAuthorizedKeysFile = "authorized_keys";
+	const char *pAuthorizedKeysFile = "ssh/authorized_keys";
 
 	CLineReader LineReader;
 	if(!LineReader.OpenFile(pStorage->OpenFile(pAuthorizedKeysFile, IOFLAG_READ, IStorage::TYPE_SAVE)))

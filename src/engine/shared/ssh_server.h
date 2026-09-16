@@ -20,6 +20,7 @@
 #include <libssh/libssh.h>
 #include <libssh/server.h>
 
+#include <cstddef>
 #include <deque>
 #include <optional>
 #include <unordered_map>
@@ -437,7 +438,8 @@ class CSshServer
 
 	char m_aError[512] = "";
 
-	void GenerateHostKeyIfMissing();
+	void GetHostKeyFilePath(char *pBuf, size_t BufSize);
+	bool GenerateHostKeyIfMissing();
 	void ProcessMessage(CSshClient *pClient);
 
 	std::optional<int> FindFreeSlot();
