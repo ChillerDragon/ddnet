@@ -724,7 +724,7 @@ const char *CSshClient::PromptBarBottomStr()
 	// FIXME: this offset is totally wrong
 	//        it has to exclude the non printable color escape codes in the beginning
 	//        and support wide unicode characters
-	m_aPromptBarBottom[m_Term.m_Width] = '\0';
+	m_aPromptBarBottom[std::clamp(m_Term.m_Width, 0, (int)sizeof(m_aPromptBarBottom) - 1)] = '\0';
 
 	if(m_Config.m_PromptBarBottomColors)
 	{
@@ -2141,7 +2141,7 @@ static void LogDrunkenBishop(const unsigned char *pData, size_t Len)
 		while(++RowIdx < Cols)
 		{
 			int Val = pFieldRow[RowIdx];
-			if(Val + 1 > (int)sizeof(BishopSymbols))
+			if(Val >= (int)sizeof(BishopSymbols) - 1)
 			{
 				Val = 2;
 			}
@@ -2518,6 +2518,12 @@ int CSshServer::ChannelPtyWindowChangeCallback(ssh_session Session, ssh_channel 
 {
 	CSshClient::CCallbackCtx *pCtx = static_cast<CSshClient::CCallbackCtx *>(pUserData);
 	CSshClient *pClient = pCtx->m_pClient;
+	if(!pClient->m_Authenticated)
+	{
+		log_error("ssh", "cid=%d tried to resize the window before authenticating", pClient->m_ClientId);
+		return SSH_ERROR;
+	}
+
 	int OldWidth = pClient->m_Term.m_Width;
 	int OldHeight = pClient->m_Term.m_Height;
 	pClient->m_Term.m_Width = Width;
@@ -2618,23 +2624,23 @@ bool CSshServer::Ratelimit(const NETADDR *pAddr)
 		if(Entry.m_LastFailedPassword)
 		{
 			int64_t SecondsSinceFail = (time_get() - Entry.m_LastFailedPassword) / time_freq();
-			if(Entry.m_NumWrongPasswords > 3)
-				return SecondsSinceFail < 20;
 			if(Entry.m_NumWrongPasswords > 6)
 				return SecondsSinceFail < 60;
+			if(Entry.m_NumWrongPasswords > 3)
+				return SecondsSinceFail < 20;
 			return SecondsSinceFail < 3;
 		}
 		if(Entry.m_LastTimeout)
 		{
 			int64_t SecondsSinceTimeout = (time_get() - Entry.m_LastTimeout) / time_freq();
-			if(Entry.m_NumTimeouts > 3)
-				return SecondsSinceTimeout < 60;
-			if(Entry.m_NumTimeouts > 6)
-				return SecondsSinceTimeout < 400;
 			// 10+ timeouts is considered a serious attack
 			// and will cause a one hour ratelimit
 			if(Entry.m_NumTimeouts > 10)
 				return SecondsSinceTimeout < 60 * 60 * 60;
+			if(Entry.m_NumTimeouts > 6)
+				return SecondsSinceTimeout < 400;
+			if(Entry.m_NumTimeouts > 3)
+				return SecondsSinceTimeout < 60;
 			return SecondsSinceTimeout < 3;
 		}
 		if(Entry.m_NumWrongKeyAttempts > 100)
@@ -2768,15 +2774,14 @@ void CSshServer::AcceptNewConnections()
 
 	ssh_set_blocking(NewSession, 0);
 
-	if(ssh_handle_key_exchange(NewSession) == SSH_AGAIN ||
-		ssh_handle_key_exchange(NewSession) == SSH_OK)
+	if(ssh_handle_key_exchange(NewSession) == SSH_ERROR)
 	{
-		OnClientConnect(ClientId, NewSession);
-	}
-	else
-	{
+		log_error("ssh", "cid=%d got a key exchange error", ClientId);
 		ssh_free(NewSession);
+		return;
 	}
+
+	OnClientConnect(ClientId, NewSession);
 }
 
 void CSshServer::Update()
@@ -2809,6 +2814,53 @@ void CSshServer::Update()
 			continue;
 		}
 
+		int64_t ConnectedSinceSeconds = (time_get() - pClient->m_JoinTime) / time_freq();
+		if(!pClient->m_KeyExchanged)
+		{
+			int KexRc = ssh_handle_key_exchange(pClient->m_Session);
+			if(KexRc == SSH_OK)
+			{
+				pClient->m_KeyExchanged = true;
+			}
+			else if(KexRc == SSH_AGAIN)
+			{
+				// this timeout is for the first connection when the user is asked to trust the host key
+				//
+				// The authenticity of host '[localhost]:2222 ([127.0.0.1]:2222)' can't be established.
+				// RSA key fingerprint is: SHA256:70uwZLFLe/vSQ6RIrMb2oEmV1Dem0uUUVjq00L5JWH8
+				// This key is not known by any other names.
+				// Are you sure you want to continue connecting (yes/no/[fingerprint])?
+				//
+				// While they are in this screen they take up a slot and if all slots are full
+				// no more ssh connections can be made
+				// so we give the user only a few seconds to react here
+				if(ConnectedSinceSeconds > 10)
+				{
+					auto [It, Inserted] = m_Ratelimits.try_emplace(pClient->m_AddrNoPort, pClient->m_AddrNoPort);
+					CRatelimitSshCon &Entry = It->second;
+					Entry.m_NumTimeouts++;
+					Entry.m_LastTimeout = time_get();
+
+					char aAddr[NETADDR_MAXSTRSIZE];
+					net_addr_str(&pClient->m_AddrNoPort, aAddr, sizeof(aAddr), false);
+					log_info(
+						"ssh",
+						"cid=%d addr=%s did not get exchange keys fast enough and timed out (%d timeouts)",
+						pClient->m_ClientId,
+						aAddr,
+						Entry.m_NumTimeouts);
+					OnClientDisconnect(pClient->m_ClientId, "timeout");
+				}
+			}
+			else if(KexRc == SSH_ERROR)
+			{
+				// This is expected to happen when someone enters "no"
+				// when asked to trust the ssh server host key fingerprint
+				OnClientDisconnect(pClient->m_ClientId, "failed key exchange");
+			}
+			continue;
+		}
+
 		// TODO: should we also timeout sessions without keepalive?
 		// TODO: this is not optimal since during the password prompt we can not really send a message
 		//       there is no channel yet so the user can still be typing a password after already being disconnected
@@ -2818,7 +2870,6 @@ void CSshServer::Update()
 		//       can econ be denial of serviced with a bunch of clients in the asking for password state?
 		if(!pClient->m_ShellReady)
 		{
-			int64_t ConnectedSinceSeconds = (time_get() - pClient->m_JoinTime) / time_freq();
 			if(ConnectedSinceSeconds > 10)
 			{
 				auto [It, Inserted] = m_Ratelimits.try_emplace(pClient->m_AddrNoPort, pClient->m_AddrNoPort);

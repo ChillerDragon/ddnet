@@ -156,6 +156,7 @@ public:
 
 	// HOLY STATE HANDLING???
 	// refactor this?
+	bool m_KeyExchanged = false;
 	bool m_Authenticated = false;
 	bool m_ShellReady = false;
 	bool m_Dropped = false;
