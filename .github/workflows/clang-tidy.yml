@@ -88,5 +88,6 @@ jobs:
           -DVIDEORECORDER=ON \
           -DVULKAN=ON \
           -DWEBSOCKETS=ON \
+          -DCLIENT=OFF \
           -Werror=dev ..
         cmake --build . --config Debug --target everything testrunner -- -k 0
